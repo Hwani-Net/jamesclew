@@ -7,6 +7,7 @@ import { createClient } from './firebase-client.mjs';
 import { analyzeSEO, formatForWP, insertAdPlaceholders } from './seo.mjs';
 import { generateArticle, parseMarkdownArticle } from './generator.mjs';
 import { buildSite } from './ssg.mjs';
+import { verifyImageFormats, runFullVerification } from './verify.mjs';
 import { ADSENSE, CONTENT } from './config.mjs';
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { resolve, dirname } from 'path';
@@ -97,12 +98,38 @@ export async function runPipeline(topic, opts = {}) {
     const { distDir, postCount } = await buildSite(posts);
     log('BUILD', `Built ${postCount} posts → ${distDir}`);
 
-    // Step 7: Deploy to Firebase Hosting
+    // Step 7: Pre-deploy image format verification
+    log('VERIFY', 'Checking image file formats...');
+    const imgIssues = verifyImageFormats();
+    if (imgIssues.length > 0) {
+      for (const issue of imgIssues) {
+        log('VERIFY', `❌ ${issue.file}: ${issue.issue}`);
+      }
+      log('VERIFY', `⛔ ${imgIssues.length} image issues found — fix before deploying`);
+      return { article, seo: seoResult, slug, draftPath, published: false, deployed: false, imageIssues: imgIssues };
+    }
+    log('VERIFY', '✅ All image formats match extensions');
+
+    // Step 8: Deploy to Firebase Hosting
     if (deploy) {
       log('DEPLOY', 'Deploying to Firebase Hosting...');
       const projectDir = resolve(__dirname, '..');
       execSync(`firebase deploy --only hosting`, { cwd: projectDir, stdio: 'inherit' });
       log('DEPLOY', 'Deployed successfully');
+
+      // Step 9: Post-deploy live rendering verification
+      const siteUrl = process.env.SITE_URL || 'https://smartreview-kr.web.app';
+      const postUrl = `${siteUrl}/posts/${slug}/`;
+      log('VERIFY', `Checking live rendering: ${postUrl}`);
+      const verification = await runFullVerification(postUrl);
+      if (!verification.passed) {
+        log('VERIFY', `⛔ Live verification FAILED — ${verification.issues.length} issues`);
+        for (const issue of verification.issues) {
+          log('VERIFY', `  ❌ ${issue.file}: ${issue.issue}`);
+        }
+      } else {
+        log('VERIFY', '✅ Live verification PASSED — all images rendered');
+      }
     }
   }
 
