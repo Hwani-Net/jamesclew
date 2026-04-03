@@ -13,6 +13,17 @@ Tool 50개 이하 유지 (230+에서 서브에이전트 실패, 50~100이 안전
 상시: Tavily(5), Perplexity search(1), persona-mcp(7), stakeholder-mcp(9), Telegram(4)
 온디맨드: Stitch(12), Context7, Windows-MCP, Firebase
 
+## Hosting & Infrastructure
+모든 웹 프로젝트는 Firebase 기반으로 통일.
+- Hosting: Firebase Hosting (정적 사이트, SSG)
+- Database: Firestore (콘텐츠 저장, CMS)
+- Functions: Firebase Functions (필요 시, 동적 API)
+- Auth: Firebase Auth (필요 시)
+- Storage: Firebase Storage (미디어)
+- CLI: `firebase` CLI 사용 (MCP 아님)
+- 도메인: Firebase Hosting에 커스텀 도메인 연결
+WordPress 사용하지 않음 — Firebase + SSG로 대체.
+
 ## Context Management
 1M 컨텍스트 시대 — 턴당 예산 제한 없음.
 대형 파일은 offset+limit 필수. 500K+ 시 /compact 고려.

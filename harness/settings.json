@@ -2,9 +2,7 @@
   "env": {
     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}",
     "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
-    "TAVILY_API_KEY": "${TAVILY_API_KEY}",
-    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
-    "TELEGRAM_CHAT_ID": "${TELEGRAM_CHAT_ID}"
+    "TAVILY_API_KEY": "${TAVILY_API_KEY}"
   },
   "permissions": {
     "allow": [
@@ -87,6 +85,17 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/verify-deploy.sh",
+            "if": "Bash(*firebase deploy*)",
+            "timeout": 30000
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [
