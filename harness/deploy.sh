@@ -36,5 +36,10 @@ echo "✅ scripts/ ($(ls "$SCRIPT_DIR/scripts/" | wc -l)개)"
 cp "$SCRIPT_DIR/scripts/tavily-rotator.mjs" "$TARGET/tavily-rotator.mjs"
 echo "✅ tavily-rotator.mjs"
 
+# Agents
+mkdir -p "$TARGET/agents"
+cp "$SCRIPT_DIR/agents/"*.md "$TARGET/agents/"
+echo "✅ agents/ ($(ls "$SCRIPT_DIR/agents/"*.md | wc -l)개)"
+
 echo ""
 echo "🎉 배포 완료. reload window 후 적용됩니다."
