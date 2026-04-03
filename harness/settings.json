@@ -62,6 +62,17 @@
             "timeout": 30000
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/quality-gate.sh pre-commit",
+            "if": "Bash(git commit *)",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "SubagentStop": [
@@ -83,6 +94,21 @@
             "type": "command",
             "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | grep -oP '\"file_path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null || echo \"$INPUT\" | grep -oP '\"path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null); case \"$FILE\" in *.js|*.ts|*.jsx|*.tsx|*.json|*.css|*.html) npx prettier --write \"$FILE\" 2>/dev/null || true;; *.py) python -m black --quiet \"$FILE\" 2>/dev/null || true;; esac; exit 0'",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/quality-gate.sh post-edit",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/quality-gate.sh post-test",
+            "timeout": 5000
           }
         ]
       }
