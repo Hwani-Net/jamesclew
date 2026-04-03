@@ -127,7 +127,6 @@
   },
   "language": "korean",
   "skipDangerousModePermissionPrompt": true,
-  "effortLevel": "max",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/awesome-statusline.sh"

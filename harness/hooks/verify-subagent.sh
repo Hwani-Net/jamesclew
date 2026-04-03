@@ -107,6 +107,12 @@ for URL in $URLS; do
   fi
 done
 
+# If no checks were possible (network down, etc), warn about unverified output
+if [ "$CHECKED" -eq 0 ] && [ -n "$REPOS$NPMS$PIPS$URLS" ]; then
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"SubagentStop\",\"additionalContext\":\"⚠️ VERIFICATION SKIPPED: 네트워크/API 문제로 서브에이전트 출력을 검증할 수 없었습니다. 수동 검증이 필요합니다.\"}}"
+  echo "[$(date +%H:%M:%S)] SKIPPED: network issue, manual verification needed" >> "$LOG_FILE"
+fi
+
 if [ "$FAILED" -gt 0 ]; then
   REASON="서브에이전트 출력에서 존재하지 않는 리소스 ${FAILED}개 발견 (${CHECKED}개 검사):${FAILURES}"
   # Output additionalContext to warn Claude
