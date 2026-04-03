@@ -46,6 +46,11 @@
   - 실제 repo에 가짜 기능을 부여한 경우 → 공식 README 확인
   - 단축 URL (bit.ly 등) → 원본 URL 확인 후 사용
 
+## File Location Rules
+- 하네스 파일(hooks, rules, scripts, settings)은 **D:/jamesclew/harness/**에서 편집 후 `bash harness/deploy.sh`로 배포
+- `~/.claude/`에 직접 생성/수정 금지 — 반드시 소스 저장소(D:/jamesclew)를 거쳐야 함
+- 프로젝트 코드는 작업 디렉토리(cwd)에 생성, 전역 설정 경로에 직접 쓰지 않음
+
 ## Quality Gates
 - 코드 변경 → 테스트 실행
 - 빌드 성공 → 커밋
