@@ -1,0 +1,3 @@
+harness/keys/
+*.credentials*
+.claude/

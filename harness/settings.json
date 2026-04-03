@@ -1,0 +1,135 @@
+{
+  "env": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}",
+    "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
+    "TAVILY_API_KEY": "${TAVILY_API_KEY}",
+    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
+    "TELEGRAM_CHAT_ID": "${TELEGRAM_CHAT_ID}"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Agent(*)",
+      "NotebookEdit(*)",
+      "TodoWrite(*)",
+      "mcp__perplexity__perplexity_search",
+      "mcp__tavily__*",
+      "mcp__windows-mcp__*",
+      "mcp__plugin_telegram_telegram__*",
+      "mcp__persona-mcp__recommend-persona",
+      "mcp__persona-mcp__discover-persona-for-context",
+      "mcp__persona-mcp__compare-personas",
+      "mcp__persona-mcp__suggest-persona-transition",
+      "mcp__persona-mcp__explain-persona-fit",
+      "mcp__persona-mcp__analyze-persona-effectiveness",
+      "mcp__persona-mcp__get-recommendation-stats",
+      "mcp__stakeholder-mcp__*",
+      "Plugin:telegram:*"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(*format*C:*)",
+      "Bash(*Remove-Item*-Recurse*-Force*C:\\*)",
+      "Bash(*del*/s*/q*C:\\*)",
+      "Bash(*|*curl*)",
+      "Bash(*|*wget*)",
+      "Bash(*&&*rm -rf*)",
+      "Bash(*;*rm -rf*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | grep -oP '\"file_path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null || echo \"$INPUT\" | grep -oP '\"path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null); if [ -z \"$FILE\" ]; then exit 0; fi; case \"$FILE\" in *.env|*.env.*|*credentials*|*secrets*|*secret*|*.pem|*.key) echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"Protected file: $FILE\\\"}}\" >&2; exit 2;; esac'",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/verify-memory-write.sh",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/verify-subagent.sh",
+            "timeout": 60000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | grep -oP '\"file_path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null || echo \"$INPUT\" | grep -oP '\"path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null); case \"$FILE\" in *.js|*.ts|*.jsx|*.tsx|*.json|*.css|*.html) npx prettier --write \"$FILE\" 2>/dev/null || true;; *.py) python -m black --quiet \"$FILE\" 2>/dev/null || true;; esac; exit 0'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh stop'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh compact; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostCompact\\\",\\\"additionalContext\\\":\\\"[CONTEXT RESTORED] JamesClaw Agent. 핵심규칙: 1) 즉시실행,할까요금지 2) Built-in>Bash>MCP 3) 토큰효율최우선 4) 에러3회재시도후보고 5) TodoWrite확인후중단작업이어서진행 6) CLAUDE.md재확인 7) 현재작업디렉토리와목표파악후진행\\\"}}\"'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh start; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"[INIT] JamesClaw Agent. 즉시실행(할까요금지), Built-in>Bash>MCP, 토큰효율최우선, 에러3회재시도후보고.\\\"}}\"'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "telegram@claude-plugins-official": true,
+    "awesome-statusline@awesome-claude-plugins": true
+  },
+  "language": "korean",
+  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "max",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/awesome-statusline.sh"
+  }
+}
