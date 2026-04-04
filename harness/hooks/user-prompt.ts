@@ -15,6 +15,19 @@ const TURN_COUNTER_FILE = `${STATE_DIR}/turn_counter`
 // Short reminder (low token cost, injected every 10 turns)
 const RULE_REMINDER = `[RULE REMINDER] 선언-미실행 금지. 불확실하면 ⚠️. 추측 금지.`
 
+// Full rule reminder (injected at context 20%/40%/60%/80%)
+const FULL_RULE_REMINDER = `[⚠️ HARNESS RULE CHECK — 컨텍스트 마일스톤]
+1. 즉시실행. 선언-미실행 금지. "할까요?" 금지.
+2. "안 됩니다" 금지 — 웹 검색 + 3회 시도 + 대안 2개 후에만 불가 판정.
+3. Evidence-First — 증거(도구 출력) 없이 상태 보고 금지.
+4. Search-Before-Solve — 막히면 LESSONS_LEARNED, 옵시디언, 이전 세션에서 먼저 검색.
+5. 완성형까지 반복 — Multi-Pass Review 최소 2라운드. 검수는 외부 모델(Antigravity + Codex) 위임.
+6. 검수 결과는 Playwright 스크린샷 + Read로 직접 확인. HTTP 200만으로 판단 금지.
+[이 시점에서 하네스 규칙 위반 여부를 자체 점검하고, 위반이 있으면 즉시 수정하세요.]`
+
+// Context milestone check
+const CONTEXT_MILESTONE_FILE = `${STATE_DIR}/context_milestone`
+
 function getProjectId(cwd: string): string {
   return cwd.split('/').pop() || 'default'
 }
@@ -105,6 +118,29 @@ async function main() {
       } catch {}
     }
 
+    // Check context milestone (20% intervals)
+    let contextMilestone = false
+    let contextPct = 0
+    try {
+      const statusInput = input as any
+      const ctxSize = statusInput?.context_window?.context_window_size || 200000
+      const ctxUsage = statusInput?.context_window?.current_usage
+      if (ctxUsage) {
+        const totalTokens = (ctxUsage.input_tokens || 0) + (ctxUsage.output_tokens || 0)
+        contextPct = Math.round((totalTokens / ctxSize) * 100)
+      }
+      // Check if we crossed a 20% milestone
+      const fs = require('fs')
+      const lastMilestone = parseInt(fs.readFileSync(CONTEXT_MILESTONE_FILE, 'utf8').trim()) || 0
+      const currentBucket = Math.floor(contextPct / 20) * 20
+      if (currentBucket > lastMilestone && currentBucket >= 20) {
+        contextMilestone = true
+        fs.writeFileSync(CONTEXT_MILESTONE_FILE, String(currentBucket))
+      }
+    } catch {
+      // First run or no context info
+    }
+
     // Build output
     const parts: string[] = []
 
@@ -117,8 +153,13 @@ async function main() {
       parts.push('[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요. 선언만 하지 말고 즉시 실행하세요. 안 된다고 단정하기 전에 웹 검색으로 확인하세요.')
     }
 
+    // Context milestone: inject full rules + trigger self-evolve
+    if (contextMilestone) {
+      parts.push(`[📊 Context ${contextPct}% — 20% 마일스톤 도달]\n${FULL_RULE_REMINDER}\n[ACTION REQUIRED] 지금 즉시:\n1. opencode run -m "google/antigravity-gemini-3.1-pro-high" 로 이 세션 하네스 규칙 위반 검수\n2. codex "이 세션 규칙 위반 검수" 로 교차 검증\n3. bash ~/.claude/scripts/self-evolve.sh --apply 로 Self-Evolving Loop 이행`)
+    }
+
     // Rule reminder every 10 turns
-    if (turnCount % 10 === 0) {
+    if (turnCount % 10 === 0 && !contextMilestone) {
       parts.push(RULE_REMINDER)
     }
 
