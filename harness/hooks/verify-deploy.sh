@@ -51,9 +51,29 @@ if [ "$FAIL" -eq 1 ]; then
   bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat "❌ Deploy verification failed: ${HOSTING_URL}" 2>/dev/null
   echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY FAILED] ${HOSTING_URL} 라이브 검증 실패. 수정 후 재배포 필요. 검증 통과 전까지 대표님께 보고 금지.\"}}" >&2
   exit 2
-else
-  echo -e "✅ Deploy verification PASSED\n${RESULTS}" >&2
-  bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat "✅ Deploy verified: ${HOSTING_URL}" 2>/dev/null
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} 라이브 검증 통과 (index/sitemap/404 모두 200). 대표님께 결과 보고 가능.\"}}" >&2
-  exit 0
 fi
+
+# Capture Playwright screenshots for visual review (non-blocking)
+SCREENSHOT_DIR="$HOME/.claude/hooks/state/screenshots"
+mkdir -p "$SCREENSHOT_DIR"
+DESKTOP_IMG="${SCREENSHOT_DIR}/deploy-desktop.png"
+MOBILE_IMG="${SCREENSHOT_DIR}/deploy-mobile.png"
+
+npx playwright screenshot --browser=chromium --full-page --wait-for-timeout=3000 "$HOSTING_URL" "$DESKTOP_IMG" >/dev/null 2>&1 &
+npx playwright screenshot --browser=chromium --full-page --wait-for-timeout=3000 --viewport-size="390,844" "$HOSTING_URL" "$MOBILE_IMG" >/dev/null 2>&1 &
+wait
+
+HAS_SCREENSHOTS="false"
+if [ -f "$DESKTOP_IMG" ] && [ -f "$MOBILE_IMG" ]; then
+  HAS_SCREENSHOTS="true"
+fi
+
+echo -e "✅ Deploy verification PASSED\n${RESULTS}" >&2
+bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat "✅ Deploy verified: ${HOSTING_URL}" 2>/dev/null
+
+if [ "$HAS_SCREENSHOTS" = "true" ]; then
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 검증 통과. [필수] Playwright 스크린샷이 ${SCREENSHOT_DIR}/ 에 저장됨. Read 도구로 deploy-desktop.png + deploy-mobile.png을 확인하고 디자인 5패스 검토를 완료한 후에만 대표님께 보고하세요.\"}}"
+else
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 검증 통과. Playwright 스크린샷 실패 — 수동으로 Playwright 스크린샷 촬영 후 디자인 5패스 검토를 완료한 후에만 보고하세요.\"}}"
+fi
+exit 0

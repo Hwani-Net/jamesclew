@@ -161,6 +161,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/enforce-execution.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
             "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh stop'",
             "timeout": 10000
           },
