@@ -12,8 +12,10 @@ NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # Git state
 GIT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 GIT_STATUS=$(git status --short 2>/dev/null | head -10)
-GIT_MODIFIED=$(git status --short 2>/dev/null | grep -c "^ M\|^M " || echo 0)
-GIT_UNTRACKED=$(git status --short 2>/dev/null | grep -c "^??" || echo 0)
+GIT_MODIFIED=$(git status --short 2>/dev/null | grep -cE "^ ?M" 2>/dev/null || true)
+GIT_MODIFIED=${GIT_MODIFIED:-0}
+GIT_UNTRACKED=$(git status --short 2>/dev/null | grep -c "^??" 2>/dev/null || true)
+GIT_UNTRACKED=${GIT_UNTRACKED:-0}
 LAST_COMMIT=$(git log --oneline -1 2>/dev/null || echo "none")
 
 # Write snapshot
