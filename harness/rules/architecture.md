@@ -6,9 +6,12 @@ Built-in > Bash commands > MCP servers (비용순)
 - 브라우저: npx playwright CLI (MCP의 4x 저렴)
 - 웹 콘텐츠: curl r.jina.ai/URL
 - OCR: tesseract CLI
-- Perplexity: 4개 도구 모두 사용 가능 (search, ask, research, reason). 용도에 맞게 선택.
-  - search: URL/목록 검색. ask: 빠른 팩트 답변. research: 딥 리서치. reason: 단계별 추론.
-  - Perplexity API 비용은 Claude 요금과 별도. 필요하면 research/reason 적극 사용.
+- Perplexity: 4개 도구 모두 사용 가능. 비용 인식하고 용도에 맞게 선택.
+  - search (~$0.01): URL/목록 검색. 기본 선택.
+  - ask (~$0.03): 빠른 팩트 답변. search로 부족할 때.
+  - reason (~$0.02): 단계별 추론. 복잡한 판단 필요 시.
+  - research (~$0.01+토큰): 딥 리서치. 대량 토큰 소비 주의. 주제 리서치/경쟁 분석에만.
+  - Perplexity API 비용은 Claude 요금과 별도 과금. 불필요한 research/reason 남용 금지.
 
 ## Tool Budget
 Tool 50개 이하 유지 (230+에서 서브에이전트 실패, 50~100이 안전 범위).
