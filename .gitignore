@@ -6,3 +6,4 @@ pipelines/*/.firebase/
 *.png
 node_modules/
 .env
+.env-keys

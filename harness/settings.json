@@ -92,6 +92,17 @@
           },
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/enforce-review.sh",
+            "if": "Bash(*firebase deploy*)",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/error-telegram.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/loop-detector.sh",
             "timeout": 5000
           }
@@ -123,7 +134,7 @@
         ]
       },
       {
-        "matcher": "Read|Glob|Grep|Agent|WebFetch|WebSearch",
+        "matcher": "WebFetch|WebSearch",
         "hooks": [
           {
             "type": "command",
@@ -167,6 +178,11 @@
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/enforce-execution.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/evidence-first.sh",
             "timeout": 5000
           },
           {

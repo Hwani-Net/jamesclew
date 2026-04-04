@@ -153,6 +153,32 @@ async function main() {
       parts.push('[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요. 선언만 하지 말고 즉시 실행하세요. 안 된다고 단정하기 전에 웹 검색으로 확인하세요.')
     }
 
+    // Detect capability gap — trigger on-demand MCP search
+    const capabilityGapPatterns = [
+      /안\s*됩니다|불가능|지원.*안|할\s*수\s*없/,       // "안 됩니다", "불가능합니다"
+      /방법.*없|도구.*없|기능.*없/,                       // "방법이 없", "도구가 없"
+      /MCP.*필요|서버.*필요|API.*필요/,                   // "MCP 필요", "API 필요"
+    ]
+    // Also detect domain keywords that might need specialized MCP
+    const domainMcpPatterns = [
+      { pattern: /법령|법률|법원|판례|관세/, mcp: 'korean-law-mcp', desc: '국가법령정보센터' },
+      { pattern: /특허|상표|지식재산/, mcp: 'patent mcp', desc: '특허 검색' },
+      { pattern: /주식|증권|코스피|코스닥/, mcp: 'stock mcp korea', desc: '주식 정보' },
+      { pattern: /날씨|기상|Weather/, mcp: 'weather mcp', desc: '날씨 정보' },
+      { pattern: /지도|좌표|geocod/, mcp: 'maps mcp', desc: '지도/위치' },
+    ]
+
+    const isCapabilityGap = capabilityGapPatterns.some(p => p.test(prompt))
+    const matchedDomain = domainMcpPatterns.find(d => d.pattern.test(prompt))
+
+    if (isCapabilityGap || matchedDomain) {
+      let mcpMsg = `[🔧 ON-DEMAND MCP] 필요한 기능이 없으면 "안 됩니다" 전에 반드시:\n1. npm search "{기능} mcp" 로 npm에서 MCP 서버 검색\n2. 존재하면 ~/.config/lazy-mcp/servers.json에 추가 (Edit)\n3. invoke_command로 즉시 사용\n4. npm에 없으면 GitHub에서 검색`
+      if (matchedDomain) {
+        mcpMsg += `\n\n[HINT] "${matchedDomain.desc}" 관련 요청 감지. npm search "${matchedDomain.mcp}" 로 먼저 확인하세요.`
+      }
+      parts.push(mcpMsg)
+    }
+
     // Context milestone: inject full rules + trigger self-evolve
     if (contextMilestone) {
       let milestoneMsg = `[📊 Context ${contextPct}% — 20% 마일스톤 도달]\n${FULL_RULE_REMINDER}\n[ACTION REQUIRED] 지금 즉시:\n1. opencode run -m "google/antigravity-gemini-3.1-pro-high" 로 이 세션 하네스 규칙 위반 검수\n2. codex "이 세션 규칙 위반 검수" 로 교차 검증\n3. bash ~/.claude/scripts/self-evolve.sh --apply 로 Self-Evolving Loop 이행`

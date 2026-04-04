@@ -15,6 +15,11 @@ CALL_LOG="$STATE_DIR/tool_call_log"
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 [ -z "$TOOL" ] && exit 0
 
+# Skip tools that are naturally repeated (image verification, file browsing, subagent work)
+case "$TOOL" in
+  Read|Agent|Glob|Grep) exit 0 ;;
+esac
+
 # Build a fingerprint: tool + full command for Bash, first 200 chars for others
 if [ "$TOOL" = "Bash" ]; then
   TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
