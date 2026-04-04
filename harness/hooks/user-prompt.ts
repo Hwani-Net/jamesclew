@@ -155,7 +155,14 @@ async function main() {
 
     // Context milestone: inject full rules + trigger self-evolve
     if (contextMilestone) {
-      parts.push(`[📊 Context ${contextPct}% — 20% 마일스톤 도달]\n${FULL_RULE_REMINDER}\n[ACTION REQUIRED] 지금 즉시:\n1. opencode run -m "google/antigravity-gemini-3.1-pro-high" 로 이 세션 하네스 규칙 위반 검수\n2. codex "이 세션 규칙 위반 검수" 로 교차 검증\n3. bash ~/.claude/scripts/self-evolve.sh --apply 로 Self-Evolving Loop 이행`)
+      let milestoneMsg = `[📊 Context ${contextPct}% — 20% 마일스톤 도달]\n${FULL_RULE_REMINDER}\n[ACTION REQUIRED] 지금 즉시:\n1. opencode run -m "google/antigravity-gemini-3.1-pro-high" 로 이 세션 하네스 규칙 위반 검수\n2. codex "이 세션 규칙 위반 검수" 로 교차 검증\n3. bash ~/.claude/scripts/self-evolve.sh --apply 로 Self-Evolving Loop 이행`
+
+      // At 60%+, add compact preparation checklist
+      if (contextPct >= 60) {
+        milestoneMsg += `\n\n[⚠️ COMPACT 준비] 65%에 수동 /compact 권장. compact 전 필수:\n1. 옵시디언 세션 요약 저장: C:/Users/AIcreator/Obsidian-Vault/01-jamesclaw/harness/session-{날짜}-{주제}.md\n2. 하네스 변경 시 harness_design.md 변경 이력 업데이트\n3. git commit + push\n4. 미완료 작업 TodoWrite 기록`
+      }
+
+      parts.push(milestoneMsg)
     }
 
     // Rule reminder every 10 turns

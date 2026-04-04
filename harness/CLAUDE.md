@@ -57,6 +57,11 @@
 - heartbeat = typing 표시만 (메시지 안 보냄). 작업 완료 시 `done` 이벤트로 보고.
 - 컨텍스트 압축(PostCompact) 발생 시 Telegram 자동 알림 발송됨
 - **compact 타이밍**: 자동 compact(75-80%)보다 65% 시점에 수동 `/compact "보존할 내용"` 실행이 품질 보존에 유리. heartbeat로 컨텍스트 확인 후 판단.
+- **compact 전 필수 저장** (hook이 self-evolve/curation 자동 실행하지만, 에이전트도 수동으로):
+  1. 옵시디언 세션 요약: `C:/Users/AIcreator/Obsidian-Vault/01-jamesclaw/harness/session-{날짜}-{주제}.md`
+  2. 하네스 변경 시 설계 문서: `harness_design.md` 변경 이력 테이블 업데이트
+  3. git commit + push (변경사항 있으면)
+  4. 미완료 작업을 TodoWrite에 기록
 - 세션 종료 전: `bash $HOME/.claude/hooks/telegram-notify.sh stop "요약"` 실행하여 종료 알림 발송
 - 세션 시작 시: 옵시디언 `C:/Users/AIcreator/Obsidian-Vault/01-jamesclaw/harness/` 에 이전 세션 요약이 있으면 반드시 읽을 것
 
