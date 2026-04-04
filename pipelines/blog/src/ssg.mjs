@@ -87,8 +87,22 @@ function indexTemplate(posts) {
   const categories = [...new Set(sorted.map(p => p.category || '리뷰'))];
 
   // Category glow map
-  const glowMap = { '가전': 'blue', '생활용품': 'green', '뷰티/건강': 'pink', 'IT/디지털': 'purple' };
+  const glowMap = { '가전': 'blue', '생활용품': 'green', '뷰티/건강': 'pink', 'IT/디지털': 'purple', '리뷰': 'blue' };
   const getGlow = (cat) => glowMap[cat] || 'blue';
+
+  // Category icon map (Material Symbols)
+  const iconMap = { '가전': 'kitchen', '생활용품': 'home', '뷰티/건강': 'spa', 'IT/디지털': 'devices', '리뷰': 'rate_review' };
+  const getIcon = (cat) => iconMap[cat] || 'star';
+
+  // Fallback for no-image cards: gradient + icon
+  const gradMap = { blue: 'from-blue-900/40 to-indigo-900/40', green: 'from-emerald-900/40 to-teal-900/40', pink: 'from-pink-900/40 to-rose-900/40', purple: 'from-purple-900/40 to-violet-900/40' };
+  const noImgFallback = (cat, size) => {
+    const glow = getGlow(cat);
+    const grad = gradMap[glow] || gradMap.blue;
+    const icon = getIcon(cat);
+    const iconSize = size === 'large' ? 'text-7xl' : size === 'wide' ? 'text-5xl' : 'text-4xl';
+    return `<div class="${size === 'square' ? 'aspect-square rounded-2xl' : size === 'wide' ? 'w-2/5 relative h-full' : 'absolute inset-0'} bg-gradient-to-br ${grad} flex items-center justify-center ${size === 'square' ? 'mb-4' : ''}"><span class="material-symbols-outlined ${iconSize} text-white/20">${icon}</span></div>`;
+  };
 
   // Category nav tabs
   const catTabs = categories.map(c =>
@@ -106,7 +120,7 @@ function indexTemplate(posts) {
     if (i === 0) {
       // 2x2 large featured card
       return `<a href="/posts/${p.slug}/" class="md:col-span-2 md:row-span-2 group bento-glow-${glow} relative overflow-hidden bg-[#1c1c1e] rounded-[2.5rem] border border-white/5 transition-all duration-500 cursor-pointer block">
-        ${thumb ? `<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy">` : '<div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30"></div>'}
+        ${thumb ? `<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy">` : noImgFallback(cat, 'large')}
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
         <div class="absolute bottom-8 left-8 right-8 space-y-4">
           <span class="px-3 py-1 rounded bg-${gc}/20 text-${gc.replace('500','300')} text-[10px] font-black uppercase tracking-widest border border-${gc}/30">${escapeHtml(cat)}</span>
@@ -119,7 +133,7 @@ function indexTemplate(posts) {
     if (i % 4 === 1 || i % 4 === 2) {
       // 1x1 small cards
       return `<a href="/posts/${p.slug}/" class="group bento-glow-${glow} bg-[#1c1c1e] rounded-[2rem] p-6 border border-white/5 transition-all duration-500 cursor-pointer flex flex-col justify-between block">
-        ${thumb ? `<div class="aspect-square rounded-2xl overflow-hidden mb-4"><img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : '<div class="aspect-square rounded-2xl bg-surface-container-high mb-4"></div>'}
+        ${thumb ? `<div class="aspect-square rounded-2xl overflow-hidden mb-4"><img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : noImgFallback(cat, 'square')}
         <h3 class="font-bold text-white leading-tight">${escapeHtml(p.title)}</h3>
         <div class="flex justify-between items-center mt-2">
           <span class="text-slate-500 text-[10px]">${escapeHtml(cat)}</span>
@@ -129,7 +143,7 @@ function indexTemplate(posts) {
 
     // 2x1 wide cards (col-span-2)
     return `<a href="/posts/${p.slug}/" class="md:col-span-2 group bento-glow-${glow} relative overflow-hidden bg-[#1c1c1e] rounded-[2rem] border border-white/5 transition-all duration-500 cursor-pointer flex block">
-      ${thumb ? `<div class="w-2/5 relative h-full"><img class="absolute inset-0 w-full h-full object-cover" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : '<div class="w-2/5 bg-surface-container-high"></div>'}
+      ${thumb ? `<div class="w-2/5 relative h-full"><img class="absolute inset-0 w-full h-full object-cover" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : noImgFallback(cat, 'wide')}
       <div class="flex-1 p-8 flex flex-col justify-center gap-3">
         <span class="w-fit px-3 py-1 rounded-full bg-${gc}/10 text-${gc.replace('500','400')} text-[10px] font-black uppercase">${escapeHtml(cat)}</span>
         <h3 class="text-2xl font-black text-white">${escapeHtml(p.title)}</h3>

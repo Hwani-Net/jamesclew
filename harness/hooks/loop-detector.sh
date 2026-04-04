@@ -15,8 +15,12 @@ CALL_LOG="$STATE_DIR/tool_call_log"
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 [ -z "$TOOL" ] && exit 0
 
-# Build a fingerprint: tool + first 100 chars of input (enough to detect duplicates)
-TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {} | tostring' 2>/dev/null | head -c 100)
+# Build a fingerprint: tool + full command for Bash, first 200 chars for others
+if [ "$TOOL" = "Bash" ]; then
+  TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+else
+  TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {} | tostring' 2>/dev/null | head -c 200)
+fi
 FINGERPRINT="${TOOL}:${TOOL_INPUT}"
 HASH=$(echo "$FINGERPRINT" | md5sum 2>/dev/null | cut -d' ' -f1 || echo "$FINGERPRINT" | cksum | cut -d' ' -f1)
 

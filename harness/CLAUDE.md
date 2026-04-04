@@ -26,14 +26,14 @@
 2. 중간 결과 검증 후 다음 단계
 3. 막히면 Perplexity/Tavily로 자체 조사
 4. 해결 불가 시에만 대표님께 질문
-5. **완성형까지 반복** — 편집장/검증이 NO면 수정 후 재검토. 횟수 제한 없음. 대표님께 보고하는 시점은 "모든 검증을 통과한 후"
+5. **완성형까지 반복** — Multi-Pass Review Protocol(quality.md) 적용. 매 패스마다 관점을 변경하여 검토. 모든 패스 통과 후에만 보고.
 6. **새 작업 시작 전** — `~/.agent/skills/` 디렉토리에서 관련 스킬(SKILL.md) 검색. 이미 방법이 있으면 그걸 따름
-7. **디자인 작업 시** — 대표님 기존 프로젝트(머니가이드, 혜택알리미) 스타일 참조. 파스텔 톤, 둥근 카드, 친근한 문구 선호
+7. **디자인 작업 시** — 벤치마킹 레퍼런스 기반 새로운 디자인. 기존 프로젝트 스타일 답습 금지. Stitch 온디맨드 MCP 또는 직접 코딩.
 
 ## Tool Priority (비용순)
 1. Built-in: Read, Edit, Write, Glob, Grep, Bash (0 overhead)
 2. Bash: gh, firebase, playwright, ffmpeg, curl, powershell, opencode (0 MCP)
-3. MCP (max 3 active): Tavily > Perplexity > Windows-MCP
+3. MCP: lazy-mcp 경유 (invoke_command). 설정: ~/.config/lazy-mcp/servers.json
 4. External API: curl 직접 호출
 - 편집장/작가 검토: OpenCode serve (localhost:4096) Bash 직접 호출. MCP 불필요.
 - 외부 모델은 무료/저비용 모델 사용 가능할 때 유료 모델 쓰지 않음

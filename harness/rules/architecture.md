@@ -10,9 +10,12 @@ Built-in > Bash commands > MCP servers (비용순)
 
 ## Tool Budget
 Tool 50개 이하 유지 (230+에서 서브에이전트 실패, 50~100이 안전 범위).
-상시: Tavily(5), Perplexity search(1), Telegram(4) = 10개
-온디맨드: Stitch MCP (디자인 시만 등록→완료 후 제거), Context7, Windows-MCP
-제거됨: persona-mcp(7), stakeholder-mcp(9) — 실사용 대비 도구 점유 과다. 편집장 검토는 OpenCode serve Bash 직접 호출로 대체.
+상시: lazy-mcp(4 meta-tools) + Telegram(4) = 8개
+lazy-mcp 내부: Perplexity, Tavily — 필요 시 invoke_command로 호출
+Stitch: 온디맨드 MCP (`claude mcp add stitch -s user -- npx @_davideast/stitch-mcp proxy`). lazy-mcp·CLI 모두 Windows 비호환. 작업 완료 후 `claude mcp remove stitch`. reload 필요.
+온디맨드: 에이전트가 npm에서 MCP 검색 → servers.json에 추가 → 즉시 사용
+제거됨: persona-mcp(7), stakeholder-mcp(9) — 실사용 대비 도구 점유 과다.
+설정 위치: ~/.config/lazy-mcp/servers.json
 
 ## Hosting & Infrastructure
 모든 웹 프로젝트는 Firebase 기반으로 통일.

@@ -17,8 +17,7 @@
       "Agent(*)",
       "NotebookEdit(*)",
       "TodoWrite(*)",
-      "mcp__perplexity__perplexity_search",
-      "mcp__tavily__*",
+      "mcp__lazy-mcp__*",
       "mcp__windows-mcp__*",
       "mcp__plugin_telegram_telegram__*",
       "Plugin:telegram:*"
