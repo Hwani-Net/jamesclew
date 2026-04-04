@@ -122,6 +122,29 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/user-prompt.ts\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto|manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/curation.ts\"",
+            "timeout": 120000
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
@@ -129,6 +152,11 @@
             "type": "command",
             "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh stop'",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/curation.ts\"",
+            "timeout": 120000
           }
         ]
       }
@@ -150,6 +178,11 @@
           {
             "type": "command",
             "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh start; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"[INIT] JamesClaw Agent. 즉시실행(할까요금지), Built-in>Bash>MCP, 토큰효율최우선, 에러3회재시도후보고.\\\"}}\"'",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
           }
         ]
