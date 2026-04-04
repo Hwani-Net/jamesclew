@@ -19,8 +19,8 @@ TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 [ -z "$TRANSCRIPT" ] && exit 0
 [ ! -f "$TRANSCRIPT" ] && exit 0
 
-# Read last few lines of transcript (last assistant turn)
-LAST_RESPONSE=$(tail -c 5000 "$TRANSCRIPT" 2>/dev/null)
+# Read last portion of transcript (last assistant turn only — smaller window to avoid false positives)
+LAST_RESPONSE=$(tail -c 2000 "$TRANSCRIPT" 2>/dev/null)
 [ -z "$LAST_RESPONSE" ] && exit 0
 
 # Count tool calls in last portion of transcript
@@ -28,7 +28,9 @@ TOOL_CALLS=$(echo "$LAST_RESPONSE" | grep -cE '"tool_use"|"tool_name"|"tool_inpu
 TOOL_CALLS=${TOOL_CALLS:-0}
 
 # === Pattern 1: Declare but don't execute ===
-HAS_DECLARATION=$(echo "$LAST_RESPONSE" | grep -cE '하겠습니다|반영합니다|진행합니다|구현합니다|수정합니다|추가합니다|적용합니다|배포합니다' 2>/dev/null)
+# Only match future-tense declarations (not past-tense reports)
+# "~합니다" ending = present/report, "~하겠" = future intent without action
+HAS_DECLARATION=$(echo "$LAST_RESPONSE" | grep -cE '하겠습니다|반영하겠|진행하겠|구현하겠|수정하겠|추가하겠|적용하겠|배포하겠' 2>/dev/null)
 HAS_DECLARATION=${HAS_DECLARATION:-0}
 
 if [ "${HAS_DECLARATION:-0}" -gt 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -eq 0 ] 2>/dev/null; then

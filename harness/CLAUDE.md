@@ -56,6 +56,8 @@ Firebase 전용 (Hosting, Firestore, Functions, Storage). WordPress 금지.
 
 ## Quality Gates [hook 강제: quality-gate.sh, verify-deploy.sh]
 - 코드 변경 → 테스트. 빌드 성공 → 커밋. 배포 → 브라우저 검증 + 외부 모델 검수.
+- 에러 해결 시 PITFALLS.md에 P-NNN 형식으로 기록 (증상/원인/해결/재발방지).
+- 하네스 구조 변경 시 docs/adr/ADR-NNN.md 작성 (컨텍스트/결정/근거/결과). 축약 금지.
 
 ## Project Override
 프로젝트 루트 CLAUDE.md가 이 글로벌 규칙보다 우선.
