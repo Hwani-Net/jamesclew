@@ -32,53 +32,20 @@ except:
 
 # ─── Usage check with caching (5min TTL) ───
 get_usage() {
-  CACHE_FILE="$STATE_DIR/usage_cache"
-  CACHE_TTL=60  # 1 minute
+  # Read from statusline's JSON cache (no separate API call)
+  CACHE_FILE="/tmp/.claude_usage_cache"
 
-  # Use cache if fresh enough
   if [ -f "$CACHE_FILE" ]; then
-    CACHE_AGE=$(( $(date +%s) - $(date -r "$CACHE_FILE" +%s 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0) ))
-    if [ "$CACHE_AGE" -lt "$CACHE_TTL" ] 2>/dev/null; then
-      cat "$CACHE_FILE"
+    FIVE=$(jq -r '.five_hour.utilization // .five_hour.used_percentage // empty' "$CACHE_FILE" 2>/dev/null)
+    SEVEN=$(jq -r '.seven_day.utilization // .seven_day.used_percentage // empty' "$CACHE_FILE" 2>/dev/null)
+    if [ -n "$FIVE" ] && [ -n "$SEVEN" ]; then
+      FIVE_INT=$(printf "%.0f" "$FIVE" 2>/dev/null || echo "?")
+      SEVEN_INT=$(printf "%.0f" "$SEVEN" 2>/dev/null || echo "?")
+      echo "${FIVE_INT}|${SEVEN_INT}"
       return
     fi
   fi
-
-  TOKEN=$(cat "$HOME/.claude/.credentials.json" 2>/dev/null | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
-  if [ -z "$TOKEN" ]; then
-    # Return cached value if available, otherwise unknown
-    if [ -f "$CACHE_FILE" ]; then cat "$CACHE_FILE"; else echo "?|?"; fi
-    return
-  fi
-
-  RESP=$(curl -s --max-time 5 \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "anthropic-beta: oauth-2025-04-20" \
-    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-
-  # Check for error responses
-  ERROR=$(echo "$RESP" | jq -r '.error.type // empty' 2>/dev/null)
-  if [ -n "$ERROR" ]; then
-    # API error — return cached value or "?"
-    if [ -f "$CACHE_FILE" ]; then cat "$CACHE_FILE"; else echo "?|?"; fi
-    return
-  fi
-
-  FIVE=$(echo "$RESP" | jq -r '.five_hour.utilization // empty' 2>/dev/null)
-  SEVEN=$(echo "$RESP" | jq -r '.seven_day.utilization // empty' 2>/dev/null)
-
-  if [ -z "$FIVE" ] || [ -z "$SEVEN" ]; then
-    if [ -f "$CACHE_FILE" ]; then cat "$CACHE_FILE"; else echo "?|?"; fi
-    return
-  fi
-
-  # Convert to percentage (API returns 0.0-1.0 or 0-100)
-  FIVE_INT=$(python3 -c "v=$FIVE; print(int(v*100) if v<=1 else int(v))" 2>/dev/null || echo "?")
-  SEVEN_INT=$(python3 -c "v=$SEVEN; print(int(v*100) if v<=1 else int(v))" 2>/dev/null || echo "?")
-
-  RESULT="${FIVE_INT}|${SEVEN_INT}"
-  echo "$RESULT" > "$CACHE_FILE"
-  echo "$RESULT"
+  echo "?|?"
 }
 
 # ─── Parse usage result ───

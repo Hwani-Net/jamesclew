@@ -18,13 +18,14 @@ SEVERITY=""
 
 # Detect irreversible commands
 case "$CMD" in
-  *"git push"*)
-    ALERT="git push"
-    SEVERITY="high"
-    ;;
   *"git push --force"*|*"git push -f"*)
     ALERT="git force push"
     SEVERITY="critical"
+    ;;
+  *"git push"*)
+    # Normal push — log only, no telegram
+    ALERT="git push"
+    SEVERITY="medium"
     ;;
   *"npm publish"*|*"npx publish"*)
     ALERT="npm publish"
@@ -88,6 +89,8 @@ ${CMD}"
     ;;
 esac
 
-# Do NOT block execution — just inject context for auditability
-echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"📝 비가역 작업 감지됨: ${ALERT}. 텔레그램 알림 발송 완료. 진행합니다.\"}}"
+# Only inject context for high/critical, not medium
+if [ "$SEVERITY" != "medium" ]; then
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"📝 비가역 작업 감지됨: ${ALERT}. 텔레그램 알림 발송 완료. 진행합니다.\"}}"
+fi
 exit 0

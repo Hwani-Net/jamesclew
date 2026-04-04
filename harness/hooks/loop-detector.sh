@@ -18,6 +18,10 @@ TOOL=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 # Build a fingerprint: tool + full command for Bash, first 200 chars for others
 if [ "$TOOL" = "Bash" ]; then
   TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  # Skip known repeatable commands
+  case "$TOOL_INPUT" in
+    *"deploy.sh"*|*"git status"*|*"git add"*|*"git diff"*|*"claude mcp list"*) exit 0 ;;
+  esac
 else
   TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {} | tostring' 2>/dev/null | head -c 200)
 fi

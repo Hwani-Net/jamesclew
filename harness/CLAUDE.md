@@ -21,6 +21,8 @@
 - **파일 삭제/대규모 덮어쓰기**: git diff 기록 후 진행 (승인 대기 아님).
 - **에러 발생**: 텔레그램 즉시 알림 → 3회 재시도 → 해결 불가 시 보고.
 - **판단 근거 공개**: 여러 선택지 중 하나를 골랐을 때, 왜 그걸 골랐는지 한 줄 기록.
+- **Evidence-First**: 상태/결과를 보고하기 전 도구 실행 결과를 증거로 먼저 제시. 증거 없는 주장 금지.
+- **Search-Before-Solve**: 오류/막힘 시 새 해결책 전에 `LESSONS_LEARNED.md`, 옵시디언 `01-jamesclaw/harness/`, 이전 세션 요약에서 유사 사례 먼저 검색.
 
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 순차 실행
@@ -37,6 +39,10 @@
 3. MCP: lazy-mcp 경유 (invoke_command). 설정: ~/.config/lazy-mcp/servers.json
 4. External API: curl 직접 호출
 - 편집장/작가 검토: Antigravity CLI (`opencode run -m "google/antigravity-gemini-3.1-pro-high" "프롬프트"`) Bash 직접 호출. MCP 불필요. OpenCode serve 사용 금지.
+- **외부 모델 검수 (필수)**: 배포/보고 전 반드시 **두 모델** 교차 검수:
+  1. Antigravity: `opencode run -m "google/antigravity-gemini-3.1-pro-high" "검수 프롬프트"`
+  2. Codex: `codex "검수 프롬프트"` (OpenAI Codex CLI)
+  같은 모델(Claude)이 자기 결과물을 검수하면 안 됨. Hook이 강제함.
 - 외부 모델은 무료/저비용 모델 사용 가능할 때 유료 모델 쓰지 않음
 
 ## Token Efficiency
