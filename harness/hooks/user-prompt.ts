@@ -101,17 +101,30 @@ async function main() {
       /말만.*하고|선언.*미실행|실행.*안/,              // "말만 하고", "실행 안 하고"
       /검수.*안|검토.*안|건너뛰/,                      // "검수 안 해?", "건너뛰고"
       /못.*믿|신뢰.*없|거짓/,                          // "못 믿겠", "신뢰 없"
+      /이것도\s*OK|통과.*시[켜킨]|제대로.*해/,        // "이것도 OK야?", "통과시킨거야", "제대로 해"
+      /깨져|잘못|엉뚱|안\s*보[여이]|누락/,            // "깨져있는", "잘못된", "엉뚱한", "안 보여"
+      /여전히|반복|또다시|계속/,                       // "여전히", "또다시", "계속"
+      /잊[었은]|기록.*안|안.*했[어지잖]/,              // "잊었어", "기록 안", "안 했잖아"
+      /바보|엉망|실수/,                                // 강한 피드백
     ]
 
-    const isFeedback = feedbackPatterns.some(p => p.test(prompt))
+    const patternNames = [
+      'skip_action', 'skip_verify', 'declare_no_execute', 'skip_review',
+      'distrust', 'false_pass', 'broken_output', 'repeated_mistake',
+      'forgot_record', 'strong_feedback',
+    ]
+    const matchedPatterns = feedbackPatterns
+      .map((p, i) => p.test(prompt) ? patternNames[i] : null)
+      .filter(Boolean)
+    const isFeedback = matchedPatterns.length > 0
     if (isFeedback) {
-      // Log feedback to state file for later analysis
       const fs = require('fs')
       const feedbackLog = `${STATE_DIR}/feedback_log.jsonl`
       const entry = JSON.stringify({
         ts: new Date().toISOString(),
         prompt: prompt.substring(0, 200),
         turn: turnCount,
+        patterns: matchedPatterns,
       })
       try {
         fs.appendFileSync(feedbackLog, entry + '\n')
