@@ -109,8 +109,10 @@ check_usage_threshold() {
   PREV_BUCKET=$((PREV_FIVE / 10))
   CURR_BUCKET=$((FIVE / 10))
 
-  if [ "$CURR_BUCKET" -gt "$PREV_BUCKET" ] 2>/dev/null && [ "$FIVE" -gt 0 ] 2>/dev/null; then
+  # Only alert at 50%+ in 10% increments
+  if [ "$CURR_BUCKET" -gt "$PREV_BUCKET" ] 2>/dev/null && [ "$FIVE" -ge 50 ] 2>/dev/null; then
     WARN=""
+    RESET_INFO=""
     if [ "$FIVE" -ge 80 ] 2>/dev/null; then
       WARN=$'\n🚨 위험 구간! 토큰 절약 필수'
     elif [ "$FIVE" -ge 50 ] 2>/dev/null; then
@@ -210,52 +212,15 @@ fmt_usage() {
 # ─── Event handlers ───
 case "$EVENT" in
   start)
-    # Debounce: skip if another start was sent within 15s
-    debounce_check "start" 15 || exit 0
-
-    USAGE=$(check_usage_threshold)
+    # No telegram notification on session start — only record state
     echo "$(date +%s)" > "$STATE_DIR/session_start"
     SESSION_NUM=$(track_session)
-    CTX=$(get_context)
-    send_msg "🔨 JamesClaw 작업 시작 (#${SESSION_NUM} 오늘)
-$(fmt_usage "$USAGE")
-$(fmt_context "$CTX")"
-    set_typing
+    check_usage_threshold > /dev/null
     ;;
 
   stop)
-    # Debounce: skip if another stop was sent within 15s
-    debounce_check "stop" 15 || exit 0
-
-    # Suppress stop if a start is about to happen (reload scenario)
-    # Write timestamp, the start handler will check this
-    USAGE=$(check_usage_threshold)
-    parse_usage "$USAGE"
-
-    DURATION=""
-    if [ -f "$STATE_DIR/session_start" ]; then
-      START_TS=$(cat "$STATE_DIR/session_start" 2>/dev/null)
-      NOW_TS=$(date +%s)
-      ELAPSED=$((NOW_TS - START_TS))
-      MINS=$((ELAPSED / 60))
-      SECS=$((ELAPSED % 60))
-      DURATION="${MINS}m${SECS}s"
-    fi
-
-    CTX=$(get_context)
-    MSG="✅ JamesClaw 작업 완료"
-    if [ -n "$DURATION" ]; then MSG="${MSG} (${DURATION})"; fi
-    MSG="${MSG}
-$(fmt_usage "$USAGE")
-$(fmt_context "$CTX")"
-    if [ -n "$EXTRA" ]; then MSG="${MSG}
-📝 ${EXTRA}"; fi
-    if [ "$FIVE" != "?" ] && [ "$FIVE" -ge 80 ] 2>/dev/null; then
-      MSG="${MSG}
-🚨 5H ${FIVE}% — 휴식 권장"
-    fi
-
-    send_msg "$MSG"
+    # No telegram notification on session stop — only record state
+    check_usage_threshold > /dev/null
     ;;
 
   compact)
