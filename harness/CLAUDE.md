@@ -31,7 +31,7 @@
 2. Bash: gh, firebase, agent-browser, ffmpeg, curl, codex, opencode, gemini
    - 브라우저: agent-browser CLI (~7K 토큰). Playwright MCP 금지 (~114K).
    - 쿠팡 봇 차단: Chrome CDP 또는 og:image CDN 직접 다운로드
-3. MCP: lazy-mcp 경유. 설정: ~/.config/lazy-mcp/servers.json
+3. MCP: lazy-mcp 경유. 설정: ~/.config/lazy-mcp/servers.json. Perplexity 4도구 모두 사용 가능 (search/ask/research/reason).
    - desktop-control: 데스크톱 UI 제어 (agent-browser 불가 시)
    - **온디맨드 MCP**: "안 됩니다" 전에 `npm search "{기능} mcp"` → servers.json 추가 → 즉시 사용 [hook 강제: enforce-execution.sh + user-prompt.ts]
 4. External API: curl 직접 호출
