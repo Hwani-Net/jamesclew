@@ -72,7 +72,12 @@ async function main() {
     const input = JSON.parse(inputText)
 
     const sessionId = input.session_id || 'unknown'
-    const prompt = input.prompt || ''
+    const rawPrompt = input.prompt || ''
+    // Extract telegram channel messages from <channel> tags in prompt
+    const channelTexts = (rawPrompt.match(/<channel[^>]*>([\s\S]*?)<\/channel>/g) || [])
+      .map((tag: string) => tag.replace(/<[^>]+>/g, '').trim())
+    // Combine terminal prompt + telegram messages for feedback detection
+    const prompt = [rawPrompt.replace(/<channel[\s\S]*?<\/channel>/g, ''), ...channelTexts].join(' ').trim()
     const cwd = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd()
     const projectId = getProjectId(cwd)
 
@@ -80,21 +85,7 @@ async function main() {
     const turnCount = getTurnCount() + 1
     setTurnCount(turnCount)
 
-    // Query memory system for context
-    const result = await httpPost(`${MEMORY_API_URL}/memory/context`, {
-      session_id: sessionId,
-      project_id: projectId,
-      current_message: prompt,
-      max_memories: 5,
-    })
-
-    // Track message
-    await httpPost(`${MEMORY_API_URL}/memory/process`, {
-      session_id: sessionId,
-      project_id: projectId,
-    })
-
-    // Detect negative feedback patterns (Self-Evolving Loop: feedback → auto-record)
+    // === FEEDBACK DETECTION FIRST (before memory server, which may timeout) ===
     const feedbackPatterns = [
       /왜.*안\s*해|또.*그러|몇\s*번|지적.*했/,       // "왜 안 해?", "또 그러네", "몇번이나"
       /검증.*안|확인.*안|팩트.*체크/,                  // "검증 안 하고", "팩트체크 안 하고"
@@ -120,11 +111,13 @@ async function main() {
     if (isFeedback) {
       const fs = require('fs')
       const feedbackLog = `${STATE_DIR}/feedback_log.jsonl`
+      const source = channelTexts.length > 0 ? 'telegram' : 'terminal'
       const entry = JSON.stringify({
         ts: new Date().toISOString(),
         prompt: prompt.substring(0, 200),
         turn: turnCount,
         patterns: matchedPatterns,
+        source,
       })
       try {
         fs.appendFileSync(feedbackLog, entry + '\n')
@@ -160,12 +153,26 @@ async function main() {
       // First run or no context info
     }
 
+    // === MEMORY SERVER (after feedback detection, may timeout) ===
+    let memoryContext = ''
+    try {
+      const result = await httpPost(`${MEMORY_API_URL}/memory/context`, {
+        session_id: sessionId,
+        project_id: projectId,
+        current_message: prompt,
+        max_memories: 5,
+      })
+      memoryContext = result.context_text || ''
+      await httpPost(`${MEMORY_API_URL}/memory/process`, {
+        session_id: sessionId,
+        project_id: projectId,
+      })
+    } catch {}
+
     // Build output
     const parts: string[] = []
 
-    // Memory context
-    const context = result.context_text || ''
-    if (context) parts.push(context)
+    if (memoryContext) parts.push(memoryContext)
 
     // If feedback detected, inject stronger reminder
     if (isFeedback) {
