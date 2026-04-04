@@ -54,6 +54,10 @@
 ## Hosting
 Firebase 전용 (Hosting, Firestore, Functions, Storage). WordPress 금지.
 
+## 외부 모델/에러/비용
+- 외부 모델 기본 매핑, 에러 유형별 참고 지식, 비용 추적: rules/architecture.md 참조.
+- API 호출 후 비용 로깅: `bash ~/.claude/scripts/log-api-cost.sh <service> <model> <cost> "<용도>"`
+
 ## Quality Gates [hook 강제: quality-gate.sh, verify-deploy.sh]
 - 코드 변경 → 테스트. 빌드 성공 → 커밋. 배포 → 브라우저 검증 + 외부 모델 검수.
 - 에러 해결 시 PITFALLS.md에 P-NNN 형식으로 기록 (증상/원인/해결/재발방지).
