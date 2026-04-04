@@ -33,10 +33,10 @@
 
 ## Tool Priority (비용순)
 1. Built-in: Read, Edit, Write, Glob, Grep, Bash (0 overhead)
-2. Bash: gh, firebase, playwright, ffmpeg, curl, powershell, opencode (0 MCP)
+2. Bash: gh, firebase, playwright, ffmpeg, curl, powershell (0 MCP)
 3. MCP: lazy-mcp 경유 (invoke_command). 설정: ~/.config/lazy-mcp/servers.json
 4. External API: curl 직접 호출
-- 편집장/작가 검토: OpenCode serve (localhost:4096) Bash 직접 호출. MCP 불필요.
+- 편집장/작가 검토: Antigravity CLI (`opencode run -m "google/antigravity-gemini-3.1-pro-high" "프롬프트"`) Bash 직접 호출. MCP 불필요. OpenCode serve 사용 금지.
 - 외부 모델은 무료/저비용 모델 사용 가능할 때 유료 모델 쓰지 않음
 
 ## Token Efficiency
