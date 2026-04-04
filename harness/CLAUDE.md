@@ -47,8 +47,8 @@
 
 ## Context & Session Awareness
 - 컨텍스트 확인: `bash $HOME/.claude/hooks/telegram-notify.sh heartbeat "내용"` 실행하면 현재 컨텍스트(K/%)와 Usage(5H/7D%)가 텔레그램으로 전송됨. "모르겠다" 말고 직접 실행하여 확인할 것.
-- 텔레그램 전송: `bash $HOME/.claude/hooks/telegram-notify.sh <event> "메시지"` (event: start/stop/heartbeat/error/compact/daily)
-- 대규모 작업 완료 시 또는 10턴 이상 진행 시 heartbeat으로 대표님께 상태 보고
+- 텔레그램 전송: `bash $HOME/.claude/hooks/telegram-notify.sh <event> "메시지"` (event: start/stop/heartbeat/error/compact/daily/done)
+- heartbeat = typing 표시만 (메시지 안 보냄). 작업 완료 시 `done` 이벤트로 보고.
 - 컨텍스트 압축(PostCompact) 발생 시 Telegram 자동 알림 발송됨
 - **compact 타이밍**: 자동 compact(75-80%)보다 65% 시점에 수동 `/compact "보존할 내용"` 실행이 품질 보존에 유리. heartbeat로 컨텍스트 확인 후 판단.
 - 세션 종료 전: `bash $HOME/.claude/hooks/telegram-notify.sh stop "요약"` 실행하여 종료 알림 발송

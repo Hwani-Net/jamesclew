@@ -171,6 +171,11 @@
           },
           {
             "type": "command",
+            "command": "bash -c 'bash $HOME/.claude/scripts/self-evolve.sh --apply 2>/dev/null'",
+            "timeout": 30000
+          },
+          {
+            "type": "command",
             "command": "bun \"$HOME/.claude/hooks/curation.ts\"",
             "timeout": 120000
           }

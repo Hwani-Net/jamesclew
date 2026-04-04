@@ -31,6 +31,11 @@ sed -i 's|stat -f %m "$cache_file"|stat -c %Y "$cache_file" 2>/dev/null || stat 
 # Patch 3: Fix date parsing — add GNU date fallback before macOS date
 sed -i 's|local reset_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S%z" "$mac_ts" "+%s" 2>/dev/null)|local reset_epoch=$(date -d "$normalized" "+%s" 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S%z" "$mac_ts" "+%s" 2>/dev/null)|g' "$SCRIPT"
 
+# Patch 4: Add stale cache fallback on rate limit
+if ! grep -q "stale cache as fallback" "$SCRIPT" 2>/dev/null; then
+  sed -i 's|    return 1\n}|    # Rate limited — use stale cache as fallback\n    if [[ -f "$cache_file" ]]; then\n        cat "$cache_file"\n        return 0\n    fi\n    return 1\n}|' "$SCRIPT"
+fi
+
 # Clear cache
 rm -f /tmp/.claude_usage_cache
 

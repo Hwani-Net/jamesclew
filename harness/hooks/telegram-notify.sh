@@ -238,9 +238,17 @@ ${EXTRA}
     ;;
 
   heartbeat)
+    # No message — just set typing indicator for bot status
+    set_typing
+    # Still check usage threshold (sends alert only at 50%+)
+    check_usage_threshold > /dev/null
+    ;;
+
+  done)
+    # Task completion — send message only on explicit "done" event
     USAGE=$(get_usage)
     CTX=$(get_context)
-    send_msg "💓 작업 진행 중
+    send_msg "✅ 작업 완료
 $(fmt_usage "$USAGE")
 $(fmt_context "$CTX")
 ${EXTRA}"

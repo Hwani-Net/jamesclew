@@ -48,7 +48,7 @@ done
 
 if [ "$FAIL" -eq 1 ]; then
   echo -e "🚨 Deploy verification FAILED\n${RESULTS}" >&2
-  bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat "❌ Deploy verification failed: ${HOSTING_URL}" 2>/dev/null
+  bash "$HOME/.claude/hooks/telegram-notify.sh" error "Deploy verification failed: ${HOSTING_URL}" 2>/dev/null
   echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY FAILED] ${HOSTING_URL} 라이브 검증 실패. 수정 후 재배포 필요. 검증 통과 전까지 대표님께 보고 금지.\"}}" >&2
   exit 2
 fi
@@ -69,7 +69,8 @@ if [ -f "$DESKTOP_IMG" ] && [ -f "$MOBILE_IMG" ]; then
 fi
 
 echo -e "✅ Deploy verification PASSED\n${RESULTS}" >&2
-bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat "✅ Deploy verified: ${HOSTING_URL}" 2>/dev/null
+# No telegram message on success — typing indicator only
+bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat 2>/dev/null
 
 if [ "$HAS_SCREENSHOTS" = "true" ]; then
   echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 검증 통과. [필수] Playwright 스크린샷이 ${SCREENSHOT_DIR}/ 에 저장됨. Read 도구로 deploy-desktop.png + deploy-mobile.png을 확인하고 디자인 5패스 검토를 완료한 후에만 대표님께 보고하세요.\"}}"
