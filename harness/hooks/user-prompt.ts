@@ -128,6 +128,12 @@ async function main() {
       if (ctxUsage) {
         const totalTokens = (ctxUsage.input_tokens || 0) + (ctxUsage.output_tokens || 0)
         contextPct = Math.round((totalTokens / ctxSize) * 100)
+        // Save context info for other tools to read
+        const fs = require('fs')
+        try {
+          fs.writeFileSync(`${STATE_DIR}/context_pct`, String(contextPct))
+          fs.writeFileSync(`${STATE_DIR}/context_tokens`, `${totalTokens}/${ctxSize}`)
+        } catch {}
       }
       // Check if we crossed a 20% milestone
       const fs = require('fs')
