@@ -13,11 +13,14 @@
 
 ## Blog Image Verification (필수)
 블로그 제품 이미지 삽입 시 반드시:
-1. 쿠팡 제품 페이지 썸네일을 Playwright로 캡처 (제조사 이미지 사용 금지)
-2. 각 제품을 별도 브라우저 인스턴스로 접속 (쿠팡 봇 차단 우회)
+1. 캡처 우선순위: og:image CDN 800x800 (1순위) → Playwright persistent context (2순위) → agent-browser CDP (3순위)
+2. 제조사 공식 이미지 사용 금지 — 쿠팡 제품 페이지 썸네일만 사용
 3. 저장 후 Read 도구로 이미지 내용을 직접 확인 (HTTP 200만으로 검증 완료 판단 금지)
 4. 파일 확장자와 실제 포맷 일치 확인 (PNG를 .jpg로 저장하면 브라우저에서 깨짐)
-5. 배포 후 Playwright fullPage 스크롤 스크린샷으로 5/5 렌더링 최종 확인
+5. Opus+Sonnet 서브에이전트 교차 검증으로 이미지-제품 매칭 확인
+6. **같은 글 내 이미지 크기 통일** — 소스 해상도가 달라도 CSS로 표시 크기 고정 (현재 500px center). 새 캡처 시 800x800 우선
+7. loading="lazy" 사용 금지 (PITFALLS P-001)
+8. 배포 후 agent-browser로 전체 페이지 이미지 로드 확인 (naturalWidth > 0)
 
 ## Multi-Pass Review Protocol (콘텐츠 품질 강제)
 결과물(블로그 글, 디자인, 코드)이 대표님께 보고되기 전 다단계 검토를 거침.

@@ -59,5 +59,11 @@ Firebase 전용 (Hosting, Firestore, Functions, Storage). WordPress 금지.
 - 에러 해결 시 PITFALLS.md에 P-NNN 형식으로 기록 (증상/원인/해결/재발방지).
 - 하네스 구조 변경 시 docs/adr/ADR-NNN.md 작성 (컨텍스트/결정/근거/결과). 축약 금지.
 
+## 규칙 관리 원칙
+- **상세 규칙**: `harness/rules/` 에 작성 (quality.md, architecture.md, security.md)
+- **CLAUDE.md**: 한 줄 요약 + `[hook 강제]` 태그 또는 rules/ 참조만. 상세 내용 직접 작성 금지.
+- **새 규칙 추가 시**: rules/ 파일에 추가 → CLAUDE.md에 참조 링크 → hook 강제 가능하면 hook 구현
+- **프로젝트 CLAUDE.md**: 프로젝트별 상세는 프로젝트 CLAUDE.md에. 글로벌 규칙은 harness/rules/ 참조.
+
 ## Project Override
 프로젝트 루트 CLAUDE.md가 이 글로벌 규칙보다 우선.
