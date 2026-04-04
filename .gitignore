@@ -1,3 +1,8 @@
 harness/keys/
 *.credentials*
 .claude/
+pipelines/*/dist/
+pipelines/*/.firebase/
+*.png
+node_modules/
+.env

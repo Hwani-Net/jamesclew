@@ -21,14 +21,6 @@
       "mcp__tavily__*",
       "mcp__windows-mcp__*",
       "mcp__plugin_telegram_telegram__*",
-      "mcp__persona-mcp__recommend-persona",
-      "mcp__persona-mcp__discover-persona-for-context",
-      "mcp__persona-mcp__compare-personas",
-      "mcp__persona-mcp__suggest-persona-transition",
-      "mcp__persona-mcp__explain-persona-fit",
-      "mcp__persona-mcp__analyze-persona-effectiveness",
-      "mcp__persona-mcp__get-recommendation-stats",
-      "mcp__stakeholder-mcp__*",
       "Plugin:telegram:*"
     ],
     "deny": [
@@ -69,6 +61,11 @@
             "command": "bash $HOME/.claude/hooks/quality-gate.sh pre-commit",
             "if": "Bash(git commit *)",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/irreversible-alert.sh",
+            "timeout": 10000
           }
         ]
       }
@@ -93,6 +90,11 @@
             "command": "bash $HOME/.claude/hooks/verify-deploy.sh",
             "if": "Bash(*firebase deploy*)",
             "timeout": 30000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/loop-detector.sh",
+            "timeout": 5000
           }
         ]
       },
@@ -117,6 +119,16 @@
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/quality-gate.sh post-test",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob|Grep|Agent|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/loop-detector.sh",
             "timeout": 5000
           }
         ]
@@ -166,7 +178,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh compact; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PostCompact\\\",\\\"additionalContext\\\":\\\"[CONTEXT RESTORED] JamesClaw Agent. 핵심규칙: 1) 즉시실행,할까요금지 2) Built-in>Bash>MCP 3) 토큰효율최우선 4) 에러3회재시도후보고 5) TodoWrite확인후중단작업이어서진행 6) CLAUDE.md재확인 7) 현재작업디렉토리와목표파악후진행\\\"}}\"'",
+            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh compact'",
             "timeout": 10000
           }
         ]

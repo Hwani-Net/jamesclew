@@ -86,167 +86,187 @@ function indexTemplate(posts) {
   // Collect unique categories
   const categories = [...new Set(sorted.map(p => p.category || '리뷰'))];
 
-  // Category chips
-  const catChips = categories.map(c => `<a href="#" class="cat-chip">${escapeHtml(c)}</a>`).join('');
+  // Category glow map
+  const glowMap = { '가전': 'blue', '생활용품': 'green', '뷰티/건강': 'pink', 'IT/디지털': 'purple' };
+  const getGlow = (cat) => glowMap[cat] || 'blue';
 
-  // All cards as grid
-  const allCards = sorted.map(p => {
+  // Category nav tabs
+  const catTabs = categories.map(c =>
+    `<a class="text-slate-400 font-medium hover:text-white transition-colors" href="#">${escapeHtml(c)}</a>`
+  ).join('\n            ');
+
+  // Bento grid cards — first card is 2x2 featured, rest alternate sizes
+  const bentoCards = sorted.map((p, i) => {
     const thumb = getThumb(p);
-    return `
-      <a href="/posts/${p.slug}/" class="grid-card">
-        ${thumb ? `<div class="grid-img"><img src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : '<div class="grid-img"></div>'}
-        <div class="grid-body">
-          <span class="chip">${escapeHtml(p.category || '리뷰')}</span>
-          <h3>${escapeHtml(p.title)}</h3>
-          <p>${escapeHtml(p.excerpt || '')}</p>
-          <div class="meta">${new Date(p.createdAt).toLocaleDateString('ko-KR')}</div>
+    const cat = p.category || '리뷰';
+    const glow = getGlow(cat);
+    const glowColors = { blue: 'blue-500', green: 'emerald-500', pink: 'pink-500', purple: 'purple-500' };
+    const gc = glowColors[glow] || 'blue-500';
+
+    if (i === 0) {
+      // 2x2 large featured card
+      return `<a href="/posts/${p.slug}/" class="md:col-span-2 md:row-span-2 group bento-glow-${glow} relative overflow-hidden bg-[#1c1c1e] rounded-[2.5rem] border border-white/5 transition-all duration-500 cursor-pointer block">
+        ${thumb ? `<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy">` : '<div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30"></div>'}
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+        <div class="absolute bottom-8 left-8 right-8 space-y-4">
+          <span class="px-3 py-1 rounded bg-${gc}/20 text-${gc.replace('500','300')} text-[10px] font-black uppercase tracking-widest border border-${gc}/30">${escapeHtml(cat)}</span>
+          <h3 class="text-3xl lg:text-4xl font-black text-white leading-tight">${escapeHtml(p.title)}</h3>
+          <p class="text-slate-300 line-clamp-2 max-w-lg">${escapeHtml(p.excerpt || '')}</p>
         </div>
       </a>`;
+    }
+
+    if (i % 4 === 1 || i % 4 === 2) {
+      // 1x1 small cards
+      return `<a href="/posts/${p.slug}/" class="group bento-glow-${glow} bg-[#1c1c1e] rounded-[2rem] p-6 border border-white/5 transition-all duration-500 cursor-pointer flex flex-col justify-between block">
+        ${thumb ? `<div class="aspect-square rounded-2xl overflow-hidden mb-4"><img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : '<div class="aspect-square rounded-2xl bg-surface-container-high mb-4"></div>'}
+        <h3 class="font-bold text-white leading-tight">${escapeHtml(p.title)}</h3>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-slate-500 text-[10px]">${escapeHtml(cat)}</span>
+        </div>
+      </a>`;
+    }
+
+    // 2x1 wide cards (col-span-2)
+    return `<a href="/posts/${p.slug}/" class="md:col-span-2 group bento-glow-${glow} relative overflow-hidden bg-[#1c1c1e] rounded-[2rem] border border-white/5 transition-all duration-500 cursor-pointer flex block">
+      ${thumb ? `<div class="w-2/5 relative h-full"><img class="absolute inset-0 w-full h-full object-cover" src="${thumb}" alt="${escapeHtml(p.title)}" loading="lazy"></div>` : '<div class="w-2/5 bg-surface-container-high"></div>'}
+      <div class="flex-1 p-8 flex flex-col justify-center gap-3">
+        <span class="w-fit px-3 py-1 rounded-full bg-${gc}/10 text-${gc.replace('500','400')} text-[10px] font-black uppercase">${escapeHtml(cat)}</span>
+        <h3 class="text-2xl font-black text-white">${escapeHtml(p.title)}</h3>
+        <p class="text-slate-400 text-sm line-clamp-2">${escapeHtml(p.excerpt || '')}</p>
+      </div>
+    </a>`;
+  }).join('\n');
+
+  // TOP 5 sidebar
+  const top5 = sorted.slice(0, 5).map((p, i) => {
+    const rank = String(i + 1).padStart(2, '0');
+    const textColor = i === 0 ? 'text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-transparent opacity-80' : 'text-transparent bg-clip-text bg-gradient-to-b from-slate-600 to-transparent opacity-50';
+    const titleColor = i === 0 ? 'text-white' : 'text-slate-400';
+    return `<a href="/posts/${p.slug}/" class="flex items-start gap-6 group cursor-pointer">
+      <span class="text-5xl font-black ${textColor} leading-none">${rank}</span>
+      <div class="flex-1 pt-1">
+        <p class="${titleColor} font-bold text-sm leading-snug group-hover:text-blue-400 transition-colors">${escapeHtml(p.title)}</p>
+      </div>
+    </a>`;
+  }).join('\n');
+
+  // Category pill tags
+  const catPills = categories.map(c => {
+    const glow = getGlow(c);
+    return `<span class="px-5 py-2.5 rounded-full bg-slate-800 text-slate-400 text-xs font-bold cursor-pointer hover:text-white hover:bg-slate-700 transition-all border border-white/5">${escapeHtml(c)}</span>`;
   }).join('\n');
 
   return `<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${SITE_NAME} — 생활 꿀팁 & 비교 리뷰</title>
-  <meta name="description" content="가성비 제품 비교, 생활 꿀팁, 실속 리뷰. 다나와 최저가 기준 객관적 비교.">
-  <link rel="canonical" href="${SITE_URL}/">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="${SITE_NAME} — 생활 꿀팁 & 비교 리뷰">
-  <meta property="og:url" content="${SITE_URL}/">
-  ${featuredThumb ? `<meta property="og:image" content="${SITE_URL}${featuredThumb}">` : ''}
-  ${ADSENSE.pubId ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE.pubId}" crossorigin="anonymous"></script>` : ''}
-  <style>
-    :root { --max-w: 1080px; --fg: #334155; --bg: #faf8f5; --accent: #e879a0; --accent-dark: #d4567a; --accent-light: #fdf2f5; --gray: #94a3b8; --card-bg: #fff; --radius: 24px; --shadow: 0 2px 12px rgba(0,0,0,.03); --shadow-hover: 0 16px 40px rgba(0,0,0,.08); --warm: #f9e4c8; }
-    @media (prefers-color-scheme: dark) { :root { --fg: #e2e8f0; --bg: #1a1520; --accent: #f0a0bf; --accent-dark: #e879a0; --accent-light: #2a1f2e; --gray: #94a3b8; --card-bg: #231e2a; --warm: #2a2030; } }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); line-height: 1.7; -webkit-font-smoothing: antialiased; }
-    a { text-decoration: none; color: inherit; }
-    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
-
-    /* Header */
-    .site-header { background: var(--card-bg); border-bottom: 1px solid rgba(0,0,0,.04); padding: 0.8rem 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
-    .site-header .container { display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-size: 1.3rem; font-weight: 800; color: var(--fg); letter-spacing: -0.02em; }
-    .logo span { color: var(--accent); }
-    .site-header nav { display: flex; gap: 1.2rem; }
-    .site-header nav a { color: var(--gray); font-size: 0.85rem; font-weight: 500; transition: color .15s; }
-    .site-header nav a:hover { color: var(--accent); }
-
-    /* Hero */
-    .hero { background: linear-gradient(135deg, #fdf2f5 0%, #fce7f3 30%, #f0e4ff 70%, #ede9fe 100%); color: var(--fg); padding: 4rem 0 3rem; position: relative; overflow: hidden; }
-    @media (prefers-color-scheme: dark) { .hero { background: linear-gradient(135deg, #2a1f2e 0%, #1e1528 50%, #1a1028 100%); color: #e2e8f0; } }
-    .hero::after { content: ''; position: absolute; right: -60px; top: -30px; width: 280px; height: 280px; border-radius: 50%; background: rgba(232,121,160,.08); }
-    .hero-content { display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
-    .hero-text h2 { font-size: 2.4rem; font-weight: 900; line-height: 1.25; margin-bottom: 0.8rem; letter-spacing: -0.03em; }
-    .hero-text p { font-size: 1.05rem; color: var(--gray); max-width: 420px; margin-bottom: 1.5rem; }
-    .hero-stats { display: flex; gap: 1.2rem; }
-    .stat-box { background: var(--card-bg); border-radius: 20px; padding: 1.2rem 1.5rem; text-align: center; min-width: 110px; box-shadow: var(--shadow); }
-    .stat-num { font-size: 2rem; font-weight: 900; color: var(--accent); }
-    .stat-label { font-size: 0.72rem; color: var(--gray); margin-top: 0.2rem; }
-
-    /* Category Chips */
-    .cat-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .cat-chip { background: var(--card-bg); color: var(--fg); font-size: 0.8rem; font-weight: 600; padding: 0.45rem 1rem; border-radius: 99px; box-shadow: var(--shadow); transition: all .2s; border: 1px solid rgba(0,0,0,.04); }
-    .cat-chip:hover { background: var(--accent); color: #fff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,121,160,.2); }
-
-    /* Section Title */
-    .section-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; letter-spacing: -0.01em; }
-
-    /* Chip */
-    .chip { display: inline-block; background: var(--accent); color: #fff; font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 99px; letter-spacing: 0.5px; }
-
-    /* Grid Cards */
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
-    .grid-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: box-shadow .25s, transform .25s; }
-    .grid-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-4px); }
-    .grid-img { aspect-ratio: 4/3; overflow: hidden; background: linear-gradient(135deg, #fdf8f4, #f5eee8); display: flex; align-items: center; justify-content: center; }
-    @media (prefers-color-scheme: dark) { .grid-img { background: linear-gradient(135deg, #231e2a, #1a1520); } }
-    .grid-img img { width: 65%; height: 65%; object-fit: contain; transition: transform .3s; }
-    .grid-card:hover .grid-img img { transform: scale(1.08); }
-    .grid-body { padding: 1.3rem; }
-    .grid-body h3 { font-size: 1rem; font-weight: 700; line-height: 1.4; margin: 0.5rem 0 0.4rem; }
-    .grid-body p { color: var(--gray); font-size: 0.83rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.5rem; }
-    .meta { color: var(--gray); font-size: 0.75rem; }
-
-    /* Footer */
-    .site-footer { background: var(--card-bg); border-top: 1px solid rgba(0,0,0,.04); padding: 2rem 0; margin-top: 3rem; }
-    .footer-inner { display: flex; justify-content: space-between; align-items: center; }
-    .footer-brand { font-weight: 800; font-size: 1rem; color: var(--fg); }
-    .footer-brand span { color: var(--accent); }
-    .footer-links { display: flex; gap: 1rem; }
-    .footer-links a { color: var(--gray); font-size: 0.82rem; }
-    .footer-links a:hover { color: var(--accent); }
-    .footer-copy { text-align: center; color: var(--gray); font-size: 0.72rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,.04); }
-
-    @media (max-width: 768px) {
-      .hero-text h2 { font-size: 1.7rem; }
-      .hero-content { flex-direction: column; text-align: center; }
-      .hero-stats { justify-content: center; }
-      .hero-text p { margin: 0 auto 1.5rem; }
-      .grid { grid-template-columns: 1fr; }
-      .footer-inner { flex-direction: column; gap: 0.8rem; text-align: center; }
-      .cat-bar { justify-content: center; }
-    }
-    @media (min-width: 769px) and (max-width: 1024px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>${SITE_NAME} — 똑똑한 소비의 시작</title>
+<meta name="description" content="가성비 제품 비교, 생활 꿀팁, 실속 리뷰. 정직한 비교 리뷰와 실시간 최저가.">
+<link rel="canonical" href="${SITE_URL}/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${SITE_NAME} — 똑똑한 소비의 시작">
+<meta property="og:url" content="${SITE_URL}/">
+${featuredThumb ? `<meta property="og:image" content="${SITE_URL}${featuredThumb}">` : ''}
+${ADSENSE.pubId ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE.pubId}" crossorigin="anonymous"></script>` : ''}
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = { darkMode: "class", theme: { extend: {
+  colors: { surface: "#131315", "surface-container": "#1f1f21", "surface-container-high": "#2a2a2c", "surface-container-low": "#1b1b1d" },
+  borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem" },
+  fontFamily: { headline: ["Manrope","sans-serif"], body: ["Plus Jakarta Sans","sans-serif"], display: ["Archivo Black","sans-serif"] }
+}}}
+</script>
+<style>
+  body { background-color: #0e0e10; color: #e4e2e4; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .bento-glow-blue:hover { box-shadow: 0 0 30px rgba(77, 142, 255, 0.2); border-color: rgba(77, 142, 255, 0.3); }
+  .bento-glow-green:hover { box-shadow: 0 0 30px rgba(52, 211, 153, 0.2); border-color: rgba(52, 211, 153, 0.3); }
+  .bento-glow-pink:hover { box-shadow: 0 0 30px rgba(244, 114, 182, 0.2); border-color: rgba(244, 114, 182, 0.3); }
+  .bento-glow-purple:hover { box-shadow: 0 0 30px rgba(167, 139, 250, 0.2); border-color: rgba(167, 139, 250, 0.3); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 </head>
-<body>
-  <header class="site-header">
-    <div class="container">
-      <a href="/" class="logo"><span>스마트</span>리뷰</a>
-      <nav>
-        <a href="/">홈</a>
-        <a href="/sitemap.xml">사이트맵</a>
-      </nav>
+<body class="selection:bg-blue-500/30">
+<!-- Nav -->
+<nav class="fixed top-0 w-full z-50 bg-[#131315]/80 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+  <div class="flex justify-between items-center px-8 h-16 max-w-full">
+    <a href="/" class="text-2xl font-display text-white tracking-tighter uppercase">스마트리뷰</a>
+    <div class="hidden md:flex gap-8 items-center font-['Manrope'] font-bold text-sm tracking-tight">
+      ${catTabs}
     </div>
-  </header>
-
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-text">
-          <h2>사기 전에 먼저,<br>비교해봤어요.</h2>
-          <p>매번 뭘 사야 할지 고민되시죠? 다나와 최저가 기준으로 가성비 제품을 꼼꼼하게 비교해드려요.</p>
-          <div class="cat-bar">${catChips}</div>
-        </div>
-        <div class="hero-stats">
-          <div class="stat-box">
-            <div class="stat-num">${sorted.length}</div>
-            <div class="stat-label">비교 리뷰</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-num">${sorted.length * 5}</div>
-            <div class="stat-label">비교 제품</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="container">
-    <div class="section-title">최신 리뷰</div>
-    <div class="grid">
-      ${allCards || '<p>아직 게시글이 없습니다.</p>'}
+    <div class="flex items-center gap-4">
+      <span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-white transition-all">search</span>
+      <span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-white transition-all md:hidden">menu</span>
     </div>
   </div>
+</nav>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-inner">
-        <div class="footer-brand"><span>스마트</span>리뷰</div>
-        <div class="footer-links">
-          <a href="/sitemap.xml">사이트맵</a>
+<main class="pt-24 pb-20 px-6 lg:px-12 max-w-[1440px] mx-auto space-y-12">
+  <!-- Hero -->
+  ${featured ? `<a href="/posts/${featured.slug}/" class="block relative group cursor-pointer overflow-hidden rounded-[2.5rem] bg-surface-container-low aspect-[21/9] min-h-[400px] lg:min-h-[500px]">
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10"></div>
+    <div class="absolute -bottom-20 -left-20 w-[60%] h-[60%] bg-blue-600/20 blur-[120px] rounded-full z-0 group-hover:bg-blue-500/30 transition-all duration-700"></div>
+    <div class="absolute -bottom-20 -right-20 w-[60%] h-[60%] bg-purple-600/20 blur-[120px] rounded-full z-0 group-hover:bg-purple-500/30 transition-all duration-700"></div>
+    ${featuredThumb ? `<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${featuredThumb}" alt="${escapeHtml(featured.title)}" loading="eager">` : ''}
+    <div class="absolute top-10 left-10 z-20">
+      <span class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-black tracking-[0.2em] uppercase">BEST PICK</span>
+    </div>
+    <div class="absolute bottom-10 lg:bottom-16 left-8 lg:left-16 right-8 lg:right-16 z-20 space-y-4 lg:space-y-6">
+      <h1 class="font-headline text-3xl lg:text-6xl font-extrabold text-white leading-none tracking-tighter max-w-4xl">${escapeHtml(featured.title)}</h1>
+      <p class="text-slate-300 text-lg lg:text-xl font-body max-w-2xl opacity-80">${escapeHtml(featured.excerpt || '')}</p>
+    </div>
+  </a>` : ''}
+
+  <!-- Content + Sidebar -->
+  <div class="flex flex-col lg:flex-row gap-12">
+    <!-- Bento Grid -->
+    <div class="flex-1">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-[280px] gap-6">
+        ${bentoCards}
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-full lg:w-80 space-y-8">
+      <div class="bg-[#1B1B1D] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
+        <div class="mb-10">
+          <h2 class="font-headline font-black text-blue-400 text-sm tracking-[0.2em] uppercase">TOP 5 REVIEWS</h2>
+          <p class="text-slate-500 text-xs mt-1">가장 많이 읽힌 리뷰</p>
+        </div>
+        <div class="space-y-8">
+          ${top5}
         </div>
       </div>
-      <div class="footer-copy">&copy; ${new Date().getFullYear()} ${SITE_NAME}. 다나와 최저가 기준 객관적 비교 리뷰.</div>
+      <div class="bg-[#1B1B1D] rounded-[2.5rem] p-8 border border-white/5">
+        <h2 class="font-headline font-black text-slate-500 text-xs tracking-[0.2em] uppercase mb-6">CATEGORIES</h2>
+        <div class="flex flex-wrap gap-2">
+          ${catPills}
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full border-t border-white/5 mt-20 bg-[#0e0e10]">
+  <div class="flex flex-col items-center py-20 px-8 w-full max-w-[1440px] mx-auto">
+    <div class="text-2xl font-display text-white mb-2 tracking-tighter">스마트리뷰</div>
+    <p class="text-slate-500 text-sm font-body mb-12">똑똑한 소비의 시작 — 정직한 리뷰와 실시간 최저가</p>
+    <div class="flex flex-wrap justify-center gap-10 mb-12">
+      <a class="text-xs uppercase tracking-[0.2em] text-slate-500 hover:text-blue-400 transition-colors font-bold" href="/sitemap.xml">사이트맵</a>
+      <a class="text-xs uppercase tracking-[0.2em] text-slate-500 hover:text-blue-400 transition-colors font-bold" href="#">이용약관</a>
+      <a class="text-xs uppercase tracking-[0.2em] text-slate-500 hover:text-blue-400 transition-colors font-bold" href="#">개인정보처리방침</a>
     </div>
-  </footer>
-</body>
-</html>`;
+    <div class="text-[10px] uppercase tracking-[0.3em] text-slate-600 font-bold opacity-40">
+      &copy; ${new Date().getFullYear()} SMART REVIEW. ALL RIGHTS RESERVED.
+    </div>
+  </div>
+</footer>
+</body></html>`;
 }
 
 function escapeHtml(str) {

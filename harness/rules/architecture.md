@@ -10,8 +10,9 @@ Built-in > Bash commands > MCP servers (비용순)
 
 ## Tool Budget
 Tool 50개 이하 유지 (230+에서 서브에이전트 실패, 50~100이 안전 범위).
-상시: Tavily(5), Perplexity search(1), persona-mcp(7), stakeholder-mcp(9), Telegram(4)
-온디맨드: Stitch(12), Context7, Windows-MCP, Firebase
+상시: Tavily(5), Perplexity search(1), Telegram(4) = 10개
+온디맨드: Stitch MCP (디자인 시만 등록→완료 후 제거), Context7, Windows-MCP
+제거됨: persona-mcp(7), stakeholder-mcp(9) — 실사용 대비 도구 점유 과다. 편집장 검토는 OpenCode serve Bash 직접 호출로 대체.
 
 ## Hosting & Infrastructure
 모든 웹 프로젝트는 Firebase 기반으로 통일.

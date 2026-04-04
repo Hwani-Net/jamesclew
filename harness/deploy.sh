@@ -21,11 +21,14 @@ mkdir -p "$TARGET/rules"
 cp "$SCRIPT_DIR/rules/"*.md "$TARGET/rules/"
 echo "✅ rules/ ($(ls "$SCRIPT_DIR/rules/"*.md | wc -l)개)"
 
-# Hooks
+# Hooks (sh + ts)
 mkdir -p "$TARGET/hooks"
 cp "$SCRIPT_DIR/hooks/"*.sh "$TARGET/hooks/"
 chmod +x "$TARGET/hooks/"*.sh
-echo "✅ hooks/ ($(ls "$SCRIPT_DIR/hooks/"*.sh | wc -l)개)"
+if ls "$SCRIPT_DIR/hooks/"*.ts 1>/dev/null 2>&1; then
+  cp "$SCRIPT_DIR/hooks/"*.ts "$TARGET/hooks/"
+fi
+echo "✅ hooks/ ($(ls "$SCRIPT_DIR/hooks/"*.sh "$SCRIPT_DIR/hooks/"*.ts 2>/dev/null | wc -l)개)"
 
 # Scripts
 mkdir -p "$TARGET/scripts"
