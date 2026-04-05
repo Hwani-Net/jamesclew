@@ -71,6 +71,13 @@
 | 4 | 인터랙션 | hover 효과, 전환 애니메이션, 접근성 |
 | 5 | 렌더링 검증 | Playwright 풀페이지 스크린샷, 모바일/데스크톱 |
 
+## Regression Guard (회귀 방지) [hook 강제: regression-guard.sh]
+파일 수정 시 의도하지 않은 회귀를 자동 감지.
+- Write/Edit 후 git diff에서 삭제량이 추가량의 2배 이상 + 10줄 초과 → 경고 주입
+- 수정 요청 시 Edit(부분 수정) 우선. Write(전체 덮어쓰기)는 최소화
+- 과거 버전 복원(git checkout, 백업 복사) 시 반드시 현재 diff와 비교 후 진행
+- 회귀 감지 시 PITFALLS에 기록
+
 ## PITFALLS Auto-Record (피드백 → 실수 기록 자동화) [hook 강제: user-prompt.ts]
 대표님 지적 → 에이전트 동의 시 PITFALLS.md에 P-NNN 형식으로 즉시 기록.
 - user-prompt.ts가 피드백 패턴 감지 시 PITFALLS 기록 지시를 자동 주입

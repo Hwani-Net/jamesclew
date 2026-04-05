@@ -120,6 +120,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/quality-gate.sh post-edit",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/regression-guard.sh",
+            "timeout": 5000
           }
         ]
       },
