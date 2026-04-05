@@ -71,6 +71,13 @@
 | 4 | 인터랙션 | hover 효과, 전환 애니메이션, 접근성 |
 | 5 | 렌더링 검증 | Playwright 풀페이지 스크린샷, 모바일/데스크톱 |
 
+## Test Manipulation Guard [hook 강제: test-manipulation-guard.sh]
+테스트 파일만 수정하고 소스를 안 고치는 패턴(#15 테스트 조작) 자동 감지.
+- 테스트 파일(*.test.*, *.spec.*, __tests__/) 수정 시 소스 파일 수정 여부 교차 확인
+- 테스트만 수정 + 소스 0개 → "테스트 조작 ALERT" 경고 주입
+- 테스트 수정 > 소스 수정 → "테스트 조작 WARN" 경고 주입
+- 금지: assertion 약화, mock 과다 사용, try-catch로 에러 숨기기, assertTrue(true)
+
 ## Change Tracker & Scope Guard [hook 강제: change-tracker.sh]
 세션 내 모든 파일 변경을 추적하고 범위 이탈을 감지.
 - 매 Write/Edit 후 변경 파일을 session_changes.log에 기록
