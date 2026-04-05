@@ -237,8 +237,13 @@ async function main() {
       console.log(JSON.stringify(output))
     }
 
-  } catch {
-    // Never crash
+  } catch (e: any) {
+    // Log errors for debugging but never crash
+    try {
+      const fs = require('fs')
+      fs.appendFileSync(`${STATE_DIR}/user-prompt-errors.log`,
+        `[${new Date().toISOString()}] ${e?.message || e}\n`)
+    } catch {}
   }
 }
 
