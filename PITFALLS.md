@@ -92,3 +92,13 @@
 - **원인**: 캐시 TTL(30분) 만료 + throttle(10분) 내 재시도 불가 → stale 캐시를 그대로 사용
 - **해결**: 캐시 삭제 후 다음 statusline 호출에서 갱신
 - **재발 방지**: usage 보고 시 resets_at 시간을 현재시각과 비교. 지났으면 "stale 데이터" 명시
+
+---
+
+## [P-010] MCP 연결 끊김 시 재연결 시도 없이 바로 대체 수단 전환
+
+- **발견**: 2026-04-05
+- **증상**: lazy-mcp가 "Connection closed" 에러 반환. 바로 WebSearch로 전환하여 진행
+- **원인**: MCP 끊김 = 일시적 장애일 수 있음. 재연결(reconnect) 시도 없이 포기한 것은 도구 활용 미숙
+- **해결**: 대표님이 수동으로 MCP reconnect 처리
+- **재발 방지**: MCP 연결 끊김 시 ① reconnect 시도 (lazy-mcp 재호출 or `claude mcp` 명령) ② 1회 재시도 ③ 그래도 실패 시에만 대체 수단 전환

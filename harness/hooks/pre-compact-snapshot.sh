@@ -33,7 +33,7 @@ $([ -n "$GIT_STATUS" ] && echo -e "\n\`\`\`\n$GIT_STATUS\n\`\`\`")
 $(cat "$STATE_DIR/context_milestone" 2>/dev/null && echo "% milestone" || echo "unknown")
 EOF
 
-# Inject snapshot as additionalContext so it survives compact
+# Inject snapshot via systemMessage (PreCompact uses top-level fields, not hookSpecificOutput)
 SNAPSHOT_CONTENT=$(cat "$SNAPSHOT_FILE" | head -c 2000 | sed 's/"/\\"/g' | tr '\n' ' ')
 
-echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreCompact\",\"additionalContext\":\"[PRE-COMPACT SNAPSHOT] $SNAPSHOT_CONTENT\"}}"
+echo "{\"systemMessage\":\"[PRE-COMPACT SNAPSHOT] $SNAPSHOT_CONTENT\"}"

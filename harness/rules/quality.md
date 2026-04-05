@@ -67,6 +67,12 @@
 | 4 | 인터랙션 | hover 효과, 전환 애니메이션, 접근성 |
 | 5 | 렌더링 검증 | Playwright 풀페이지 스크린샷, 모바일/데스크톱 |
 
+## PITFALLS Auto-Record (피드백 → 실수 기록 자동화) [hook 강제: user-prompt.ts]
+대표님 지적 → 에이전트 동의 시 PITFALLS.md에 P-NNN 형식으로 즉시 기록.
+- user-prompt.ts가 피드백 패턴 감지 시 PITFALLS 기록 지시를 자동 주입
+- 기록 필수 항목: 증상, 원인, 해결, 재발 방지
+- 기록하지 않으면 forgot_record 패턴으로 재감지 → 반복 지적
+
 ## Self-Healing
 1. 에러 메시지 정독 2. 근본 원인 파악 3. 수정 적용
 4. 검증 5. 실패 시 3회 대안 시도 6. 3회 실패 후 보고
