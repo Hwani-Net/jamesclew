@@ -71,6 +71,13 @@
 | 4 | 인터랙션 | hover 효과, 전환 애니메이션, 접근성 |
 | 5 | 렌더링 검증 | Playwright 풀페이지 스크린샷, 모바일/데스크톱 |
 
+## Change Tracker & Scope Guard [hook 강제: change-tracker.sh]
+세션 내 모든 파일 변경을 추적하고 범위 이탈을 감지.
+- 매 Write/Edit 후 변경 파일을 session_changes.log에 기록
+- 15개 이상 파일 수정 시 스코프 크리프 경고 주입
+- CWD와 다른 드라이브의 파일 수정 시 "잘못된 파일?" 경고
+- 세션 종료 시 변경 파일 전체 목록 확인 가능
+
 ## Regression Guard (회귀 방지) [hook 강제: regression-guard.sh]
 파일 수정 시 의도하지 않은 회귀를 자동 감지.
 - Write/Edit 후 git diff에서 삭제량이 추가량의 2배 이상 + 10줄 초과 → 경고 주입
