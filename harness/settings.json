@@ -164,7 +164,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun \"$HOME/.claude/hooks/user-prompt.ts\"",
+            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/user-prompt.ts\"",
             "timeout": 10000
           }
         ]
@@ -186,7 +186,7 @@
           },
           {
             "type": "command",
-            "command": "bun \"$HOME/.claude/hooks/curation.ts\"",
+            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/curation.ts\"",
             "timeout": 120000
           }
         ]
@@ -212,7 +212,7 @@
           },
           {
             "type": "command",
-            "command": "bun \"$HOME/.claude/hooks/curation.ts\"",
+            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/curation.ts\"",
             "timeout": 120000
           },
           {
@@ -233,7 +233,7 @@
           },
           {
             "type": "command",
-            "command": "bun \"$HOME/.claude/hooks/session-start.ts\"",
+            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
           }
         ]
@@ -249,7 +249,7 @@
           },
           {
             "type": "command",
-            "command": "bun \"$HOME/.claude/hooks/session-start.ts\"",
+            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
           }
         ]

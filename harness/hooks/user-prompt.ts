@@ -68,7 +68,11 @@ async function main() {
   if (process.env.MEMORY_CURATOR_ACTIVE === '1') return
 
   try {
-    const inputText = await Bun.stdin.text()
+    const inputText = await new Promise<string>((resolve) => {
+      let data = ''
+      process.stdin.on('data', (chunk: Buffer) => { data += chunk.toString() })
+      process.stdin.on('end', () => resolve(data))
+    })
     const input = JSON.parse(inputText)
 
     const sessionId = input.session_id || 'unknown'
