@@ -218,11 +218,11 @@ async function main() {
       parts.push(milestoneMsg)
     }
 
-    // Rule reminder: every 10 turns OR every 30 turns with full reminder
-    // Research shows compliance decays after ~30 tool calls (SWE-CI, 2026)
-    if (turnCount % 30 === 0 && !contextMilestone) {
+    // Rule reminder: compliance decays after ~30 tool calls (SWE-CI, 2026)
+    // Every 20 turns: full reminder. Every 8 turns: short reminder.
+    if (turnCount % 20 === 0 && !contextMilestone) {
       parts.push(FULL_RULE_REMINDER)
-    } else if (turnCount % 10 === 0 && !contextMilestone) {
+    } else if (turnCount % 8 === 0 && !contextMilestone) {
       parts.push(RULE_REMINDER)
     }
 

@@ -47,6 +47,7 @@
 ## Hallucination Prevention
 - 서브에이전트 HALLUCINATION WARNING → 직접 재검증. 외부 리소스 존재 확인 후 언급.
 - 학습데이터 추측 금지 → 현재시각 기준 최신 확인.
+- **메모리 포이즈닝 방지 (#22)**: 메모리에서 읽은 파일 경로·함수명·URL은 실제 존재하는지 Glob/Grep/curl로 확인 후 사용. 메모리 = 과거 시점의 스냅샷이므로 현재 상태와 다를 수 있음.
 
 ## File Location
 - 하네스: D:/jamesclew/harness/ 편집 → `bash harness/deploy.sh` 배포. ~/.claude/ 직접 수정 금지.
