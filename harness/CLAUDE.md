@@ -61,7 +61,7 @@ Firebase 전용 (Hosting, Firestore, Functions, Storage). WordPress 금지.
 
 ## Quality Gates [hook 강제: quality-gate.sh, verify-deploy.sh]
 - 코드 변경 → 테스트. 빌드 성공 → 커밋. 배포 → 브라우저 검증 + 외부 모델 검수.
-- 에러 해결 시 PITFALLS.md에 P-NNN 형식으로 기록 (증상/원인/해결/재발방지).
+- 에러 해결 시 `~/.claude/PITFALLS.md`에 P-NNN 형식으로 기록 (증상/원인/해결/재발방지). 전역 파일 — 모든 프로젝트의 실수가 누적됨.
 - 대표님 지적 동의 시 PITFALLS 자동 기록. [hook 강제: user-prompt.ts 피드백 감지 → 기록 지시 주입]
 - 하네스 구조 변경 시 docs/adr/ADR-NNN.md 작성 (컨텍스트/결정/근거/결과). 축약 금지.
 

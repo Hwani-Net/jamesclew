@@ -44,5 +44,16 @@ mkdir -p "$TARGET/agents"
 cp "$SCRIPT_DIR/agents/"*.md "$TARGET/agents/"
 echo "✅ agents/ ($(ls "$SCRIPT_DIR/agents/"*.md | wc -l)개)"
 
+# PITFALLS (전역 실수 기록)
+cp "$SCRIPT_DIR/PITFALLS.md" "$TARGET/PITFALLS.md"
+echo "✅ PITFALLS.md (전역)"
+
+# ADR (설계 결정 기록)
+if [ -d "$SCRIPT_DIR/../docs/adr" ]; then
+  mkdir -p "$TARGET/docs/adr"
+  cp "$SCRIPT_DIR/../docs/adr/"*.md "$TARGET/docs/adr/"
+  echo "✅ docs/adr/"
+fi
+
 echo ""
 echo "🎉 배포 완료. reload window 후 적용됩니다."
