@@ -54,7 +54,7 @@ HAS_SEARCH=$(echo "$LAST_RESPONSE" | grep -cE '검색|조사|확인|tavily|perpl
 HAS_SEARCH=${HAS_SEARCH:-0}
 
 if [ "${HAS_IMPOSSIBLE:-0}" -gt 0 ] 2>/dev/null && [ "${HAS_SEARCH:-0}" -eq 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -lt 2 ] 2>/dev/null; then
-  echo "{\"decision\":\"block\",\"reason\":\"섣부른 단정 감지: 불가능하다고 결론냈으나 검증이 부족합니다. 1) 웹 검색으로 확인 2) npm search 'keyword mcp'로 MCP 서버 검색 후 lazy-mcp에 등록 3) 3회 다른 접근 시도. 전부 실패 후에만 불가 보고.\"}"
+  echo "{\"decision\":\"block\",\"reason\":\"섣부른 단정 감지: 불가능하다고 결론냈으나 검증이 부족합니다. 1) 웹 검색(Tavily/Perplexity)으로 확인 2) npm search로 MCP 서버 검색 후 claude mcp add로 등록 3) 3회 다른 접근 시도. 전부 실패 후에만 불가 보고.\"}"
   exit 0
 fi
 
