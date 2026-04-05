@@ -24,7 +24,7 @@
 4. 해결 불가 시에만 대표님께 질문
 5. 완성형까지 반복 — Multi-Pass Review (quality.md). 최소 2라운드.
 6. 새 작업 시작 전 `~/.agent/skills/` 스킬 검색. 있으면 따름.
-7. 디자인: 벤치마킹 레퍼런스 기반. 기존 스타일 답습 금지.
+7. 디자인: 벤치마킹 레퍼런스 기반. 기존 스타일 답습 금지. 레퍼런스 소스: godly.website, motionsites.ai, NotebookLM 디자인 노트북.
 
 ## Tool Priority (비용순)
 1. Built-in: Read, Edit, Write, Glob, Grep, Bash
