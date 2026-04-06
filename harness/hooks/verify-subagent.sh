@@ -9,7 +9,7 @@ if [ -z "$LAST_MSG" ]; then
   exit 0
 fi
 
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 LOG_FILE="$STATE_DIR/hallucination-check.log"
 

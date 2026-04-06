@@ -7,7 +7,7 @@
 # Input: stdin JSON from PreToolUse hook
 
 INPUT=$(cat)
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 
 CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)

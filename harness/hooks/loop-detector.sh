@@ -7,7 +7,7 @@
 # Input: stdin JSON from PostToolUse hook
 
 INPUT=$(cat)
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 CALL_LOG="$STATE_DIR/tool_call_log"
 

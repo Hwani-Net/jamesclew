@@ -11,7 +11,7 @@
 # This catches: full-file overwrites, accidental reverts, copy-paste from old versions
 
 INPUT=$(cat)
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 
 # Extract file path from tool input

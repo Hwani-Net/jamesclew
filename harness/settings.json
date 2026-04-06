@@ -33,7 +33,7 @@
       "Bash(*&&*rm -rf*)",
       "Bash(*;*rm -rf*)"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "bypassPermissions"
   },
   "hooks": {
     "PreToolUse": [
@@ -49,6 +49,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/verify-memory-write.sh",
             "timeout": 30000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/enforce-build-transition.sh",
+            "timeout": 5000
           }
         ]
       },
@@ -65,6 +70,12 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/irreversible-alert.sh",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/verify-deploy.sh",
+            "if": "Bash(*firebase deploy*)",
+            "timeout": 30000
           }
         ]
       }
@@ -113,27 +124,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | grep -oP '\"file_path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null || echo \"$INPUT\" | grep -oP '\"path\"\\s*:\\s*\"\\K[^\"]+' 2>/dev/null); case \"$FILE\" in *.js|*.ts|*.jsx|*.tsx|*.json|*.css|*.html) npx prettier --write \"$FILE\" 2>/dev/null || true;; *.py) python -m black --quiet \"$FILE\" 2>/dev/null || true;; esac; exit 0'",
-            "timeout": 10000
-          },
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/quality-gate.sh post-edit",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/regression-guard.sh",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/change-tracker.sh",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/test-manipulation-guard.sh",
+            "command": "bash $HOME/.claude/hooks/post-edit-dispatcher.sh",
             "timeout": 5000
           }
         ]
@@ -181,6 +172,11 @@
           },
           {
             "type": "command",
+            "command": "bash $HOME/.claude/scripts/audit-session.sh --compact",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
             "command": "bash -c 'bash $HOME/.claude/scripts/self-evolve.sh --apply 2>/dev/null'",
             "timeout": 30000
           },
@@ -197,28 +193,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash $HOME/.claude/hooks/enforce-execution.sh",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/evidence-first.sh",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "bash -c 'bash $HOME/.claude/scripts/self-evolve.sh --apply 2>/dev/null'",
+            "command": "bash $HOME/.claude/hooks/stop-dispatcher.sh",
             "timeout": 30000
-          },
-          {
-            "type": "command",
-            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/curation.ts\"",
-            "timeout": 120000
-          },
-          {
-            "type": "command",
-            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh stop'",
-            "timeout": 10000
           }
         ]
       }

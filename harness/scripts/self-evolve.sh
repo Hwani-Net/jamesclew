@@ -11,7 +11,7 @@
 set -euo pipefail
 
 APPLY="${1:-}"
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 FEEDBACK_LOG="$STATE_DIR/feedback_log.jsonl"
 MEMORY_DIR="$HOME/.claude/projects/d--jamesclew/memory"
 EVOLVE_LOG="$STATE_DIR/evolve_history.jsonl"
@@ -56,6 +56,38 @@ fi
 for rule in "${NEEDS_RULE[@]}"; do
   echo "  ⚠️ $rule (${PATTERNS[$rule]}회)"
 done
+
+# === Audit History Analysis — find repeat FAIL items across sessions ===
+AUDIT_FAIL_LOG="$STATE_DIR/audit_fail_history.jsonl"
+
+# Run audit on recent transcripts and accumulate FAIL patterns
+RECENT_TRANSCRIPTS=$(ls -t "$HOME/.claude/projects"/*/????????-????-????-????-????????????.jsonl 2>/dev/null | head -3)
+
+for TF in $RECENT_TRANSCRIPTS; do
+  SID=$(basename "$TF" .jsonl)
+  # Skip if already audited
+  grep -q "${SID:0:8}" "$AUDIT_FAIL_LOG" 2>/dev/null && continue
+  AUDIT_RESULT=$(bash "$HOME/.claude/scripts/audit-session.sh" --full "$TF" 2>/dev/null || true)
+  FAILS=$(echo "$AUDIT_RESULT" | grep '❌' | sed 's/.*❌  *//' | sed 's/  .*//')
+  for FITEM in $FAILS; do
+    echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"session\":\"${SID:0:8}\",\"fail\":\"$FITEM\"}" >> "$AUDIT_FAIL_LOG" 2>/dev/null
+  done
+done
+
+# Count repeat FAIL items and save top fails for session-start warning
+if [ -f "$AUDIT_FAIL_LOG" ]; then
+  echo ""
+  echo "--- Audit FAIL Frequency (cross-session) ---"
+  grep -o '"fail":"[^"]*"' "$AUDIT_FAIL_LOG" | sort | uniq -c | sort -rn | head -5 | while read CNT ITEM; do
+    CLEAN=$(echo "$ITEM" | tr -d '"' | sed 's/fail://')
+    echo "  ⚠️ $CLEAN (${CNT}회)"
+  done
+
+  TOP_FAILS=$(grep -o '"fail":"[^"]*"' "$AUDIT_FAIL_LOG" | sort | uniq -c | sort -rn | head -3 | sed 's/.*"fail":"//;s/"//' | tr '\n' ', ' | sed 's/,$//')
+  if [ -n "$TOP_FAILS" ]; then
+    echo "$TOP_FAILS" > "$STATE_DIR/audit_top_fails"
+  fi
+fi
 
 if [ "$APPLY" != "--apply" ]; then
   echo ""

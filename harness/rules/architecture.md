@@ -73,7 +73,7 @@ WordPress 사용하지 않음 — Firebase + SSG로 대체.
 
 ## 비용 추적
 API 호출 비용을 누적 로깅. 제한하지 않음, 관찰만.
-- 로그 위치: `~/.claude/hooks/state/api_cost_log.jsonl`
+- 로그 위치: `~/.harness-state/api_cost_log.jsonl`
 - 기록 항목: 날짜, 서비스(perplexity/openai), 모델, 비용, 용도
 - 월말 집계 시 대표님께 보고
 

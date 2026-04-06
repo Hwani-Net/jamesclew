@@ -20,7 +20,7 @@ const CORE_RULES = `[CORE RULES - ALWAYS ACTIVE]
 6. Built-in > Bash > MCP (비용순). 하네스는 D:/jamesclew/harness/ → deploy.sh.
 7. 컨텍스트 20%마다 외부 모델 검수 + Self-Evolving Loop 자동 트리거.`
 
-const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.claude/hooks/state`
+const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.harness-state`
 
 function getProjectId(cwd: string): string {
   return cwd.split('/').pop() || 'default'
@@ -95,12 +95,34 @@ async function main() {
       // Reset context milestone for new session
       const milestoneFile = `${STATE_DIR}/context_milestone`
       fs.writeFileSync(milestoneFile, '0')
+
+      // Reset build pipeline state files for fresh session
+      const buildStateFiles = [
+        'prd_done', 'pipeline_done', 'plan_done', 'build_detected',
+        'step5_quality_done', 'step7_review_done'
+      ]
+      for (const f of buildStateFiles) {
+        try { fs.unlinkSync(`${STATE_DIR}/${f}`) } catch {}
+      }
     } catch {}
 
-    // Output: core rules + evolution warning + primer
+    // Audit top fails warning — inject repeat FAIL items from cross-session audit
+    let auditWarning = ''
+    try {
+      const topFailsFile = `${STATE_DIR}/audit_top_fails`
+      if (fs.existsSync(topFailsFile)) {
+        const topFails = fs.readFileSync(topFailsFile, 'utf8').trim()
+        if (topFails) {
+          auditWarning = `[🎯 AUDIT FOCUS] 최근 세션 반복 FAIL 항목: ${topFails}. 이번 세션에서 이 항목들을 의식적으로 준수하세요.`
+        }
+      }
+    } catch {}
+
+    // Output: core rules + evolution warning + audit warning + primer
     const primer = result.context_text || ''
     const output = [CORE_RULES]
     if (evolveWarning) output.push(evolveWarning)
+    if (auditWarning) output.push(auditWarning)
     if (primer) output.push(primer)
 
     console.log(output.join('\n\n'))

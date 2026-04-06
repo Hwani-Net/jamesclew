@@ -9,7 +9,7 @@
 
 const MEMORY_API_URL = process.env.MEMORY_API_URL || 'http://localhost:8765'
 const TIMEOUT_MS = 5000
-const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.claude/hooks/state`
+const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.harness-state`
 const TURN_COUNTER_FILE = `${STATE_DIR}/turn_counter`
 
 // Short reminder (low token cost, injected every 10 turns)
@@ -208,6 +208,35 @@ async function main() {
         mcpMsg += `\n\n[HINT] "${matchedDomain.desc}" 관련 요청 감지. npm search "${matchedDomain.mcp}" 로 먼저 확인하세요.`
       }
       parts.push(mcpMsg)
+    }
+
+    // === BUILD REQUEST DETECTION — enforce PRD + pipeline-install ===
+    const buildPatterns = /만들어줘|만들려고|구현해|개발해|페이지로|앱으로|만들어\s*볼|만들자|빌드해/
+    const isBuildRequest = buildPatterns.test(prompt)
+    if (isBuildRequest) {
+      // Check if PRD and pipeline-install have been done in this session
+      const fs = require('fs')
+      const prdDone = fs.existsSync(`${STATE_DIR}/prd_done`)
+      const pipelineDone = fs.existsSync(`${STATE_DIR}/pipeline_done`)
+
+      // Mark build detected for enforce-build-transition.sh
+      try {
+        const fs2 = require('fs')
+        fs2.writeFileSync(`${STATE_DIR}/build_detected`, new Date().toISOString())
+      } catch {}
+
+      if (!prdDone || !pipelineDone) {
+        let buildMsg = `[🚨 BUILD REQUEST DETECTED] 빌드 요청 감지. Build Transition Rule 강제:`
+        if (!prdDone) {
+          buildMsg += `\n1. /prd 먼저 실행하세요 (새 프로젝트). 완료 후: echo done > ${STATE_DIR}/prd_done`
+        }
+        if (!pipelineDone) {
+          buildMsg += `\n${!prdDone ? '2' : '1'}. /pipeline-install 실행하세요. 완료 후: echo done > ${STATE_DIR}/pipeline_done`
+        }
+        buildMsg += `\n그 다음 /plan 진입 → 승인 → 코드 작성.`
+        buildMsg += `\n단순 일회성 유틸리티라면 판단 근거를 명시하고 바로 코드 작성 가능.`
+        parts.push(buildMsg)
+      }
     }
 
     // Context milestone: inject full rules + trigger self-evolve

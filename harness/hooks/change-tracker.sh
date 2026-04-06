@@ -4,7 +4,7 @@
 # Also warns when modifying files unrelated to current task context
 
 INPUT=$(cat)
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 TRACKER_FILE="$STATE_DIR/session_changes.log"
 mkdir -p "$STATE_DIR"
 

@@ -3,7 +3,7 @@
 # Automatically saves git state + work state before compact
 # Writes to MEMORY.md-style snapshot for context preservation
 
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 SNAPSHOT_FILE="$STATE_DIR/pre-compact-snapshot.md"
 mkdir -p "$STATE_DIR"
 

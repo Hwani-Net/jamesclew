@@ -6,7 +6,7 @@ EVENT="${1:-info}"
 EXTRA="${2:-}"
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-8670142686:AAENLGRRLmbv3gd06p0XWUuw7HbuX8LzbD8}"
 CHAT_ID="${TELEGRAM_CHAT_ID:-6702395893}"
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 
 # ─── Typing indicator ───
@@ -179,14 +179,51 @@ fmt_usage() {
 # ─── Event handlers ───
 case "$EVENT" in
   start)
-    # No telegram notification on session start — only record state
     echo "$(date +%s)" > "$STATE_DIR/session_start"
     SESSION_NUM=$(track_session)
-    check_usage_threshold > /dev/null
+    USAGE=$(check_usage_threshold)
+    # Get current working directory from environment
+    CWD="${CLAUDE_CWD:-$(pwd)}"
+    PROJECT=$(basename "$CWD" 2>/dev/null || echo "?")
+    send_msg "🚀 세션 시작 (#${SESSION_NUM})
+📂 ${PROJECT}
+$(fmt_usage "$USAGE")"
     ;;
 
   stop)
-    # No telegram notification on session stop — only record state
+    RESULT_FILE="$STATE_DIR/last_result.txt"
+    RESULT=""
+    if [ -f "$RESULT_FILE" ]; then
+      RESULT=$(cat "$RESULT_FILE")
+      rm -f "$RESULT_FILE"
+    fi
+
+    if debounce_check "stop" 30; then
+      USAGE=$(get_usage)
+      CTX=$(get_context)
+      # Calculate session duration
+      DURATION=""
+      if [ -f "$STATE_DIR/session_start" ]; then
+        START_TS=$(cat "$STATE_DIR/session_start" 2>/dev/null || echo 0)
+        NOW_TS=$(date +%s)
+        ELAPSED=$((NOW_TS - START_TS))
+        MINS=$((ELAPSED / 60))
+        if [ "$MINS" -gt 0 ] 2>/dev/null; then
+          DURATION="⏱ ${MINS}분"
+        fi
+      fi
+
+      if [ -n "$RESULT" ]; then
+        send_msg "✅ 작업 완료 ${DURATION}
+$(fmt_usage "$USAGE")
+$(fmt_context "$CTX")
+${RESULT}"
+      else
+        send_msg "🔚 세션 종료 ${DURATION}
+$(fmt_usage "$USAGE")
+$(fmt_context "$CTX")"
+      fi
+    fi
     check_usage_threshold > /dev/null
     ;;
 

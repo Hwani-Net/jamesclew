@@ -31,6 +31,28 @@ if [ -z "$HOSTING_URL" ]; then
   exit 0
 fi
 
+# ─── Pipeline step evidence check ───
+STATE_DIR="$HOME/.harness-state"
+STEP5_FILE="$STATE_DIR/step5_quality_done"
+STEP7_FILE="$STATE_DIR/step7_review_done"
+MISSING_STEPS=""
+
+if [ ! -f "$STEP5_FILE" ]; then
+  MISSING_STEPS="${MISSING_STEPS}Step 5 (품질루프) "
+fi
+if [ ! -f "$STEP7_FILE" ]; then
+  MISSING_STEPS="${MISSING_STEPS}Step 7 (교차검수) "
+elif [ "$(wc -c < "$STEP7_FILE" 2>/dev/null)" -lt 100 ] 2>/dev/null; then
+  # Step 7 evidence must contain actual external model output (>100 bytes)
+  MISSING_STEPS="${MISSING_STEPS}Step 7 (증거 불충분 — 외부 모델 응답 포함 필수, 현재 $(wc -c < "$STEP7_FILE")byte) "
+fi
+
+if [ -n "$MISSING_STEPS" ]; then
+  echo "🚫 Pipeline step 미완료: ${MISSING_STEPS}" >&2
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"[PIPELINE BLOCK] 배포 차단 — ${MISSING_STEPS}증거 파일 없음. 품질루프 완료 후 echo done > ~/.harness-state/step5_quality_done, 교차검수 완료 후 echo done > ~/.harness-state/step7_review_done 실행 후 재배포.\"}}" >&2
+  exit 2
+fi
+
 FAIL=0
 RESULTS=""
 
@@ -54,7 +76,7 @@ if [ "$FAIL" -eq 1 ]; then
 fi
 
 # Capture Playwright screenshots for visual review (non-blocking)
-SCREENSHOT_DIR="$HOME/.claude/hooks/state/screenshots"
+SCREENSHOT_DIR="$HOME/.harness-state/screenshots"
 mkdir -p "$SCREENSHOT_DIR"
 DESKTOP_IMG="${SCREENSHOT_DIR}/deploy-desktop.png"
 MOBILE_IMG="${SCREENSHOT_DIR}/deploy-mobile.png"

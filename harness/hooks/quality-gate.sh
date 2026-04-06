@@ -9,7 +9,7 @@
 
 ACTION="${1:-}"
 INPUT=$(cat)
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
 DIRTY_FILE="$STATE_DIR/code_dirty"
 TEST_PASS_FILE="$STATE_DIR/last_test_pass"

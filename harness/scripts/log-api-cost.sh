@@ -5,7 +5,7 @@
 #
 # 제한하지 않음, 관찰만. 월말 집계용.
 
-STATE_DIR="$HOME/.claude/hooks/state"
+STATE_DIR="$HOME/.harness-state"
 LOG_FILE="$STATE_DIR/api_cost_log.jsonl"
 mkdir -p "$STATE_DIR"
 
@@ -28,7 +28,7 @@ if [ "$1" = "summary" ]; then
     python3 -c "
 import json, sys, os
 sys.stdout.reconfigure(encoding='utf-8')
-log_file = os.path.expanduser('~/.claude/hooks/state/api_cost_log.jsonl')
+log_file = os.path.expanduser('~/.harness-state/api_cost_log.jsonl')
 month = '${MONTH}'
 total = 0
 by_service = {}
