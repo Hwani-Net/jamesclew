@@ -44,6 +44,13 @@ mkdir -p "$TARGET/agents"
 cp "$SCRIPT_DIR/agents/"*.md "$TARGET/agents/"
 echo "✅ agents/ ($(ls "$SCRIPT_DIR/agents/"*.md | wc -l)개)"
 
+# Slash commands
+if [ -d "$SCRIPT_DIR/commands" ]; then
+  mkdir -p "$TARGET/commands"
+  cp "$SCRIPT_DIR/commands/"*.md "$TARGET/commands/"
+  echo "✅ commands/ ($(ls "$SCRIPT_DIR/commands/"*.md | wc -l)개)"
+fi
+
 # PITFALLS (전역 실수 기록)
 cp "$SCRIPT_DIR/PITFALLS.md" "$TARGET/PITFALLS.md"
 echo "✅ PITFALLS.md (전역)"
