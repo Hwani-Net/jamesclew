@@ -34,7 +34,8 @@
 1. Built-in > Bash > MCP > External API
 2. 외부 모델 검수: Antigravity + Codex. Claude 자기 검수 금지.
 3. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
-4. 상세: rules/architecture.md
+4. **탐색 3회+ 예상 시 Agent(Explore) 위임** [hook: explore-router.sh] — 직접 Read/Grep/Glob 8회 누적 시 hook 경고
+5. 상세: rules/architecture.md
 
 ## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.

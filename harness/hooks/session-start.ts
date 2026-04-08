@@ -120,6 +120,8 @@ async function main() {
         "scope_milestones_fired",
         "session_changes.log",
         "enforce_block_count",
+        "explore_count",
+        "explore_warned",
       ];
       for (const f of buildStateFiles) {
         try {
