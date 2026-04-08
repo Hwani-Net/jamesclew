@@ -58,6 +58,16 @@
         ]
       },
       {
+        "matcher": "mcp__tavily__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/tavily-guardrail.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
