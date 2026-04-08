@@ -24,10 +24,27 @@ UNIQUE_COUNT=$(sort -u "$TRACKER_FILE" 2>/dev/null | grep -v "^\[" | wc -l 2>/de
 # More reliable: count unique paths
 UNIQUE_COUNT=$(sed 's/\[.*\] //' "$TRACKER_FILE" 2>/dev/null | sort -u | wc -l)
 
-# 3. Warn if too many different files changed (possible scope creep)
+# 3. Warn at scope milestones only (50/100/200 files) — token saving
+# Each milestone fires exactly ONCE per session to avoid noise
 WARN=""
-if [ "$UNIQUE_COUNT" -gt 15 ] 2>/dev/null; then
-  WARN="[⚠️ SCOPE ALERT] 이 세션에서 ${UNIQUE_COUNT}개 파일을 수정했습니다. 작업 범위가 넓어지고 있습니다. 현재 작업 목표와 관련 없는 파일을 수정하고 있지 않은지 확인하세요."
+MILESTONE_FILE="$STATE_DIR/scope_milestones_fired"
+touch "$MILESTONE_FILE"
+
+check_milestone() {
+  local threshold=$1
+  if [ "$UNIQUE_COUNT" -ge "$threshold" ] 2>/dev/null && ! grep -q "^$threshold$" "$MILESTONE_FILE"; then
+    echo "$threshold" >> "$MILESTONE_FILE"
+    return 0
+  fi
+  return 1
+}
+
+if check_milestone 200; then
+  WARN="[⚠️ SCOPE ALERT 200] 200+ 파일 수정. 작업 범위 재검토 필수."
+elif check_milestone 100; then
+  WARN="[⚠️ SCOPE ALERT 100] 100+ 파일 수정. 의도된 범위인지 확인."
+elif check_milestone 50; then
+  WARN="[⚠️ SCOPE ALERT 50] 50+ 파일 수정. 작업 목표 재확인 권장."
 fi
 
 # 4. Detect if editing a file far from current working directory (possible wrong file)

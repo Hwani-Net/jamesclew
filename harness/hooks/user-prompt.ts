@@ -302,11 +302,10 @@ async function main() {
       parts.push(milestoneMsg);
     }
 
-    // Rule reminder: compliance decays after ~30 tool calls (SWE-CI, 2026)
-    // Every 20 turns: full reminder. Every 8 turns: short reminder.
-    if (turnCount % 20 === 0 && !contextMilestone) {
-      parts.push(FULL_RULE_REMINDER);
-    } else if (turnCount % 8 === 0 && !contextMilestone) {
+    // Rule reminder: 토큰 절감을 위해 대폭 축소 (2026-04-08)
+    // Full reminder는 컨텍스트 마일스톤(20%/40%/60%/80%)에서만, 턴 기반 제거
+    // Short reminder는 30턴마다만 (이전 8턴에서 완화)
+    if (turnCount % 30 === 0 && !contextMilestone && turnCount > 0) {
       parts.push(RULE_REMINDER);
     }
 

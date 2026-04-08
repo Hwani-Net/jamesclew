@@ -73,6 +73,11 @@
           },
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/bash-tool-blocker.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/verify-deploy.sh",
             "if": "Bash(*firebase deploy*)",
             "timeout": 30000

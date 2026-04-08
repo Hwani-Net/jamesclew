@@ -7,8 +7,8 @@
 // 2. CLAUDE.md 핵심 규칙을 면책 조항 없이 직접 주입
 // ============================================================================
 
-const MEMORY_API_URL = process.env.MEMORY_API_URL || 'http://localhost:8765'
-const TIMEOUT_MS = 5000
+const MEMORY_API_URL = process.env.MEMORY_API_URL || "http://localhost:8765";
+const TIMEOUT_MS = 5000;
 
 // Core rules injected WITHOUT "may or may not be relevant" disclaimer
 const CORE_RULES = `[CORE RULES - ALWAYS ACTIVE]
@@ -18,119 +18,140 @@ const CORE_RULES = `[CORE RULES - ALWAYS ACTIVE]
 4. Search-Before-Solve — 막히면 LESSONS_LEARNED, 옵시디언, 이전 세션에서 먼저 검색.
 5. 완성형까지 반복 — Multi-Pass Review 최소 2라운드. 검수는 외부 모델(Antigravity + Codex) 위임.
 6. Built-in > Bash > MCP (비용순). 하네스는 D:/jamesclew/harness/ → deploy.sh.
-7. 컨텍스트 20%마다 외부 모델 검수 + Self-Evolving Loop 자동 트리거.`
+7. 컨텍스트 20%마다 외부 모델 검수 + Self-Evolving Loop 자동 트리거.`;
 
-const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.harness-state`
+const STATE_DIR = `${process.env.HOME || process.env.USERPROFILE}/.harness-state`;
 
 function getProjectId(cwd: string): string {
-  return cwd.split('/').pop() || 'default'
+  return cwd.split("/").pop() || "default";
 }
 
 async function httpPost(url: string, data: object): Promise<any> {
   try {
     const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
-    return response.ok ? response.json() : {}
+    });
+    return response.ok ? response.json() : {};
   } catch {
-    return {}
+    return {};
   }
 }
 
 async function main() {
-  if (process.env.MEMORY_CURATOR_ACTIVE === '1') return
+  if (process.env.MEMORY_CURATOR_ACTIVE === "1") return;
 
   try {
-    const inputText = await new Promise<string>((resolve) => { let data = ''; process.stdin.on('data', (chunk: Buffer) => { data += chunk.toString() }); process.stdin.on('end', () => resolve(data)) })
-    const input = JSON.parse(inputText)
+    const inputText = await new Promise<string>((resolve) => {
+      let data = "";
+      process.stdin.on("data", (chunk: Buffer) => {
+        data += chunk.toString();
+      });
+      process.stdin.on("end", () => resolve(data));
+    });
+    const input = JSON.parse(inputText);
 
-    const sessionId = input.session_id || 'unknown'
-    const cwd = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd()
-    const projectId = getProjectId(cwd)
+    const sessionId = input.session_id || "unknown";
+    const cwd = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+    const projectId = getProjectId(cwd);
 
     // Get session primer from memory system
     const result = await httpPost(`${MEMORY_API_URL}/memory/context`, {
       session_id: sessionId,
       project_id: projectId,
-      current_message: '',
+      current_message: "",
       max_memories: 0,
-    })
+    });
 
     // Register session
     await httpPost(`${MEMORY_API_URL}/memory/process`, {
       session_id: sessionId,
       project_id: projectId,
-      metadata: { event: 'session_start' },
-    })
+      metadata: { event: "session_start" },
+    });
 
     // Load evolution history for session start warning
-    let evolveWarning = ''
+    let evolveWarning = "";
     try {
-      const fs = require('fs')
-      const feedbackLog = `${STATE_DIR}/feedback_log.jsonl`
+      const fs = require("fs");
+      const feedbackLog = `${STATE_DIR}/feedback_log.jsonl`;
       if (fs.existsSync(feedbackLog)) {
-        const lines = fs.readFileSync(feedbackLog, 'utf8').trim().split('\n')
-        const count = lines.length
+        const lines = fs.readFileSync(feedbackLog, "utf8").trim().split("\n");
+        const count = lines.length;
         if (count > 0) {
           // Count patterns
-          const patterns: Record<string, number> = {}
+          const patterns: Record<string, number> = {};
           for (const line of lines) {
             try {
-              const entry = JSON.parse(line)
-              const p = entry.prompt || ''
-              if (/말만|선언|실행.*안/.test(p)) patterns['declare_no_execute'] = (patterns['declare_no_execute'] || 0) + 1
-              if (/검증|팩트|못.*한다/.test(p)) patterns['premature_conclusion'] = (patterns['premature_conclusion'] || 0) + 1
-              if (/검수|검토|건너뛰/.test(p)) patterns['skip_review'] = (patterns['skip_review'] || 0) + 1
+              const entry = JSON.parse(line);
+              const p = entry.prompt || "";
+              if (/말만|선언|실행.*안/.test(p))
+                patterns["declare_no_execute"] =
+                  (patterns["declare_no_execute"] || 0) + 1;
+              if (/검증|팩트|못.*한다/.test(p))
+                patterns["premature_conclusion"] =
+                  (patterns["premature_conclusion"] || 0) + 1;
+              if (/검수|검토|건너뛰/.test(p))
+                patterns["skip_review"] = (patterns["skip_review"] || 0) + 1;
             } catch {}
           }
-          const top = Object.entries(patterns).sort((a, b) => b[1] - a[1]).slice(0, 3)
+          const top = Object.entries(patterns)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
           if (top.length > 0) {
-            evolveWarning = `[⚠️ EVOLUTION WARNING] 이전 세션 피드백 ${count}건. 반복 패턴: ${top.map(([k, v]) => `${k}(${v}회)`).join(', ')}. 이 패턴을 이번 세션에서 반복하지 마세요.`
+            evolveWarning = `[⚠️ EVOLUTION WARNING] 이전 세션 피드백 ${count}건. 반복 패턴: ${top.map(([k, v]) => `${k}(${v}회)`).join(", ")}. 이 패턴을 이번 세션에서 반복하지 마세요.`;
           }
         }
       }
       // Reset context milestone for new session
-      const milestoneFile = `${STATE_DIR}/context_milestone`
-      fs.writeFileSync(milestoneFile, '0')
+      const milestoneFile = `${STATE_DIR}/context_milestone`;
+      fs.writeFileSync(milestoneFile, "0");
 
       // Reset build pipeline state files for fresh session
       const buildStateFiles = [
-        'prd_done', 'pipeline_done', 'plan_done', 'build_detected',
-        'step5_quality_done', 'step7_review_done'
-      ]
+        "prd_done",
+        "pipeline_done",
+        "plan_done",
+        "build_detected",
+        "step5_quality_done",
+        "step7_review_done",
+        "scope_milestones_fired",
+        "session_changes.log",
+        "enforce_block_count",
+      ];
       for (const f of buildStateFiles) {
-        try { fs.unlinkSync(`${STATE_DIR}/${f}`) } catch {}
+        try {
+          fs.unlinkSync(`${STATE_DIR}/${f}`);
+        } catch {}
       }
     } catch {}
 
     // Audit top fails warning — inject repeat FAIL items from cross-session audit
-    let auditWarning = ''
+    let auditWarning = "";
     try {
-      const topFailsFile = `${STATE_DIR}/audit_top_fails`
+      const topFailsFile = `${STATE_DIR}/audit_top_fails`;
       if (fs.existsSync(topFailsFile)) {
-        const topFails = fs.readFileSync(topFailsFile, 'utf8').trim()
+        const topFails = fs.readFileSync(topFailsFile, "utf8").trim();
         if (topFails) {
-          auditWarning = `[🎯 AUDIT FOCUS] 최근 세션 반복 FAIL 항목: ${topFails}. 이번 세션에서 이 항목들을 의식적으로 준수하세요.`
+          auditWarning = `[🎯 AUDIT FOCUS] 최근 세션 반복 FAIL 항목: ${topFails}. 이번 세션에서 이 항목들을 의식적으로 준수하세요.`;
         }
       }
     } catch {}
 
     // Output: core rules + evolution warning + audit warning + primer
-    const primer = result.context_text || ''
-    const output = [CORE_RULES]
-    if (evolveWarning) output.push(evolveWarning)
-    if (auditWarning) output.push(auditWarning)
-    if (primer) output.push(primer)
+    const primer = result.context_text || "";
+    const output = [CORE_RULES];
+    if (evolveWarning) output.push(evolveWarning);
+    if (auditWarning) output.push(auditWarning);
+    if (primer) output.push(primer);
 
-    console.log(output.join('\n\n'))
-
+    console.log(output.join("\n\n"));
   } catch {
     // Still inject core rules even if memory server is down
-    console.log(CORE_RULES)
+    console.log(CORE_RULES);
   }
 }
 
-main()
+main();
