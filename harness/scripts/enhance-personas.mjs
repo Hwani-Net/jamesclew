@@ -12,8 +12,8 @@ const KEYS_FILE = resolve(process.env.HOME || process.env.USERPROFILE, '.claude/
 const MODEL = 'qwen/qwen3.6-plus:free';
 const REQUIRED_SECTIONS = ['## 목표 (Goals)', '## 제약조건 (Constraints)', '## 사용 맥락 (Scenario)', '## 대표 발화'];
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8670142686:AAENLGRRLmbv3gd06p0XWUuw7HbuX8LzbD8';
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '6702395893';
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 
 let keys = JSON.parse(readFileSync(KEYS_FILE, 'utf-8'));
 let keyIndex = 0;

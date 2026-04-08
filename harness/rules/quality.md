@@ -119,6 +119,6 @@ Conventional Commits (영어). 논리적 단위 1커밋.
 
 ## Design Doc Sync (필수)
 하네스(hooks, rules, settings.json)를 추가/수정하면 반드시 설계 문서도 동시에 업데이트:
-- 설계 문서: `C:/Users/AIcreator/Obsidian-Vault/01-jamesclaw/harness/harness_design.md`
+- 설계 문서: `$OBSIDIAN_VAULT/01-jamesclaw/harness/harness_design.md` (env: OBSIDIAN_VAULT)
 - 변경 이력 테이블에 날짜, 변경 내용, 근거 기록
 - 설계 문서와 실제 구현이 불일치하면 안 됨

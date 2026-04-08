@@ -4,10 +4,15 @@
 
 EVENT="${1:-info}"
 EXTRA="${2:-}"
-BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-8670142686:AAENLGRRLmbv3gd06p0XWUuw7HbuX8LzbD8}"
-CHAT_ID="${TELEGRAM_CHAT_ID:-6702395893}"
+BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 STATE_DIR="$HOME/.harness-state"
 mkdir -p "$STATE_DIR"
+
+# Skip silently if not configured (for distribution)
+if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
+  exit 0
+fi
 
 # ─── Typing indicator ───
 set_typing() {

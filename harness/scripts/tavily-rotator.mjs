@@ -6,10 +6,22 @@
  */
 import { readFileSync } from "fs";
 import { pathToFileURL } from "url";
+import { resolve } from "path";
+import { execSync } from "child_process";
 
-const KEYS_FILE = "C:/Users/AIcreator/.claude/tavily-keys.json";
-const TAVILY_MCP =
-  "C:/Users/AIcreator/AppData/Roaming/npm/node_modules/tavily-mcp/build/index.js";
+const HOME = process.env.HOME || process.env.USERPROFILE;
+const KEYS_FILE = process.env.TAVILY_KEYS_FILE || resolve(HOME, ".claude/tavily-keys.json");
+
+// Auto-detect tavily-mcp install path (cross-platform)
+let TAVILY_MCP = process.env.TAVILY_MCP_PATH;
+if (!TAVILY_MCP) {
+  try {
+    const npmRoot = execSync("npm root -g", { encoding: "utf-8" }).trim();
+    TAVILY_MCP = resolve(npmRoot, "tavily-mcp/build/index.js");
+  } catch {
+    throw new Error("tavily-mcp not found. Run: npm install -g tavily-mcp");
+  }
+}
 
 const keys = JSON.parse(readFileSync(KEYS_FILE, "utf-8"));
 let currentKeyIndex = 0;

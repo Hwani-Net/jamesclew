@@ -295,7 +295,8 @@ async function main() {
 
       // At 60%+, add compact preparation checklist
       if (contextPct >= 60) {
-        milestoneMsg += `\n\n[⚠️ COMPACT 준비] 65%에 수동 /compact 권장. compact 전 필수:\n1. 옵시디언 세션 요약 저장: C:/Users/AIcreator/Obsidian-Vault/01-jamesclaw/harness/session-{날짜}-{주제}.md\n2. 하네스 변경 시 harness_design.md 변경 이력 업데이트\n3. git commit + push\n4. 미완료 작업 TodoWrite 기록`;
+        const vaultPath = process.env.OBSIDIAN_VAULT || "$OBSIDIAN_VAULT";
+        milestoneMsg += `\n\n[⚠️ COMPACT 준비] 65%에 수동 /compact 권장. compact 전 필수:\n1. 옵시디언 세션 요약 저장: ${vaultPath}/01-jamesclaw/harness/session-{날짜}-{주제}.md\n2. 하네스 변경 시 harness_design.md 변경 이력 업데이트\n3. git commit + push\n4. 미완료 작업 TodoWrite 기록`;
       }
 
       parts.push(milestoneMsg);

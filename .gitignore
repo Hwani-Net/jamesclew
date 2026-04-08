@@ -7,3 +7,19 @@ pipelines/*/.firebase/
 node_modules/
 .env
 .env-keys
+.env.*
+!harness/.env.example
+*.pem
+*.key
+*-keys.json
+!*-keys.example.json
+.harness-state/
+.harness.env
+
+# Personal data
+**/personal/
+**/private/
+
+# OS
+.DS_Store
+Thumbs.db
