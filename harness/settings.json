@@ -145,6 +145,16 @@
         ]
       },
       {
+        "matcher": "mcp__perplexity__.*|mcp__tavily__.*|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/cost-tracker.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {

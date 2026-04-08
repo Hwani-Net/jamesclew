@@ -11,8 +11,8 @@ Built-in > Bash commands > MCP servers (비용순)
   - ask (~$0.03/회): 빠른 팩트 답변.
   - reason (~$0.02/회): 단계별 추론.
   - research (~$0.80/회): 딥 리서치. search 대비 133배 비용.
-- Tavily: 5개 도구. 크롤링/추출에 강점.
-  - search: 웹 검색 (basic/advanced/fast). 6키 로테이션.
+- Tavily: 5개 도구. 크롤링/추출에 강점. **토큰 주의: 결과 평균 11KB/회 — 도구 결과 중 최대.**
+  - search: 웹 검색. **기본값 강제: `search_depth="basic"`, `max_results=5`**. advanced는 명시 요청 시에만. 6키 로테이션.
   - crawl: 사이트 재귀 크롤링 (깊이/너비 지정). 경쟁사 사이트 전체 수집.
   - extract: URL에서 원문 마크다운 추출 (LinkedIn 등 보호 사이트 가능).
   - map: 사이트맵 구조 탐색 (URL 트리).
