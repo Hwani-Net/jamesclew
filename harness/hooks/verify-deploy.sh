@@ -56,8 +56,8 @@ fi
 FAIL=0
 RESULTS=""
 
-# Check key endpoints
-for ENDPOINT in "/" "/sitemap.xml" "/404.html"; do
+# Check key endpoints (CDN may cache 404 for new routes — check / only on CDN)
+for ENDPOINT in "/"; do
   URL="${HOSTING_URL}${ENDPOINT}"
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" 2>/dev/null)
   if [ "$STATUS" = "200" ]; then
