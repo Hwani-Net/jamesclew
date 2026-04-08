@@ -216,7 +216,7 @@ PRD 작성 전 반드시 시장 조사를 실행:
 ## 5. 결과 저장
 - `PRD.md` → 프로젝트 루트
 - CLAUDE.md에 PRD 요약 섹션 추가 (있으면)
-- 옵시디언에 사본 저장: `C:/Users/AIcreator/Obsidian-Vault/02-projects/[프로젝트명]/PRD.md`
+- 옵시디언에 사본 저장: `$OBSIDIAN_VAULT/02-projects/[프로젝트명]/PRD.md`
 
 ## 6. 다음 단계 안내
 PRD 생성 완료 후 안내:

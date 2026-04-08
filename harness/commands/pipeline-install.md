@@ -73,7 +73,7 @@ mkdir -p .claude && cat > .claude/settings.json << 'SETTINGS'
   "permissions": {
     "defaultMode": "bypassPermissions",
     "allow": ["Bash(*)", "Read(*)", "Edit(*)", "Write(*)", "Glob(*)", "Grep(*)", "Agent(*)", "TodoWrite(*)", "mcp__plugin_telegram_telegram__*", "Plugin:telegram:*"],
-    "additionalDirectories": ["C:\\Users\\AIcreator\\.harness-state", "C:\\Users\\AIcreator\\.claude\\plans"]
+    "additionalDirectories": ["${HOME}/.harness-state", "${HOME}/.claude/plans"]
   }
 }
 SETTINGS
