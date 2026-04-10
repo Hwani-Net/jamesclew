@@ -86,7 +86,7 @@
 ## Change Tracker & Scope Guard [hook 강제: change-tracker.sh]
 세션 내 모든 파일 변경을 추적하고 범위 이탈을 감지.
 - 매 Write/Edit 후 변경 파일을 session_changes.log에 기록
-- 15개 이상 파일 수정 시 스코프 크리프 경고 주입
+- 50개 이상 파일 수정 시 스코프 크리프 경고 주입 (50/100/200 단계)
 - CWD와 다른 드라이브의 파일 수정 시 "잘못된 파일?" 경고
 - 세션 종료 시 변경 파일 전체 목록 확인 가능
 

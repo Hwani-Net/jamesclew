@@ -51,7 +51,7 @@ echo "{\"ts\":\"$TS\",\"service\":\"$SERVICE\",\"model\":\"$MODEL\",\"cost\":$CO
 HOUR_KEY=$(date -u +%Y-%m-%dT%H)
 HOURLY_COST=$(grep "$HOUR_KEY" "$LOG" 2>/dev/null | jq -s '[.[].cost] | add // 0' 2>/dev/null || echo "0")
 WARN_THRESHOLD="${COST_WARN_USD:-4.00}"
-if [ "$(echo "$HOURLY_COST > $WARN_THRESHOLD" | bc -l 2>/dev/null)" = "1" ]; then
+if [ "$(python -c "print(1 if float('$HOURLY_COST') > float('$WARN_THRESHOLD') else 0)" 2>/dev/null)" = "1" ]; then
   echo "{\"systemMessage\":\"[COST WARN] Hourly API cost \$$HOURLY_COST exceeds \$$WARN_THRESHOLD. Consider reducing external model calls.\"}"
 fi
 

@@ -27,7 +27,17 @@ echo "$INPUT" | bash "$HOME/.claude/hooks/change-tracker.sh" 2>/dev/null
 # 5. Test manipulation guard
 echo "$INPUT" | bash "$HOME/.claude/hooks/test-manipulation-guard.sh" 2>/dev/null
 
-# 6. Auto session rename suggestion — PRD.md / PLAN.md 작성 감지
+# 6. Harness file change → Design Doc Sync reminder
+if [ -n "$FILE" ]; then
+  case "$FILE" in
+    */harness/hooks/*|*/harness/rules/*|*/harness/scripts/*|*/harness/CLAUDE.md|*/.claude/settings.json)
+      WARN="{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[📐 DESIGN DOC SYNC] 하네스 파일 수정 감지: $FILE. harness_design.md 변경 이력 업데이트 필수 (\$OBSIDIAN_VAULT/01-jamesclaw/harness/harness_design.md).\"}}"
+      echo "$WARN"
+      ;;
+  esac
+fi
+
+# 7. Auto session rename suggestion — PRD.md / PLAN.md 작성 감지
 # 디렉토리 이름을 슬러그화해 ~/.harness-state/session_rename_pending.txt 작성
 # user-prompt.ts가 다음 user prompt 시 읽고 클로드에게 안내 주입
 if [ -n "$FILE" ]; then
