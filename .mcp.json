@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "expect": {
-      "command": "npx",
-      "args": ["-y", "expect-cli@latest", "mcp"]
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "expect-cli@latest", "mcp"]
     }
   }
 }
