@@ -20,7 +20,7 @@
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 순차 실행
 2. 막히면 Perplexity/Tavily로 자체 조사. 해결 불가 시에만 질문.
-3. Multi-Pass Review 최소 2라운드. 외부 모델(Antigravity + Codex) 검수 필수. → rules/quality.md
+3. Multi-Pass Review: 1라운드 수정 0건이면 즉시 완료. 수정 있으면 2라운드. 외부 모델(Antigravity + Codex) 검수 필수. → rules/quality.md
 
 ## Build Transition Rule [hook: enforce-build-transition.sh]
 - 빌드 요청 감지 시 바로 코딩 금지.
@@ -36,7 +36,7 @@
 1. Built-in > Bash > MCP > External API
 2. 외부 모델 검수: Antigravity + Codex. Claude 자기 검수 금지.
 3. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
-4. **탐색 3회+ 예상 시 Agent(Explore) 위임** [hook: explore-router.sh] — 직접 Read/Grep/Glob 8회 누적 시 hook 경고
+4. **탐색 3회+ 예상 시 Agent(Explore, model: "sonnet") 위임** [hook: explore-router.sh] — 직접 Read/Grep/Glob 8회 누적 시 hook 경고. Subagent는 sonnet 기본.
 5. 상세: rules/architecture.md
 
 ## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
@@ -47,7 +47,7 @@
 - **하네스(hooks/rules/settings.json) 수정 전 advisor() 호출 필수** — 충돌/회귀 사전 검토.
 
 ## Context & Session
-- compact: 65%에 `/compact`. 직전 옵시디언 저장 필수.
+- compact: **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
 - 컨텍스트 수치는 `telegram-notify.sh heartbeat`로 확인. 추측 금지.
 
 ## Hosting
