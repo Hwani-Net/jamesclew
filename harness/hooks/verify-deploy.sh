@@ -55,50 +55,37 @@ if [ -n "$MISSING_STEPS" ]; then
   exit 2
 fi
 
-FAIL=0
-RESULTS=""
-
-# Check key endpoints (CDN may cache 404 for new routes — check / only on CDN)
-for ENDPOINT in "/"; do
-  URL="${HOSTING_URL}${ENDPOINT}"
-  STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$URL" 2>/dev/null)
-  if [ "$STATUS" = "200" ]; then
-    RESULTS="${RESULTS}  ✅ ${ENDPOINT} → ${STATUS}\n"
-  else
-    RESULTS="${RESULTS}  ❌ ${ENDPOINT} → ${STATUS}\n"
-    FAIL=1
-  fi
-done
-
-if [ "$FAIL" -eq 1 ]; then
-  echo -e "🚨 Deploy verification FAILED\n${RESULTS}" >&2
-  bash "$HOME/.claude/hooks/telegram-notify.sh" error "Deploy verification failed: ${HOSTING_URL}" 2>/dev/null
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY FAILED] ${HOSTING_URL} 라이브 검증 실패. 수정 후 재배포 필요. 검증 통과 전까지 대표님께 보고 금지.\"}}" >&2
+# ─── Sanity check: quick curl before handing off to expect MCP ───
+# Hook can block (exit 2) on hard failure; expect MCP handles deep verification
+QUICK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HOSTING_URL/" 2>/dev/null)
+if [ "$QUICK_STATUS" != "200" ]; then
+  echo "🚨 Deploy verification FAILED: ${HOSTING_URL}/ → HTTP ${QUICK_STATUS}" >&2
+  bash "$HOME/.claude/hooks/telegram-notify.sh" error "Deploy verification failed: ${HOSTING_URL} (HTTP ${QUICK_STATUS})" 2>/dev/null
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY FAILED] ${HOSTING_URL} HTTP ${QUICK_STATUS}. 수정 후 재배포 필요. 검증 통과 전까지 대표님께 보고 금지.\"}}" >&2
   exit 2
 fi
 
-# Capture Playwright screenshots for visual review (non-blocking)
-SCREENSHOT_DIR="$HOME/.harness-state/screenshots"
-mkdir -p "$SCREENSHOT_DIR"
-DESKTOP_IMG="${SCREENSHOT_DIR}/deploy-desktop.png"
-MOBILE_IMG="${SCREENSHOT_DIR}/deploy-mobile.png"
-
-npx playwright screenshot --browser=chromium --full-page --wait-for-timeout=3000 "$HOSTING_URL" "$DESKTOP_IMG" >/dev/null 2>&1 &
-npx playwright screenshot --browser=chromium --full-page --wait-for-timeout=3000 --viewport-size="390,844" "$HOSTING_URL" "$MOBILE_IMG" >/dev/null 2>&1 &
-wait
-
-HAS_SCREENSHOTS="false"
-if [ -f "$DESKTOP_IMG" ] && [ -f "$MOBILE_IMG" ]; then
-  HAS_SCREENSHOTS="true"
+# ─── URL validation (prevent injection) ───
+if ! echo "$HOSTING_URL" | grep -qE '^https://[a-zA-Z0-9._-]+\.web\.app$'; then
+  echo "⚠️ verify-deploy: URL format invalid: $HOSTING_URL" >&2
+  exit 0
 fi
 
-echo -e "✅ Deploy verification PASSED\n${RESULTS}" >&2
-# No telegram message on success — typing indicator only
+# ─── expect MCP 브라우저 검증 지시 (Playwright 대체) ───
+# hook에서 MCP 직접 호출 불가 → additionalContext로 에이전트에 지시 주입
+
 bash "$HOME/.claude/hooks/telegram-notify.sh" heartbeat 2>/dev/null
 
-if [ "$HAS_SCREENSHOTS" = "true" ]; then
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 검증 통과. [필수] Playwright 스크린샷이 ${SCREENSHOT_DIR}/ 에 저장됨. Read 도구로 deploy-desktop.png + deploy-mobile.png을 확인하고 디자인 5패스 검토를 완료한 후에만 대표님께 보고하세요.\"}}"
-else
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 검증 통과. Playwright 스크린샷 실패 — 수동으로 Playwright 스크린샷 촬영 후 디자인 5패스 검토를 완료한 후에만 보고하세요.\"}}"
-fi
+VERIFY_DIRECTIVE="[DEPLOY-VERIFY OK] ${HOSTING_URL} HTTP 200 통과. expect MCP로 심층 검증 필수 (순서대로):
+1. mcp__expect__open(url: \"${HOSTING_URL}\") — 페이지 로드
+2. mcp__expect__network_requests() — 4xx/5xx, 중복 요청, mixed content 확인
+3. mcp__expect__console_logs(type: \"error\") — JS 에러 확인
+4. mcp__expect__screenshot() — 데스크톱 풀페이지
+5. mcp__expect__playwright(script: \"page.setViewportSize({width:390,height:844})\") → mcp__expect__screenshot() — 모바일
+6. mcp__expect__accessibility_audit() — WCAG 접근성
+7. mcp__expect__close()
+
+network_requests에서 4xx/5xx 발견 시 FAIL → 수정 후 재배포. 전체 통과 시에만 대표님께 보고."
+
+echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"${VERIFY_DIRECTIVE}\"}}"
 exit 0
