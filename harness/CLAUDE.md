@@ -47,8 +47,14 @@
 - **하네스(hooks/rules/settings.json) 수정 전 advisor() 호출 필수** — 충돌/회귀 사전 검토.
 
 ## Context & Session
-- compact: **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
+- **Opus 세션**: compact **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
+- **Sonnet 세션**: compact 제한 없음 (auto). 코딩/배포/버그 수정 등 범위 명확한 작업 전용.
 - 컨텍스트 수치는 `telegram-notify.sh heartbeat`로 확인. 추측 금지.
+
+## Model Selection (세션 시작 시 선택)
+- **Opus** (기본): 하네스 엔지니어링, 긴 분석, 다수 파일 탐색. 1M 컨텍스트.
+- **Sonnet + Advisor**: 코딩/배포/수정 등 범위가 명확한 작업. 128K 컨텍스트. `advisorModel: opus`로 전략 판단 시 Opus 호출.
+- 전환: `/model sonnet` 또는 `/model opus`. 세션 중 자동 전환 불가.
 
 ## Hosting
 Firebase 전용. WordPress 금지.
