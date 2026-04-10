@@ -133,8 +133,9 @@ _run_codex() {
   return 1
 }
 
-# ── 3+1단계 모델 로테이션: codex(6계정) → opencode(4계정) → codex backoff → [glm optional] ──
-MODELS=("codex" "opencode" "codex_backoff" "glm_flash")
+# ── 3단계 모델 로테이션: codex(6계정) → opencode(4계정) → codex backoff ──
+# GLM Free tier 제거: concurrency 1 + 지속적 rate limit으로 실용성 없음 (2026-04-10)
+MODELS=("codex" "opencode" "codex_backoff")
 MODEL_USED=""
 
 for MODEL in "${MODELS[@]}"; do
@@ -147,21 +148,6 @@ for MODEL in "${MODELS[@]}"; do
       ;;
     opencode)
       timeout 60 opencode run "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
-      ;;
-    glm_flash)
-      # GLM-4.7-Flash: 무료 API (OpenAI 호환)
-      GLM_KEY="${GLM_API_KEY:-}"
-      if [ -n "$GLM_KEY" ]; then
-        timeout 60 curl -s -X POST "https://api.z.ai/api/paas/v4/chat/completions" \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $GLM_KEY" \
-          -d "{\"model\":\"glm-4.7-flash\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}]}" \
-          > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
-        # 응답에서 content 추출
-        python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['choices'][0]['message']['content'])" "$TEMP_RESULT" > "${TEMP_RESULT}.txt" 2>/dev/null && mv "${TEMP_RESULT}.txt" "$TEMP_RESULT"
-      else
-        RC=1
-      fi
       ;;
     codex_backoff)
       echo "  ⏳ 15초 백오프..."
