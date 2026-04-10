@@ -219,7 +219,10 @@ async function main() {
     // If feedback detected, inject stronger reminder + PITFALLS auto-record instruction
     if (isFeedback) {
       parts.push(`[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요. 선언만 하지 말고 즉시 실행하세요. 안 된다고 단정하기 전에 웹 검색으로 확인하세요.
-[📝 PITFALLS AUTO-RECORD] 이 지적이 타당하다고 동의하면, 반드시 ~/.claude/PITFALLS.md (전역)에 P-NNN 형식으로 즉시 기록하세요. (증상/원인/해결/재발방지). 기록하지 않으면 forgot_record 패턴으로 재감지됩니다.`);
+[📝 PITFALLS AUTO-RECORD] 이 지적이 타당하다고 동의하면:
+1. 먼저 grep으로 PITFALLS.md에서 유사 항목 확인 (같은 증상/원인이면 기존 항목에 "재발: {날짜}" 추가)
+2. 신규면 P-NNN 형식으로 즉시 기록 (증상/원인/해결/재발방지)
+기록하지 않으면 forgot_record 패턴으로 재감지됩니다.`);
     }
 
     // Detect capability gap — trigger on-demand MCP search

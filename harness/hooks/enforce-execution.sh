@@ -28,13 +28,17 @@ TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 [ -z "$TRANSCRIPT" ] && exit 0
 [ ! -f "$TRANSCRIPT" ] && exit 0
 
-# Read last portion of transcript (last assistant turn only — smaller window to avoid false positives)
-LAST_RESPONSE=$(tail -c 2000 "$TRANSCRIPT" 2>/dev/null)
+# Read last portion of transcript (wider window to catch tool calls that precede text)
+LAST_RESPONSE=$(tail -c 4000 "$TRANSCRIPT" 2>/dev/null)
 [ -z "$LAST_RESPONSE" ] && exit 0
 
 # Count tool calls in last portion of transcript
 TOOL_CALLS=$(echo "$LAST_RESPONSE" | grep -cE '"tool_use"|"tool_name"|"tool_input"' 2>/dev/null)
 TOOL_CALLS=${TOOL_CALLS:-0}
+
+# === Exception: analysis/comparison context — not actual declarations ===
+HAS_ANALYSIS=$(echo "$LAST_RESPONSE" | grep -cE '비교|분석|검토|판단|충돌|오버엔지니어링|Nyongjong|평가축' 2>/dev/null)
+HAS_ANALYSIS=${HAS_ANALYSIS:-0}
 
 # === Exception: PRD/plan question phase — intentionally no tool calls ===
 HAS_PRD_QUESTION=$(echo "$LAST_RESPONSE" | grep -cE '구체화 질문|확인 질문|질문.*개|PRD.*질문|어떤.*것이.*중요|사용 환경|핵심 정보|어떤.*원하' 2>/dev/null)
@@ -47,7 +51,7 @@ HAS_PRD_QUESTION=${HAS_PRD_QUESTION:-0}
 HAS_DECLARATION=$(echo "$LAST_RESPONSE" | grep -cE '하겠습니다|반영하겠|진행하겠|구현하겠|수정하겠|추가하겠|적용하겠|배포하겠' 2>/dev/null)
 HAS_DECLARATION=${HAS_DECLARATION:-0}
 
-if [ "${HAS_DECLARATION:-0}" -gt 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -eq 0 ] 2>/dev/null; then
+if [ "${HAS_DECLARATION:-0}" -gt 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -eq 0 ] 2>/dev/null && [ "${HAS_ANALYSIS:-0}" -lt 2 ] 2>/dev/null; then
   echo "$((BLOCK_COUNT + 1))" > "$BLOCK_COUNTER_FILE"
   echo "{\"decision\":\"block\",\"reason\":\"선언-미실행 감지: 하겠습니다라고 선언했으나 도구 호출이 없습니다. 즉시 실행하세요.\"}"
   exit 0
@@ -70,7 +74,7 @@ HAS_IMPOSSIBLE=${HAS_IMPOSSIBLE:-0}
 HAS_SEARCH=$(echo "$LAST_RESPONSE" | grep -cE '검색|조사|확인|tavily|perplexity|검증|리서치' 2>/dev/null)
 HAS_SEARCH=${HAS_SEARCH:-0}
 
-if [ "${HAS_IMPOSSIBLE:-0}" -gt 0 ] 2>/dev/null && [ "${HAS_SEARCH:-0}" -eq 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -lt 2 ] 2>/dev/null; then
+if [ "${HAS_IMPOSSIBLE:-0}" -gt 0 ] 2>/dev/null && [ "${HAS_SEARCH:-0}" -eq 0 ] 2>/dev/null && [ "${TOOL_CALLS:-0}" -lt 2 ] 2>/dev/null && [ "${HAS_ANALYSIS:-0}" -lt 2 ] 2>/dev/null; then
   echo "$((BLOCK_COUNT + 1))" > "$BLOCK_COUNTER_FILE"
   echo "{\"decision\":\"block\",\"reason\":\"섣부른 단정 감지: 불가능하다고 결론냈으나 검증이 부족합니다. 1) 웹 검색(Tavily/Perplexity)으로 확인 2) npm search로 MCP 서버 검색 후 claude mcp add로 등록 3) 3회 다른 접근 시도. 전부 실패 후에만 불가 보고.\"}"
   exit 0
