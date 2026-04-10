@@ -35,7 +35,7 @@ npx vite preview  # 또는 npx serve dist/
 
 ```bash
 # 라운드별 로테이션 — rubric을 프롬프트에 포함
-RUBRIC=$(cat D:/jamesclew/harness/rules/design_rubric.md)
+RUBRIC=$(cat $HOME/.claude/rules/design_rubric.md)
 codex exec "다음 웹앱을 Anthropic Design Rubric 기준으로 평가하라.
 
 $RUBRIC
@@ -87,7 +87,7 @@ firebase deploy --only hosting
 
 **배포 후 즉시 Evaluator 스크립트 실행** (Generator-Evaluator 분리):
 ```bash
-bash D:/jamesclew/harness/scripts/evaluator.sh https://PROJECT.web.app/
+bash $HOME/.claude/scripts/evaluator.sh https://PROJECT.web.app/
 # 자동으로: Playwright 캡처 → Codex 등급 평가 → PASS/REWORK/FAIL 판정
 # 결과: ~/.harness-state/evaluator_result.json
 ```
