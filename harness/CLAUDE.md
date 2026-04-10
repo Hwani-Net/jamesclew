@@ -39,7 +39,8 @@
 ## Build Transition Rule [hook: enforce-build-transition.sh]
 - 빌드 요청 감지 시 바로 코딩 금지.
 - 새 프로젝트: `/prd` → `/pipeline-install` → **복잡도별 plan 선택** → 코드.
-  - **고복잡도** (다수 서비스, DB, 인증 등): `/deep-plan @PRD.md` (Research→Interview→External LLM Review→TDD Plan)
+  - **고복잡도** (다수 서비스, DB, 인증 등): `/ultraplan` (클라우드 VM, 3탐색+1비평 에이전트 병렬, 브라우저 플랜 편집. GitHub 리포 필수)
+  - **고복잡도 (GitHub 없음)**: `/deep-plan @PRD.md` (Research→Interview→External LLM Review→TDD Plan)
   - **중복잡도** (단일 앱, 여러 페이지): `/plan` (Claude 내장 Plan 모드)
   - **저복잡도** (단일 파일, 유틸리티): 바로 코드 (판단 근거 명시)
 - 대화 중 빌드 전환: `/plan` → 코드.
