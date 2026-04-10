@@ -32,39 +32,54 @@
 - 작업 완료: `echo "결과 요약" > ~/.harness-state/last_result.txt` → Stop hook이 자동 전송.
 - 텔레그램 요청 → 텔레그램 응답. 터미널 요청 → 터미널 응답.
 
-## Subagent-First Architecture (토큰 절감 핵심)
-Opus = **오케스트레이터 + 어드바이저**. 실행은 Sonnet 서브에이전트 위임.
+## Multi-Model Orchestration (토큰 절감 + 품질 핵심)
+Opus = **오케스트레이터 + 어드바이저 + 모델 라우터**. 작업 유형에 따라 최적 모델 배정.
+
+### 실행 모델 풀
+| 모델 | 호출 | 강점 | 용도 |
+|------|------|------|------|
+| Sonnet 서브에이전트 | `Agent(model: sonnet)` | 풀 도구 접근, 파일 편집 | 코딩, 탐색, 배포 |
+| Codex CLI | `codex exec "..."` (6계정 로테이션) | 독립적 코드 관점 | 코드 리뷰, 설계 평가 |
+| Antigravity | `opencode run -m "..." "..."` (4계정) | 콘텐츠 톤, AI냄새 감지 | 콘텐츠 리뷰, 차별화 분석 |
+| Gemma 4 로컬 | Ollama API (localhost:11434) | 무제한, 오프라인 | 벌크 작업, 최종 폴백 |
+
+### 작업→모델 라우팅
+| 작업 유형 | 1순위 | 교차 검증 |
+|-----------|-------|-----------|
+| 코드 작성/수정 | Sonnet 서브에이전트 | Codex 리뷰 |
+| 코드 리뷰 | Codex + Antigravity 병렬 | 의견 불일치 시 Opus 판단 |
+| 콘텐츠(블로그) 리뷰 | Antigravity | Codex 보조 |
+| AI냄새 검사 | Antigravity | — |
+| 웹 리서치 | Sonnet(researcher) | — |
+| 탐색/검색 | Sonnet(Explore) | — |
+| 배포/빌드 | Sonnet(general-purpose) | — |
+| 설계 평가 | Codex + Antigravity | 다수결 |
+| 벌크/반복 작업 | Gemma 4 로컬 | — |
 
 ### 위임 규칙
-- **위임 대상**: 파일 읽기 2개+, 코드 수정, 검색 3회+, 리서치 → 전부 서브에이전트
+- **위임 대상**: 파일 읽기 2개+, 코드 수정, 검색 3회+, 리서치 → 서브에이전트 또는 외부 모델
 - **Opus 직접 수행**: 단일 파일 읽기/수정, 대표님 대화, 최종 판단, 커밋
-- **병렬 실행**: 독립 작업은 반드시 병렬 서브에이전트로 동시 실행
+- **병렬 실행**: 독립 작업은 반드시 병렬로 동시 실행 (Sonnet + Codex 동시 등)
 
-### 서브에이전트 유형
-- `Explore` (sonnet): 코드베이스 탐색, 파일 검색
-- `general-purpose` (sonnet): 코딩, 수정, 빌드, 배포
-- `code-reviewer` (sonnet): 코드 리뷰
-- `researcher` (sonnet): 웹 리서치, 최신 정보 조사
-- `Plan` (sonnet): 구현 계획 수립
+### Advisor Loop (Opus ↔ 모델 반복 대화)
+1. **라우팅**: Opus가 작업 유형 판단 → 최적 모델(들) 선택
+2. **1차 위임**: 상세 프롬프트 + 제약조건 → 모델 실행
+3. **결과 검증**: Opus가 결과 검토. 불충분하면 SendMessage(Sonnet) 또는 재호출(외부 CLI)
+4. **교차 검증**: 품질 중요 작업은 2+ 모델 결과 비교. 불일치 시 Opus가 최종 판단
+5. **완료**: 대표님께 요약 전달
 
-### Advisor Loop (Opus ↔ Sonnet 반복 대화)
-서브에이전트는 1회성이 아님. **SendMessage로 후속 지시** 가능:
-1. **1차 위임**: Opus가 상세 프롬프트 + 제약조건 → Sonnet 실행
-2. **결과 검증**: Opus가 결과를 검토. 불충분하면 SendMessage로 추가 지시/수정 요청
-3. **분기 판단**: Sonnet이 "A vs B 중 어느 방향?" 보고 → Opus가 결정 → Sonnet 계속
-4. **완료**: Opus가 결과를 대표님께 요약 전달
-
-**프롬프트 작성 원칙** (어드바이저 품질 = 프롬프트 품질):
-- 목표·맥락·제약조건을 명시 (서브에이전트는 대화 맥락을 모름)
+**프롬프트 작성 원칙**:
+- 목표·맥락·제약조건 명시 (모델은 대화 맥락을 모름)
 - 파일 경로, 라인 번호 등 구체적 정보 포함
-- 판단이 필요한 지점을 사전에 식별해 프롬프트에 "X 상황이면 옵션을 보고하라" 명시
-- 결과물 형식 지정 (요약 200자, JSON, 수정된 파일 목록 등)
+- 판단 분기점을 사전 식별 → "X 상황이면 옵션을 보고하라"
+- 결과물 형식 지정 (요약 200자, JSON, 파일 목록 등)
+- 외부 CLI용 프롬프트는 1회성이므로 충분한 컨텍스트 포함
 
 [hook: explore-router.sh] 직접 Read/Grep/Glob 5회 누적 시 경고
 
 ## Tool Priority (비용순)
-1. Subagent(sonnet) > Built-in > Bash > MCP > External API
-2. 외부 모델 검수: Antigravity + Codex. Claude 자기 검수 금지.
+1. Subagent(sonnet) + 외부 CLI(Codex/Antigravity) > Built-in > Bash > MCP > External API
+2. 검수는 반드시 외부 모델. Claude 자기 검수 금지.
 3. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
 4. 상세: rules/architecture.md
 
