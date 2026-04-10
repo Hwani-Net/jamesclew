@@ -13,7 +13,7 @@ if [ -z "$URL" ]; then
 fi
 
 STATE_DIR="$HOME/.harness-state"
-RUBRIC_FILE="D:/jamesclew/harness/rules/design_rubric.md"
+RUBRIC_FILE="$HOME/.claude/rules/design_rubric.md"
 SHOT_DIR="$STATE_DIR/evaluator_shots"
 RESULT="$STATE_DIR/evaluator_result.json"
 

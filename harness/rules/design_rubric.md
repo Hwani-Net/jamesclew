@@ -95,7 +95,7 @@
 
 ```bash
 # /qa 커맨드 내부에서 호출
-cat D:/jamesclew/harness/rules/design_rubric.md | \
+cat $HOME/.claude/rules/design_rubric.md | \
   codex exec "다음 rubric으로 {URL}을 평가하라. 각 축별 점수(0-10)와 근거, 최저축, PASS/REWORK/FAIL 판정을 JSON으로 출력"
 ```
 
