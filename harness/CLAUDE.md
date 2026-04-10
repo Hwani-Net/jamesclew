@@ -33,18 +33,34 @@
 - 텔레그램 요청 → 텔레그램 응답. 터미널 요청 → 터미널 응답.
 
 ## Subagent-First Architecture (토큰 절감 핵심)
-Opus = 오케스트레이터. 실행은 Sonnet 서브에이전트 위임.
-- **위임 기준**: 파일 읽기 2개+, 코드 수정, 검색 3회+, 리서치 → 전부 서브에이전트
+Opus = **오케스트레이터 + 어드바이저**. 실행은 Sonnet 서브에이전트 위임.
+
+### 위임 규칙
+- **위임 대상**: 파일 읽기 2개+, 코드 수정, 검색 3회+, 리서치 → 전부 서브에이전트
 - **Opus 직접 수행**: 단일 파일 읽기/수정, 대표님 대화, 최종 판단, 커밋
-- **서브에이전트 유형별 사용**:
-  - `Explore` (model: sonnet): 코드베이스 탐색, 파일 검색
-  - `general-purpose` (model: sonnet): 코딩, 수정, 빌드, 배포
-  - `code-reviewer` (model: sonnet): 코드 리뷰
-  - `researcher` (model: sonnet): 웹 리서치, 최신 정보 조사
-  - `Plan` (model: sonnet): 구현 계획 수립
 - **병렬 실행**: 독립 작업은 반드시 병렬 서브에이전트로 동시 실행
-- **결과 보고**: 서브에이전트 결과를 대표님께 요약 전달. 원문은 메인 컨텍스트에 안 남음
-- [hook: explore-router.sh] 직접 Read/Grep/Glob 8회 누적 시 경고
+
+### 서브에이전트 유형
+- `Explore` (sonnet): 코드베이스 탐색, 파일 검색
+- `general-purpose` (sonnet): 코딩, 수정, 빌드, 배포
+- `code-reviewer` (sonnet): 코드 리뷰
+- `researcher` (sonnet): 웹 리서치, 최신 정보 조사
+- `Plan` (sonnet): 구현 계획 수립
+
+### Advisor Loop (Opus ↔ Sonnet 반복 대화)
+서브에이전트는 1회성이 아님. **SendMessage로 후속 지시** 가능:
+1. **1차 위임**: Opus가 상세 프롬프트 + 제약조건 → Sonnet 실행
+2. **결과 검증**: Opus가 결과를 검토. 불충분하면 SendMessage로 추가 지시/수정 요청
+3. **분기 판단**: Sonnet이 "A vs B 중 어느 방향?" 보고 → Opus가 결정 → Sonnet 계속
+4. **완료**: Opus가 결과를 대표님께 요약 전달
+
+**프롬프트 작성 원칙** (어드바이저 품질 = 프롬프트 품질):
+- 목표·맥락·제약조건을 명시 (서브에이전트는 대화 맥락을 모름)
+- 파일 경로, 라인 번호 등 구체적 정보 포함
+- 판단이 필요한 지점을 사전에 식별해 프롬프트에 "X 상황이면 옵션을 보고하라" 명시
+- 결과물 형식 지정 (요약 200자, JSON, 수정된 파일 목록 등)
+
+[hook: explore-router.sh] 직접 Read/Grep/Glob 5회 누적 시 경고
 
 ## Tool Priority (비용순)
 1. Subagent(sonnet) > Built-in > Bash > MCP > External API
