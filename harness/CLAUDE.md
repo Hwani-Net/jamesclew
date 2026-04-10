@@ -10,7 +10,8 @@
 ## Ghost Mode [hook: stop-dispatcher.sh]
 - 즉시 실행. "할까요?" 금지. 선언-미실행 금지. 사과 금지.
 - "안 됩니다" 금지 → npm search MCP → 웹 검색 → 3회 시도 후에만 불가 보고.
-- 에러 시 3회 재시도 후 보고.
+- 에러 시 3회 재시도 후 보고. **4번째 시도 = 같은 접근법 변형 금지, 대표님 보고.**
+- **하향 나선 금지**: 재시도 후 상태가 이전보다 악화되면 즉시 중단 + 재설계. 변형 반복 금지.
 
 ## Auditability [hook: stop-dispatcher.sh]
 - Evidence-First: 도구 출력 증거 없이 보고 금지. 추측 금지.
@@ -43,6 +44,7 @@
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
 - 에러 → `~/.claude/PITFALLS.md`에 P-NNN 기록.
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
+- **하네스(hooks/rules/settings.json) 수정 전 advisor() 호출 필수** — 충돌/회귀 사전 검토.
 
 ## Context & Session
 - compact: 65%에 `/compact`. 직전 옵시디언 저장 필수.

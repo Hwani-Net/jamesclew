@@ -47,4 +47,12 @@ esac
 PURPOSE=$(echo "$INPUT" | jq -r '.tool_input.query // .tool_input.prompt // .tool_input.command // ""' 2>/dev/null | head -c 80 | tr '\n' ' ' | sed 's/"/\\"/g')
 echo "{\"ts\":\"$TS\",\"service\":\"$SERVICE\",\"model\":\"$MODEL\",\"cost\":$COST,\"purpose\":\"$PURPOSE\"}" >> "$LOG"
 
+# ── Hourly cost warning (observe + warn, no blocking) ──
+HOUR_KEY=$(date -u +%Y-%m-%dT%H)
+HOURLY_COST=$(grep "$HOUR_KEY" "$LOG" 2>/dev/null | jq -s '[.[].cost] | add // 0' 2>/dev/null || echo "0")
+WARN_THRESHOLD="${COST_WARN_USD:-4.00}"
+if [ "$(echo "$HOURLY_COST > $WARN_THRESHOLD" | bc -l 2>/dev/null)" = "1" ]; then
+  echo "{\"systemMessage\":\"[COST WARN] Hourly API cost \$$HOURLY_COST exceeds \$$WARN_THRESHOLD. Consider reducing external model calls.\"}"
+fi
+
 exit 0

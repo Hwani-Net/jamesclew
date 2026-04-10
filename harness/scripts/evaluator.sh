@@ -133,8 +133,8 @@ _run_codex() {
   return 1
 }
 
-# ── 5단계 모델 로테이션: codex → opencode → ollama 31b cloud → glm-flash → codex backoff ──
-MODELS=("codex" "opencode" "ollama_cloud" "glm_flash" "codex_backoff")
+# ── 3+1단계 모델 로테이션: codex(6계정) → opencode(4계정) → codex backoff → [glm optional] ──
+MODELS=("codex" "opencode" "codex_backoff" "glm_flash")
 MODEL_USED=""
 
 for MODEL in "${MODELS[@]}"; do
@@ -147,9 +147,6 @@ for MODEL in "${MODELS[@]}"; do
       ;;
     opencode)
       timeout 60 opencode run "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
-      ;;
-    ollama_cloud)
-      timeout 90 ollama run gemma4:31b-cloud "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
       ;;
     glm_flash)
       # GLM-4.7-Flash: 무료 API (OpenAI 호환)
