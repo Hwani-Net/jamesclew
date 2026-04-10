@@ -28,6 +28,8 @@
 - Evidence-First: 도구 출력 증거 없이 보고 금지. 추측 금지.
 - Search-Before-Solve: 막히면 PITFALLS, 옵시디언, 이전 세션 먼저 검색.
 - **Claude Code 기능 참조**: 새 기능/도구 도입 전 반드시 (1) NotebookLM `notebook_query`로 공식 매뉴얼 조회 (2) `~/.claude/cache/changelog.md`에서 최신 릴리즈 확인. 추측으로 기능 존재 여부를 판단하지 않는다.
+  - NLM CLI: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` (Claude Code Official Docs)
+  - NLM 하네스: `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` (Agent Harness Blueprint)
 
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 순차 실행
