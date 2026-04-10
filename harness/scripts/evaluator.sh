@@ -79,8 +79,6 @@ echo "✅ 인터랙션: $(cat "$SHOT_DIR/interactive.json" | head -1)"
 # ─────────────────────────────────────
 # Phase 2: 외부 모델 등급 평가 (Generator와 분리)
 # ─────────────────────────────────────
-echo "🤖 외부 모델 등급 평가 (Codex)..."
-
 if [ ! -f "$RUBRIC_FILE" ]; then
   echo "❌ design_rubric.md 없음: $RUBRIC_FILE"
   exit 3
@@ -114,7 +112,89 @@ URL: $URL
 
 통과: 4개 축 모두 8점 이상. 5점 이하 있으면 FAIL."
 
-codex exec "$PROMPT" 2>&1 | tee "$RESULT"
+# ── Codex 멀티계정 로테이션 헬퍼 ──
+CODEX_ACCOUNTS_DIR="$HOME/.codex-accounts"
+CODEX_AUTH="$HOME/.codex/auth.json"
+
+_run_codex() {
+  local prompt="$1" out="$2"
+  local accts=()
+  [ -d "$CODEX_ACCOUNTS_DIR" ] && while IFS= read -r f; do accts+=("$f"); done \
+    < <(ls "$CODEX_ACCOUNTS_DIR"/account*.json 2>/dev/null | sort)
+  if [ ${#accts[@]} -eq 0 ]; then
+    timeout 30 codex exec "$prompt" > "$out" 2>&1 && return 0 || return $?
+  fi
+  for acct in "${accts[@]}"; do
+    cp "$acct" "$CODEX_AUTH"
+    timeout 30 codex exec "$prompt" > "$out" 2>&1
+    if [ $? -eq 0 ] && grep -qP '"verdict"' "$out" 2>/dev/null; then return 0; fi
+    grep -qi "429\|rate.limit\|usage.limit" "$out" 2>/dev/null && echo "  ⚠️ $(basename $acct) 429" || echo "  ⚠️ $(basename $acct) fail"
+  done
+  return 1
+}
+
+# ── 5단계 모델 로테이션: codex → opencode → ollama 31b cloud → glm-flash → codex backoff ──
+MODELS=("codex" "opencode" "ollama_cloud" "glm_flash" "codex_backoff")
+MODEL_USED=""
+
+for MODEL in "${MODELS[@]}"; do
+  echo "🤖 [$MODEL] 시도..."
+  TEMP_RESULT="$STATE_DIR/evaluator_attempt_${MODEL}.json"
+
+  case "$MODEL" in
+    codex)
+      _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
+      ;;
+    opencode)
+      timeout 60 opencode run "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
+      ;;
+    ollama_cloud)
+      timeout 90 ollama run gemma4:31b-cloud "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
+      ;;
+    glm_flash)
+      # GLM-4.7-Flash: 무료 API (OpenAI 호환)
+      GLM_KEY="${GLM_API_KEY:-}"
+      if [ -n "$GLM_KEY" ]; then
+        timeout 60 curl -s -X POST "https://api.z.ai/api/paas/v4/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $GLM_KEY" \
+          -d "{\"model\":\"glm-4.7-flash\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}]}" \
+          > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
+        # 응답에서 content 추출
+        python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['choices'][0]['message']['content'])" "$TEMP_RESULT" > "${TEMP_RESULT}.txt" 2>/dev/null && mv "${TEMP_RESULT}.txt" "$TEMP_RESULT"
+      else
+        RC=1
+      fi
+      ;;
+    codex_backoff)
+      echo "  ⏳ 15초 백오프..."
+      sleep 15
+      _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
+      ;;
+  esac
+
+  # 성공: exit 0 + verdict 존재
+  if [ $RC -eq 0 ] && grep -qP '"verdict"' "$TEMP_RESULT" 2>/dev/null; then
+    echo "✅ $MODEL 성공"
+    cp "$TEMP_RESULT" "$RESULT"
+    MODEL_USED="$MODEL"
+    break
+  fi
+
+  # 실패 로그
+  FAIL_REASON="exit=$RC"
+  grep -qi "429\|rate.limit\|usage.limit\|Too Many" "$TEMP_RESULT" 2>/dev/null && FAIL_REASON="429"
+  [ $RC -eq 124 ] && FAIL_REASON="timeout"
+  echo "  ⚠️ $MODEL 실패 ($FAIL_REASON)"
+  echo "{\"ts\":\"$(date -u +%FT%TZ)\",\"service\":\"$MODEL\",\"event\":\"eval_fail\",\"reason\":\"$FAIL_REASON\"}" \
+    >> "$STATE_DIR/api_cost_log.jsonl"
+done
+
+if [ -z "$MODEL_USED" ]; then
+  echo "❌ 전체 모델 실패. 대표님 확인 필요."
+  exit 4
+fi
+echo "📝 평가 모델: $MODEL_USED"
 
 # ─────────────────────────────────────
 # Phase 3: 판정 추출

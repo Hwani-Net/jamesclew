@@ -113,3 +113,11 @@
 - **원인**: crossReview 함수가 `substring(0, 3000)`으로 본문을 잘라서 전달. 4311자 글이 3000자에서 "추천 대"로 끊김
 - **해결**: 텍스트 제한 3000→5000자로 확대
 - **재발 방지**: 글 작성 시 목표 글자수(4000-5000자)와 crossReview 제한을 같이 관리. 5000자 이상 글이 나올 경우 제한 추가 확대 필요
+
+## [P-012] 외부 모델 로테이션 규칙만 존재, 구현 없음
+
+- **발견**: 2026-04-10
+- **증상**: Codex 429 한도 초과 시 수동으로 Antigravity 전환 필요. evaluator.sh에 `codex exec` 하드코딩, 재시도/로테이션 로직 0
+- **원인**: architecture.md와 qa.md에 "Codex → Antigravity → Gemini 로테이션" 규칙만 명시. 실제 스크립트(evaluator.sh)에는 codex 단일 호출만 구현
+- **해결**: evaluator.sh Phase 2에 3단계 자동 로테이션 구현 (codex → opencode → codex_backoff). 429/timeout 패턴 감지 → 자동 전환 + 실패 로그 기록
+- **재발 방지**: 규칙 추가 시 구현 코드도 동시 작성. "규칙 vs 구현" 갭을 /audit 체크리스트에 추가
