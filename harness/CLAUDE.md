@@ -32,12 +32,25 @@
 - 작업 완료: `echo "결과 요약" > ~/.harness-state/last_result.txt` → Stop hook이 자동 전송.
 - 텔레그램 요청 → 텔레그램 응답. 터미널 요청 → 터미널 응답.
 
+## Subagent-First Architecture (토큰 절감 핵심)
+Opus = 오케스트레이터. 실행은 Sonnet 서브에이전트 위임.
+- **위임 기준**: 파일 읽기 2개+, 코드 수정, 검색 3회+, 리서치 → 전부 서브에이전트
+- **Opus 직접 수행**: 단일 파일 읽기/수정, 대표님 대화, 최종 판단, 커밋
+- **서브에이전트 유형별 사용**:
+  - `Explore` (model: sonnet): 코드베이스 탐색, 파일 검색
+  - `general-purpose` (model: sonnet): 코딩, 수정, 빌드, 배포
+  - `code-reviewer` (model: sonnet): 코드 리뷰
+  - `researcher` (model: sonnet): 웹 리서치, 최신 정보 조사
+  - `Plan` (model: sonnet): 구현 계획 수립
+- **병렬 실행**: 독립 작업은 반드시 병렬 서브에이전트로 동시 실행
+- **결과 보고**: 서브에이전트 결과를 대표님께 요약 전달. 원문은 메인 컨텍스트에 안 남음
+- [hook: explore-router.sh] 직접 Read/Grep/Glob 8회 누적 시 경고
+
 ## Tool Priority (비용순)
-1. Built-in > Bash > MCP > External API
+1. Subagent(sonnet) > Built-in > Bash > MCP > External API
 2. 외부 모델 검수: Antigravity + Codex. Claude 자기 검수 금지.
 3. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
-4. **탐색 3회+ 예상 시 Agent(Explore, model: "sonnet") 위임** [hook: explore-router.sh] — 직접 Read/Grep/Glob 8회 누적 시 hook 경고. Subagent는 sonnet 기본.
-5. 상세: rules/architecture.md
+4. 상세: rules/architecture.md
 
 ## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
@@ -51,11 +64,10 @@
 - **Sonnet 세션**: compact 제한 없음 (auto). 코딩/배포/버그 수정 등 범위 명확한 작업 전용.
 - 컨텍스트 수치는 `telegram-notify.sh heartbeat`로 확인. 추측 금지.
 
-## Model Selection (세션 시작 시 선택)
-- **Opus** (기본): 하네스 엔지니어링, 긴 분석, 다수 파일 탐색. 1M 컨텍스트.
-- **Sonnet**: 단순 코딩/배포/버그 수정 등 단일 작업만. 128K 컨텍스트. 복잡한 판단 필요 시 Opus 전환.
-- 전환: `/model sonnet` 또는 `/model opus`. 세션 중 자동 전환 불가.
-- ~~advisorModel~~ 폐기: settings.json에 존재하지 않는 키. 실제 대안은 opusplan 모드 (미검증).
+## Model Selection
+- **Opus 오케스트레이터** (기본): 계획·판단·대화·커밋. 실행은 Sonnet 서브에이전트 위임.
+- **Sonnet 메인**: 단순 단일 작업 시에만. `/model sonnet`으로 전환.
+- Sonnet 서브에이전트: Opus 세션 내에서 `model: "sonnet"`으로 자동 사용. 별도 전환 불필요.
 
 ## Hosting
 Firebase 전용. WordPress 금지.

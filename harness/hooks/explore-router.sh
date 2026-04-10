@@ -18,22 +18,22 @@ echo "$COUNT" > "$COUNTER"
 
 WARN=""
 
-# Threshold 1: 8 exploration calls in session → first nudge
-if [ "$COUNT" -eq 8 ] && ! grep -q "^8$" "$WARNED"; then
-  echo "8" >> "$WARNED"
-  WARN="[💡 EXPLORE ROUTER] Read/Grep/Glob 누적 8회. 같은 영역 추가 탐색이 예상되면 Agent(subagent_type=\"Explore\")로 위임하세요. 단일 prompt로 여러 검색 묶음 → 메인 컨텍스트에 결과만 반환 → 5-10x 토큰 절감."
+# Threshold 1: 5 calls → subagent-first reminder
+if [ "$COUNT" -eq 5 ] && ! grep -q "^5$" "$WARNED"; then
+  echo "5" >> "$WARNED"
+  WARN="[💡 SUBAGENT-FIRST] Read/Grep/Glob 누적 5회. Subagent-First 규칙: 추가 탐색/수정은 Agent(model: sonnet)로 위임. 메인 컨텍스트에는 결과만."
 fi
 
-# Threshold 2: 20 calls → stronger warning
-if [ "$COUNT" -eq 20 ] && ! grep -q "^20$" "$WARNED"; then
-  echo "20" >> "$WARNED"
-  WARN="[⚠️ EXPLORE OVERFLOW] Read/Grep/Glob 누적 20회. 다음 탐색 작업은 반드시 Agent(Explore)로 위임. 직접 탐색은 컨텍스트 오염 비용이 큼."
+# Threshold 2: 12 calls → strong warning
+if [ "$COUNT" -eq 12 ] && ! grep -q "^12$" "$WARNED"; then
+  echo "12" >> "$WARNED"
+  WARN="[⚠️ DIRECT OVERFLOW] Read/Grep/Glob 누적 12회. 직접 탐색이 토큰을 낭비 중. 다음 작업은 반드시 서브에이전트로."
 fi
 
-# Threshold 3: 50 calls → block-level warning
-if [ "$COUNT" -eq 50 ] && ! grep -q "^50$" "$WARNED"; then
-  echo "50" >> "$WARNED"
-  WARN="[🚨 EXPLORE EXCESS] 50회 직접 탐색. 작업 패턴 재검토 필요. 큰 codebase 분석은 subagent로 위임이 표준."
+# Threshold 3: 25 calls → excess
+if [ "$COUNT" -eq 25 ] && ! grep -q "^25$" "$WARNED"; then
+  echo "25" >> "$WARNED"
+  WARN="[🚨 CONTEXT WASTE] 25회 직접 작업. Opus 컨텍스트 오염 심각. 서브에이전트 위임 패턴 즉시 전환."
 fi
 
 if [ -n "$WARN" ]; then
