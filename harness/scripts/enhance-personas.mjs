@@ -9,7 +9,15 @@ import { join, resolve } from 'path';
 
 const PERSONAS_DIR = resolve(process.env.HOME || process.env.USERPROFILE, 'Obsidian-Vault/03-knowledge/personas');
 const KEYS_FILE = resolve(process.env.HOME || process.env.USERPROFILE, '.claude/openrouter-keys.json');
-const MODEL = 'qwen/qwen3.6-plus:free';
+// Model fallback list — tried in order. "ollama:" prefix = local Ollama inference
+const MODELS = [
+  'openai/gpt-oss-120b:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'google/gemma-4-31b-it:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'ollama:gemma4:e4b',  // local fallback — no rate limit, ~107s/req
+];
 const REQUIRED_SECTIONS = ['## 목표 (Goals)', '## 제약조건 (Constraints)', '## 사용 맥락 (Scenario)', '## 대표 발화'];
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -45,21 +53,29 @@ function getMissingSections(body) {
   return REQUIRED_SECTIONS.filter(s => !body.includes(s));
 }
 
-async function callLLM(prompt, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    const key = getNextKey();
+async function callLLM(prompt) {
+  const sysMsg = '당신은 한국 시장에 특화된 UX 리서치 전문가입니다. 기존 페르소나를 보강합니다. 마크다운 형식으로만 응답하세요. 추가 설명이나 인사말 없이 섹션 내용만 출력하세요.';
+
+  for (const entry of MODELS) {
+    const isOllama = entry.startsWith('ollama:');
+    const model = isOllama ? entry.slice(7) : entry;
+    const url = isOllama
+      ? 'http://localhost:11434/v1/chat/completions'
+      : 'https://openrouter.ai/api/v1/chat/completions';
+    const headers = { 'Content-Type': 'application/json' };
+    if (!isOllama) {
+      headers['Authorization'] = `Bearer ${getNextKey()}`;
+      headers['X-Title'] = 'JamesClaw Persona Enhancer';
+    }
+
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'X-Title': 'JamesClaw Persona Enhancer'
-        },
+        headers,
         body: JSON.stringify({
-          model: MODEL,
+          model,
           messages: [
-            { role: 'system', content: '당신은 한국 시장에 특화된 UX 리서치 전문가입니다. 기존 페르소나를 보강합니다. 마크다운 형식으로만 응답하세요. 추가 설명이나 인사말 없이 섹션 내용만 출력하세요.' },
+            { role: 'system', content: sysMsg },
             { role: 'user', content: prompt }
           ],
           max_tokens: 600,
@@ -67,15 +83,20 @@ async function callLLM(prompt, retries = 3) {
         })
       });
 
-      if (res.status === 429 || res.status === 402) {
-        log(`Key #${keyIndex} exhausted (${res.status}), rotating...`);
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        log(`${entry} HTTP ${res.status}: ${errText.slice(0, 150)}, next model...`);
         continue;
       }
 
       const data = await res.json();
-      return data.choices?.[0]?.message?.content || '';
+      const content = data.choices?.[0]?.message?.content || '';
+      if (content) {
+        log(`✓ ${entry} succeeded`);
+        return content;
+      }
     } catch (e) {
-      log(`Error: ${e.message}, retrying...`);
+      log(`${entry} error: ${e.message}, next model...`);
     }
   }
   return '';

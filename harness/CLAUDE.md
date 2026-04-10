@@ -44,7 +44,7 @@
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
 - 에러 → `~/.claude/PITFALLS.md`에 P-NNN 기록.
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
-- **하네스(hooks/rules/settings.json) 수정 전 advisor() 호출 필수** — 충돌/회귀 사전 검토.
+- **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/Antigravity) 검토 필수** — 충돌/회귀 사전 검토.
 
 ## Context & Session
 - **Opus 세션**: compact **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
@@ -53,8 +53,9 @@
 
 ## Model Selection (세션 시작 시 선택)
 - **Opus** (기본): 하네스 엔지니어링, 긴 분석, 다수 파일 탐색. 1M 컨텍스트.
-- **Sonnet + Advisor**: 코딩/배포/수정 등 범위가 명확한 작업. 128K 컨텍스트. `advisorModel: opus`로 전략 판단 시 Opus 호출.
+- **Sonnet**: 단순 코딩/배포/버그 수정 등 단일 작업만. 128K 컨텍스트. 복잡한 판단 필요 시 Opus 전환.
 - 전환: `/model sonnet` 또는 `/model opus`. 세션 중 자동 전환 불가.
+- ~~advisorModel~~ 폐기: settings.json에 존재하지 않는 키. 실제 대안은 opusplan 모드 (미검증).
 
 ## Hosting
 Firebase 전용. WordPress 금지.
