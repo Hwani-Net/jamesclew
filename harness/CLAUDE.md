@@ -150,6 +150,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 5. **비용**: GitHub Copilot Pro $10/월 (GPT-4.1/4o 무제한) 또는 Free (50 req/월)
 6. **복귀**: 리밋 해제 후 `ANTHROPIC_BASE_URL` 없이 재시작 → Opus 복귀
 ⚠️ **제약**: 프록시 세션에서 /model로 Opus/Sonnet 선택 시 에러 (프록시가 미지원). 프록시에서 사용 가능: GPT-4.1, GPT-4o, GPT-5 mini, Claude Haiku 4.5만. Opus 어드바이저는 반드시 별도 세션.
+⚠️ **GPT-4.1 한계**: 오케스트레이터 부적합 (Opus 60-65% 수준). 단순 반복/벌크 작업에만 사용. 판단/설계는 Opus 세션에서.
 
 ## Context & Session
 - **Opus 세션**: compact **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
