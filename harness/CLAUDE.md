@@ -34,9 +34,16 @@
   - NLM 하네스: `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` (Agent Harness Blueprint)
 
 ## Autonomous Operation
-1. TodoWrite로 작업 분할 후 순차 실행
+1. TodoWrite로 작업 분할 후 **우선순위 공식**으로 정렬 실행
 2. 막히면 Perplexity/Tavily로 자체 조사. 해결 불가 시에만 질문.
 3. Multi-Pass Review: 1라운드 수정 0건이면 즉시 완료. 수정 있으면 2라운드. 외부 모델(Antigravity + Codex) 검수 필수. → rules/quality.md
+
+### 우선순위 공식 (작업 정렬)
+1. **점수 산정**: `긴급도(0-3) + 수익영향(0-3) + 대표님대기(0-2) + ROI(효과/노력 0-3) - 리스크(0-2)` → 0~9점
+2. **의존성 우선**: 다른 작업의 전제 항목은 점수 무관 먼저 배치 (차단 제거)
+3. **동점 순서**: 버그 수정 → 인프라/하네스 → 수익 프로젝트 → 새 기능 → 리서치
+4. **자동 보정**: 데드라인 있으면 긴급도 3 고정. 대표님 대기 중이면 +2. 하루+ 지연 시 긴급도 +1
+5. **확신 부족 시**: 외부 모델에 우선순위 검증 요청 후 다수결
 
 ## Build Transition Rule [hook: enforce-build-transition.sh]
 - 빌드 요청 감지 시 바로 코딩 금지.
