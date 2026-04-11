@@ -60,7 +60,8 @@
 - 텔레그램 요청 → 텔레그램 응답. 터미널 요청 → 터미널 응답.
 
 ## Multi-Model Orchestration (토큰 절감 + 품질 핵심)
-Opus = **오케스트레이터 + 어드바이저 + 모델 라우터**. 작업 유형에 따라 최적 모델 배정.
+메인 모델(Opus 또는 GPT-4.1) = **오케스트레이터 + 어드바이저 + 모델 라우터**. 작업 유형에 따라 최적 모델 배정.
+⚠️ **자기 인식**: 너의 실제 모델명은 API 응답의 `model` 필드로 확인. CLAUDE.md에 "Opus"라 적혀있어도 네가 GPT-4.1이면 GPT-4.1이다. 자신을 Opus라 칭하지 마라.
 
 ### 실행 모델 풀
 | 모델 | 호출 | 강점 | 용도 |
@@ -157,6 +158,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 
 ## Model Selection
 - **Opus 오케스트레이터** (기본): 계획·판단·대화·커밋. 실행은 Sonnet 서브에이전트 위임.
+- **GPT-4.1 메인** (copilot-api): Opus 5H 리밋 절약 시. `ANTHROPIC_BASE_URL=http://localhost:4141`. GPT는 자신을 Opus라 칭하지 않는다.
 - **Sonnet 메인**: 단순 단일 작업 시에만. `/model sonnet`으로 전환.
 - Sonnet 서브에이전트: Opus 세션 내에서 `model: "sonnet"`으로 자동 사용. 별도 전환 불필요.
 - **Sonnet 서브에이전트 한계**: 지시 이해력 부족 → 단순 코딩/배포만 배정. 복잡한 판단/대화는 Opus.
