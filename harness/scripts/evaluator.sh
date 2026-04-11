@@ -133,9 +133,10 @@ _run_codex() {
   return 1
 }
 
-# ── 3단계 모델 로테이션: codex(6계정) → gemma4 로컬 → codex backoff ──
-# opencode(Antigravity) 일괄 차단 (Google ToS 자동차단, 2026-04): gemma4 로컬로 대체
-MODELS=("codex" "gemma4_local" "codex_backoff")
+# ── 4단계 모델 로테이션: codex → openrouter무료 → gemma4로컬 → codex backoff ──
+# opencode(Antigravity) 일괄 차단 (Google ToS 자동차단, 2026-04)
+MODELS=("codex" "openrouter_free" "gemma4_local" "codex_backoff")
+OPENROUTER_KEYS_FILE="$HOME/.claude/openrouter-keys.json"
 MODEL_USED=""
 
 for MODEL in "${MODELS[@]}"; do
@@ -145,6 +146,22 @@ for MODEL in "${MODELS[@]}"; do
   case "$MODEL" in
     codex)
       _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
+      ;;
+    openrouter_free)
+      OR_KEY=""
+      if [ -f "$OPENROUTER_KEYS_FILE" ]; then
+        OR_KEY=$(jq -r '.[0]' "$OPENROUTER_KEYS_FILE" 2>/dev/null)
+      fi
+      if [ -n "$OR_KEY" ]; then
+        curl -s --max-time 60 https://openrouter.ai/api/v1/chat/completions \
+          -H "Authorization: Bearer $OR_KEY" \
+          -H "Content-Type: application/json" \
+          -d "{\"model\":\"openai/gpt-oss-120b:free\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | jq -Rs .)}],\"max_tokens\":1000}" \
+          | jq -r '.choices[0].message.content // empty' > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
+      else
+        echo "  ⚠️ OpenRouter keys not found, skipping"
+        RC=1
+      fi
       ;;
     gemma4_local)
       curl -s --max-time 120 http://localhost:11434/v1/chat/completions \
