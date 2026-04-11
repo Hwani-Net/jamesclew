@@ -158,7 +158,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 
 ## Model Selection
 - **Opus 오케스트레이터** (기본): 계획·판단·대화·커밋. 실행은 Sonnet 서브에이전트 위임.
-- **GPT-4.1 메인** (copilot-api): Opus 5H 리밋 절약 시. `ANTHROPIC_BASE_URL=http://localhost:4141`. GPT는 자신을 Opus라 칭하지 않는다.
+- **GPT-4.1 메인** (copilot-api): Opus 5H 리밋 절약 시. `ANTHROPIC_BASE_URL=http://localhost:4141`. GPT는 자신을 Opus라 칭하지 않는다. 서브에이전트는 `model: "haiku"`만 가능 (Sonnet/Opus는 프록시 미지원).
 - **Sonnet 메인**: 단순 단일 작업 시에만. `/model sonnet`으로 전환.
 - Sonnet 서브에이전트: Opus 세션 내에서 `model: "sonnet"`으로 자동 사용. 별도 전환 불필요.
 - **Sonnet 서브에이전트 한계**: 지시 이해력 부족 → 단순 코딩/배포만 배정. 복잡한 판단/대화는 Opus.
