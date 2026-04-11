@@ -111,10 +111,12 @@
 - Ollama: localhost:11434 API — 무제한, 최종 폴백
 
 ## Tool Priority (비용순)
-1. Subagent(sonnet) + 외부 CLI(Codex/Antigravity) > Built-in > Bash > MCP > External API
+1. 외부 모델(Codex/GPT-4.1/Gemma4, 5H 0) > Subagent(sonnet, 5H 느림) > Built-in > Bash > MCP
 2. 검수는 반드시 외부 모델. Claude 자기 검수 금지. **전멸 폴백**: Codex+Antigravity+Gemma 전부 실패 시 대표님께 보고 후 Sonnet 서브에이전트 교차 검수로 대체 (임시). 교착 금지.
-3. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
-4. 상세: rules/architecture.md
+3. **이중 검토 필수**: Sonnet/Haiku 등 저렴한 모델이 생성한 결과는 반드시 외부 모델(Codex 또는 GPT-4.1)로 교차 검토. 품질 타협 금지.
+4. **Opus 어드바이저 상시**: 외부 모델/Sonnet이 실행해도, 최종 판단·방향 결정·품질 승인은 Opus가 수행.
+5. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
+6. 상세: rules/architecture.md
 
 ## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
