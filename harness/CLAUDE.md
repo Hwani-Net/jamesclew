@@ -124,22 +124,23 @@
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/Antigravity) 검토 필수** — 충돌/회귀 사전 검토.
 
 ## 5H Limit Optimization (Opus 사용량 보존)
-Opus 5시간 리밋을 최대한 보존하기 위한 전략. Agent(model: sonnet) 호출은 Sonnet 풀에서 차감됨 (Opus 풀 보존). 미지정 시 Opus 풀 차감이므로 model: sonnet 명시 필수.
+5H 롤링 윈도우는 **모든 모델 공통** — Sonnet 서브에이전트도 5H를 소비함 (Opus보다 느리게).
+7D 주간 풀은 Opus/Sonnet **별도** — Agent(model: sonnet)은 Opus 7D 풀 보존에 유효.
+**외부 모델(Codex/GPT-4.1/Gemma4)만이 5H + 7D 양쪽 모두 0 소비.** model: sonnet 명시 필수 (미지정 시 Opus 풀 차감).
 
 ### 일반 규칙
 - **Opus는 판단만**: 1-3줄 결정/지시. 긴 분석·코딩·탐색은 반드시 Sonnet 서브에이전트 위임
 - **서브에이전트 출력 간결화**: 200단어 이내 요약 요청. 긴 결과는 파일 저장 후 경로만 반환
 - **model: sonnet 명시 필수**: Agent() 호출 시 model 생략하면 Opus 풀 차감
 - **compact 적극 활용**: contextCompactionThreshold 80% 자동 compact 활성화
-- **위임 기준 (풀 보존 우선 — 외부 모델 > Sonnet > Opus 직접)**:
-  - 코드 리뷰/평가: Codex CLI (풀 0)
-  - 반복/벌크 코딩: GPT-4.1 별도 세션 (풀 0)
-  - 코딩 (도구 필요): Sonnet 서브에이전트 (Sonnet 풀)
-  - 탐색 3회+: Sonnet(Explore) (Sonnet 풀)
-  - 탐색 1-2회: Opus 직접
-  - 리서치: Perplexity/Tavily MCP 직접 (풀 0)
-  - 외부 검수: Codex + Gemma4 (풀 0)
-  - 단일 파일 읽기: Opus 직접
+- **위임 기준 (5H 보존 최우선 — 외부 모델(5H 0) > Sonnet(5H 느림) > Opus 직접(5H 빠름))**:
+  - 코드 리뷰/평가: **Codex CLI** (5H 0, 7D 0)
+  - 반복/벌크 코딩: **GPT-4.1** 별도 세션 (5H 0, 7D 0)
+  - 외부 검수: **Codex + Gemma4** (5H 0, 7D 0)
+  - 리서치: **Perplexity/Tavily** MCP 직접 (5H 0)
+  - 코딩 (도구 필요): Sonnet 서브에이전트 (5H 소비, 7D Sonnet 풀)
+  - 탐색 3회+: Sonnet(Explore) (5H 소비, 7D Sonnet 풀)
+  - 단일 파일/판단: Opus 직접 (5H 소비 큼, 7D Opus 풀)
 
 ### 80%+ 비상 모드 (5H rate limit 기준)
 5H 사용량 80%+ 감지 시 (heartbeat 또는 수동 확인):
