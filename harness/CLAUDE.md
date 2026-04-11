@@ -140,6 +140,15 @@ Opus 5시간 리밋을 최대한 보존하기 위한 전략. Agent(model: sonnet
    - `echo -n "/model sonnet" | clip` → `mcp__desktop-control__computer(action: "key", text: "ctrl+v")` → Enter
 5. Sonnet 메인 전환 후에도 Opus 풀은 보존됨 — 리밋 해제 후 `/model opus`로 복귀
 
+### GPT 메인 전환 (copilot-api 프록시)
+copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로, GPT-4.1을 Claude Code 메인 모델로 사용 가능:
+1. **서버 시작**: `copilot-api start --port 4141 &` (백그라운드)
+2. **전환**: `ANTHROPIC_BASE_URL=http://localhost:4141 claude` 로 새 세션 시작
+3. **모델**: GPT-4.1이 Claude Code의 모든 도구(Read/Edit/Write/Agent 등)를 사용
+4. **Opus 어드바이저**: 별도 Claude Code 세션(Opus)을 열어 판단/검증 요청
+5. **비용**: GitHub Copilot Pro $10/월 (GPT-4.1/4o 무제한) 또는 Free (50 req/월)
+6. **복귀**: 리밋 해제 후 `ANTHROPIC_BASE_URL` 없이 재시작 → Opus 복귀
+
 ## Context & Session
 - **Opus 세션**: compact **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007).
 - **Sonnet 세션**: compact 제한 없음 (auto). 코딩/배포/버그 수정 등 범위 명확한 작업 전용.
