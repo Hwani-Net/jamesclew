@@ -1,8 +1,8 @@
 #!/bin/bash
-# explore-router.sh — PostToolUse hook for Read|Grep|Glob
-# Counts cumulative exploration calls and recommends Agent(Explore) when
-# threshold exceeded. Reasoning: Agent subagent runs in isolated context,
-# returns only the summary, saving 5-10x tokens vs direct exploration.
+# explore-router.sh — PostToolUse hook for Read|Grep|Glob|Bash|Edit|Write
+# Counts ALL direct tool calls and enforces Subagent-First rule.
+# Agent subagent runs in isolated context, returns only summary → 5-10x token savings.
+# Critical: blog-auto session showed 194 direct calls vs 28 subagent = 87% direct = 5H drain.
 
 INPUT=$(cat)
 STATE_DIR="$HOME/.harness-state"
