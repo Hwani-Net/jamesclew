@@ -133,9 +133,9 @@ _run_codex() {
   return 1
 }
 
-# ── 3단계 모델 로테이션: codex(6계정) → opencode(4계정) → codex backoff ──
-# GLM Free tier 제거: concurrency 1 + 지속적 rate limit으로 실용성 없음 (2026-04-10)
-MODELS=("codex" "opencode" "codex_backoff")
+# ── 3단계 모델 로테이션: codex(6계정) → gemma4 로컬 → codex backoff ──
+# opencode(Antigravity) 일괄 차단 (Google ToS 자동차단, 2026-04): gemma4 로컬로 대체
+MODELS=("codex" "gemma4_local" "codex_backoff")
 MODEL_USED=""
 
 for MODEL in "${MODELS[@]}"; do
@@ -146,8 +146,11 @@ for MODEL in "${MODELS[@]}"; do
     codex)
       _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
       ;;
-    opencode)
-      timeout 60 opencode run "$PROMPT" > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
+    gemma4_local)
+      curl -s --max-time 120 http://localhost:11434/v1/chat/completions \
+        -H "Content-Type: application/json" \
+        -d "{\"model\":\"gemma4:e4b\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | jq -Rs .)}],\"max_tokens\":1000}" \
+        | jq -r '.choices[0].message.content // empty' > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
       ;;
     codex_backoff)
       echo "  ⏳ 15초 백오프..."
