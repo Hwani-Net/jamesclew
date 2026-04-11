@@ -114,8 +114,9 @@ SETTINGS
 
 ### 5. /plan 진입 강제
 pipeline-install 완료 후 반드시 `/plan` (EnterPlanMode)에 진입하세요.
+pipeline-install 완료 시: `echo done > ~/.harness-state/pipeline_done`
 plan 승인 후: `echo done > ~/.harness-state/plan_done`
-**plan_done이 없으면 소스 코드 Write/Edit가 차단됩니다.**
+**pipeline_done과 plan_done이 없으면 소스 코드 Write/Edit가 차단됩니다.**
 
 ### 6. Step 0: 디자인 (UI 프로젝트 필수, DESIGN.md 산출)
 UI 파일(html/css/tsx/jsx)을 작성하는 프로젝트는 코딩 전에 반드시:

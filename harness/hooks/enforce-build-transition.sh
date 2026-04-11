@@ -11,7 +11,9 @@
 # ============================================================================
 
 INPUT=$(cat)
-STATE_DIR="$HOME/.harness-state"
+PROJECT_HASH=$(echo "$PWD" | md5sum | cut -c1-8)
+STATE_DIR="$HOME/.harness-state/build-$PROJECT_HASH"
+mkdir -p "$STATE_DIR"
 
 # Extract file path from input
 FILE=$(echo "$INPUT" | grep -oE '"file_path"\s*:\s*"[^"]+"' | head -1 | sed 's/.*"file_path"\s*:\s*"//;s/"//')
