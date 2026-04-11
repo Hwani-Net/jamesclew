@@ -131,11 +131,15 @@ Opus 5시간 리밋을 최대한 보존하기 위한 전략. Agent(model: sonnet
 - **서브에이전트 출력 간결화**: 200단어 이내 요약 요청. 긴 결과는 파일 저장 후 경로만 반환
 - **model: sonnet 명시 필수**: Agent() 호출 시 model 생략하면 Opus 풀 차감
 - **compact 적극 활용**: contextCompactionThreshold 80% 자동 compact 활성화
-- **위임 기준 (작업 유형별)**:
-  - 코딩/수정: 항상 Sonnet 서브에이전트
-  - 탐색/검색: 3회+ 예상 시 위임, 1-2회는 직접
-  - 단일 파일 읽기: Opus 직접 (위임 오버헤드 > 직접 비용)
-  - 리서치: 항상 Sonnet(researcher) 위임
+- **위임 기준 (풀 보존 우선 — 외부 모델 > Sonnet > Opus 직접)**:
+  - 코드 리뷰/평가: Codex CLI (풀 0)
+  - 반복/벌크 코딩: GPT-4.1 별도 세션 (풀 0)
+  - 코딩 (도구 필요): Sonnet 서브에이전트 (Sonnet 풀)
+  - 탐색 3회+: Sonnet(Explore) (Sonnet 풀)
+  - 탐색 1-2회: Opus 직접
+  - 리서치: Perplexity/Tavily MCP 직접 (풀 0)
+  - 외부 검수: Codex + Gemma4 (풀 0)
+  - 단일 파일 읽기: Opus 직접
 
 ### 80%+ 비상 모드 (5H rate limit 기준)
 5H 사용량 80%+ 감지 시 (heartbeat 또는 수동 확인):
