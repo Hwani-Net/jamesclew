@@ -11,10 +11,11 @@ TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
 [ -z "$TRANSCRIPT" ] && exit 0
 [ ! -f "$TRANSCRIPT" ] && exit 0
 
-LAST_RESPONSE=$(tail -c 5000 "$TRANSCRIPT" 2>/dev/null)
+LAST_RESPONSE=$(tail -c 15000 "$TRANSCRIPT" 2>/dev/null)
 [ -z "$LAST_RESPONSE" ] && exit 0
 
-TOOL_CALLS=$(echo "$LAST_RESPONSE" | grep -cE '"tool_use"|"tool_name"|"tool_input"' 2>/dev/null)
+# Count tool calls AND inline evidence (commit hashes, deploy output)
+TOOL_CALLS=$(echo "$LAST_RESPONSE" | grep -cE '"tool_use"|"tool_name"|"tool_input"|"tool_result"|\[master [0-9a-f]|배포 완료|exit 0|rerun: b' 2>/dev/null)
 TOOL_CALLS=${TOOL_CALLS:-0}
 
 HAS_REPORT=$(echo "$LAST_RESPONSE" | grep -cE '확인했습니다|완료했습니다|정상입니다|문제없습니다|통과했습니다|검증 완료|ALL PASS|배포 완료' 2>/dev/null)
