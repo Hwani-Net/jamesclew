@@ -107,7 +107,8 @@
 
 ## External Model CLI Reference
 - Codex: `codex exec "프롬프트"` — -q 옵션 없음, timeout 30초
-- Antigravity: `opencode run -m "모델" "프롬프트"` — serve 금지 (불안정)
+- Antigravity: `opencode run -m "모델" "프롬프트"` — serve 금지 (불안정). ⚠️ copilot/GPT 모델 미지원, Google 모델만
+- GPT-4.1 (copilot-api): `curl -s http://localhost:4141/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gpt-4.1","messages":[...]}'` — copilot-api 서버 실행 필수
 - Ollama: localhost:11434 API — 무제한, 최종 폴백
 
 ## Tool Priority (비용순)
