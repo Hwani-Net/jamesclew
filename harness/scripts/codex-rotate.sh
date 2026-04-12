@@ -68,6 +68,16 @@ RESULT=$(curl -s http://localhost:11434/api/generate -d "{
 if [ -n "$RESULT" ]; then
   echo "[codex-rotate] gemma4 fallback result:"
   echo "$RESULT"
+  exit 0
+fi
+
+# GLM-5.1 fallback
+echo "[codex-rotate] gemma4 failed. Falling back to GLM-5.1:cloud." >&2
+RESULT=$(curl -s http://localhost:11434/api/generate -d "{\"model\":\"glm-5.1:cloud\",\"prompt\":\"$PROMPT\",\"stream\":false}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('response',''))" 2>/dev/null)
+
+if [ -n "$RESULT" ]; then
+  echo "[codex-rotate] glm-5.1:cloud fallback result:"
+  echo "$RESULT"
 else
   echo "[codex-rotate] ALL MODELS EXHAUSTED. Manual intervention needed." >&2
   exit 1
