@@ -292,7 +292,8 @@
   },
   "enabledPlugins": {
     "telegram@claude-plugins-official": true,
-    "awesome-statusline@awesome-claude-plugins": true
+    "awesome-statusline@awesome-claude-plugins": true,
+    "ralph-loop@claude-plugins-official": true
   },
   "language": "korean",
   "skipDangerousModePermissionPrompt": true,
