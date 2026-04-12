@@ -70,7 +70,7 @@
 | Codex CLI | `codex exec "..."` (6계정 로테이션) | 독립적 코드 관점 | 코드 리뷰, 설계 평가 |
 | Antigravity | `opencode run -m "..." "..."` (4계정) | 콘텐츠 톤, AI냄새 감지 | 콘텐츠 리뷰, 차별화 분석 |
 | Gemma 4 로컬 | Ollama API (localhost:11434) | 무제한, 오프라인 | 벌크 작업, 최종 폴백 |
-| GLM-5.1 클라우드 | Ollama `glm-5.1:cloud` (localhost:11434) | 무료, 고성능 | AI냄새 3번째 검수, 프롬프트 사전테스트 |
+| GLM-5.1 클라우드 | Ollama `glm-5.1:cloud` (localhost:11434) | 무료, 고성능 | 수동 호출만 (cloud=과금 리스크). `ollama run glm-5.1:cloud` |
 
 ### 작업→모델 라우팅 (가이드, hook 강제 아님)
 | 작업 유형 | 1순위 | 교차 검증 |
