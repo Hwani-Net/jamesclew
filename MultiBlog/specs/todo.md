@@ -1,10 +1,10 @@
-# Ralph-Loop Execution Plan
+# Ralph-Loop Blog Pipeline — Execution Tracker
 
-## Current Keyword: 2026 무선 이어폰 추천 비교
+## Current Mode: Ralph Loop (self-improving)
+## Target: Benchmark Score >= 70
 
-- [x] Phase 1: SEO keyword research (Tavily SERP + Perplexity clusters)
-- [ ] Phase 2: Draft generation (Sonnet subagent, 2000+ chars)
-- [ ] Phase 3: Fact verification (Tavily extract cross-check)
-- [ ] Phase 4: Image selection (og:image + Vision verify)
-- [ ] Phase 5: Save to MultiBlog/drafts/ + evidence log
-- [ ] Phase 6: Mark keyword complete in keywords.md
+### Progress
+- [x] PROMPT.md 설계 (self-improving loop)
+- [x] feedback-log.md 초기화 (v6 baseline: 58점)
+- [ ] Ralph Loop 실행 — Batch 2 키워드 3개
+- [ ] 70+ 달성 후 스킬로 추출 (/blog-pipeline 강화)

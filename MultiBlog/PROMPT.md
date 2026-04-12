@@ -1,60 +1,91 @@
-# Ralph-Loop Blog Generator Prompt
+# Ralph-Loop Blog Pipeline — Self-Improving Generator
 
 ## Goal
-specs/keywords.md에서 미완료([ ]) 키워드를 1개 선택하여 /blog-generate 절차대로 블로그 초안을 생성한다.
-
-## Working Rules
-1. 매 iteration 시작 시 specs/todo.md를 읽어 현재 진행 상태를 확인한다
-2. 완료된 Phase의 체크박스를 [x]로 업데이트한다
-3. 실패한 Phase는 3회 재시도 후 스킵하고 로그를 남긴다
-4. 모든 Phase가 완료되면 keywords.md의 해당 키워드를 [x]로 표시한다
-
-## Execution Flow Per Keyword
-
-### Phase 1: SEO Research
-- Tavily search (basic, max_results=5): "{keyword} 블로그 추천 2026"
-- Perplexity search: "{keyword} 관련 검색어 AND 자주 묻는 질문"
-- Save SEO data to meta.json
-
-### Phase 2: Draft Generation
-- Sonnet subagent로 초안 작성. 프롬프트 구성:
-  - **톤**: 1인칭 경험 기반 + 객관 비교 하이브리드. "직접 비교해본 결과" 도입 → 스펙 표 → 체감 후기 순서
-  - **구조**: H2 3개+ (제품군 소개 / 제품별 비교 / 구매 가이드), H3로 개별 제품 세분화, FAQ 2개+
-  - **차별화**: Phase 1에서 식별한 differentiationPoint 반영. 경쟁 블로그가 안 다룬 각도 1개 필수
-  - **길이**: 3000-4000자 목표 (상위 블로그 평균 이상)
-  - **SEO**: primaryKeyword 본문 3회+ 자연 삽입, relatedKeywords 각 1회, 메타 디스크립션 120-155자
-  - **AI냄새 제거**: "다양한/혁신적인/획기적인/알아보겠습니다" 금지. 구어체 자연스러움. 구체적 수치 우선
-  - **이미지 위치**: 제품별 [IMAGE:제품명] 태그 삽입
-  - **내부링크**: [INTERNAL_LINK:관련주제] 2개+ 삽입 위치 표시
-- Fallback: Sonnet 실패 → Codex CLI → Gemma4 로컬
-
-### Phase 3: Fact Verification
-- Extract verifiable claims from draft
-- Cross-check with Tavily extract (official sources)
-- Auto-fix mismatches, flag unverifiable claims
-
-### Phase 4: Image Selection
-- og:image from product URLs (1st priority)
-- Tavily extract thumbnails (2nd)
-- Vision verify each image matches product
-- Download to drafts/{date}-{slug}/images/
-
-### Phase 5: Save + Evidence
-- Save draft.md, meta.json, status.json to MultiBlog/drafts/{date}-{slug}/
-- Log to ~/.harness-state/last_result.txt
-
-### Phase 6: Loop Control
-- Mark keyword [x] in keywords.md
-- Check for remaining [ ] keywords
-- If none remain: output completion signal
-- If more exist: update todo.md for next keyword and continue
-
-## Constraints
-- Draft must be 2000+ characters with H2 x3+, FAQ x2+
-- AI cliches forbidden: "다양한", "혁신적인", "획기적인", "알아보겠습니다"
-- All images must pass HTTP 200 + Vision check
-- No loading="lazy" (P-001)
-- Keyword density: primary keyword 3+ natural mentions
+Managed Agent로 블로그를 생성하고, Codex로 벤치마크 평가한 뒤, 점수가 목표 미달이면
+피드백을 누적하여 다음 반복에서 시스템 프롬프트를 자동 개선한다.
 
 ## Completion Promise
-All keywords in specs/keywords.md are marked [x] = done.
+`feedback-log.md`에 BENCHMARK_SCORE >= 70인 기록이 있으면 완료.
+
+## 매 Iteration 실행 절차
+
+### Step 0: 상태 확인
+1. `feedback-log.md` 읽기 — 이전 반복의 점수와 피드백 확인
+2. `specs/keywords.md`에서 미완료([ ]) 키워드 1개 선택
+3. 이전 반복 피드백이 있으면 Step 1에서 시스템 프롬프트에 반영
+
+### Step 1: 시스템 프롬프트 동적 생성
+`harness/scripts/managed-blog-agent.py`의 BLOG_SYSTEM_PROMPT를 읽고,
+`feedback-log.md`의 최근 피드백을 **Writing Style Rules 끝에 추가 규칙으로 삽입**.
+
+```
+기존 프롬프트 + "\n\n### 이전 반복 피드백 반영\n" + feedback-log.md의 최근 3개 피드백
+```
+
+수정된 프롬프트로 Agent를 update (agents.update) 또는 새로 생성.
+
+### Step 2: Managed Agent 실행 (5H 0)
+```bash
+python3 harness/scripts/managed-blog-agent.py run "{keyword}"
+```
+- 결과: MultiBlog/drafts/{date}-{slug}/draft.md
+- 실패 시 3회 재시도. 3회 실패 → 키워드 스킵 + 로그
+
+### Step 3: Codex 벤치마크 비교 평가 (5H 0)
+```bash
+bash harness/scripts/codex-rotate.sh "다음 두 글을 비교하라...
+글A: $(cat draft.md | head -80)
+글B: (인간 블로거 참고글)
+...SCORE: NN"
+```
+- SCORE 파싱 → 점수 기록
+
+### Step 4: 피드백 누적
+`feedback-log.md`에 추가:
+```
+## Iteration {N} — {date}
+- Keyword: {keyword}
+- Score: {NN}/100
+- Codex Feedback: {피드백 원문 요약}
+- Action Taken: {이번 반복에서 프롬프트에 뭘 바꿨는지}
+- Next: {다음 반복에서 시도할 것}
+```
+
+### Step 5: 판정
+- Score >= 70 → PASS. 키워드 [x] 표시. 다음 키워드로.
+- Score < 70 → 같은 키워드로 재시도 (최대 3회). 프롬프트에 피드백 반영.
+- 같은 키워드 3회 실패 → 에스컬레이션. 다음 키워드로.
+
+### Step 6: SEO 체크 (PASS된 글만)
+- 키워드 밀도 3회+
+- 메타 디스크립션 120-155자
+- H2 3개+, FAQ 2개+
+- 실패 항목 있으면 Sonnet 서브에이전트로 부분 수정
+
+### Step 7: 완료 체크
+- keywords.md에 미완료 키워드 남아있으면 → Step 0으로
+- 모든 키워드 완료 또는 전체 70+ 달성 → BATCH_DONE
+
+## 인간 블로거 참고글 (벤치마크 기준)
+글B 고정 텍스트 (Codex 평가 시 매번 동일하게 사용):
+```
+로봇청소기 쓴 지 3년차인데요. 작년에 드리미 쓰다가 올해 로보락으로 갈아탔어요.
+솔직히 처음엔 뭐가 다른가 했는데 써보니까 확실히 달라요. 우선 매핑이 진짜 빠름.
+처음 돌릴 때 집 구조 파악하는 게 체감 2배는 빠른 느낌? 근데 걸레질은 좀 아쉬워요.
+드리미가 물을 더 많이 써서 그런지 바닥이 더 촉촉하게 닦였거든요. 가격은 로보락이
+한 20만원 더 비쌌는데 그만한 값어치가 있나 하면... 음 반반이에요 솔직히.
+```
+
+## 핵심 원칙
+1. **프롬프트 수정은 feedback-log.md 근거로만** — 감으로 바꾸지 않는다
+2. **규칙 추가 < 규칙 제거** — v3→v5 실험에서 규칙 과다가 역효과임을 확인
+3. **Managed Agent + Codex = 5H 소비 0** — 루프 오케스트레이션만 5H 소비
+4. **벤치마크 글B는 고정** — 평가 기준이 흔들리면 점수 비교 무의미
+
+## Constraints
+- Draft: 2000+ chars, H2 x3+, FAQ x2+
+- AI cliches: "다양한/혁신적인/획기적인/알아보겠습니다" 금지
+- No loading="lazy" (P-001)
+- Keyword density: 3+ natural mentions
+- Max iterations per keyword: 3
+- Max total iterations: 8
