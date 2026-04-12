@@ -11,6 +11,9 @@ Usage:
 
   # List existing sessions
   python managed-blog-agent.py list
+
+  # Retrieve blog content from an existing session
+  python managed-blog-agent.py retrieve <session_id>
 """
 
 import os
@@ -18,6 +21,11 @@ import sys
 import json
 import time
 from pathlib import Path
+
+# Fix Windows cp949 encoding for emoji/unicode output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 from dotenv import load_dotenv
 
@@ -89,6 +97,10 @@ Write a blog post in Korean with these requirements:
 **종결어미 반복 금지**
 - "~소개했습니다", "~제공합니다", "~지원합니다" 같은 어미 연속 2회 이상 반복 금지
 - "~로 소개했습니다" 패턴 자체를 사용하지 마라 — 제품을 "소개"하지 말고 체험을 "이야기"하라
+
+**수치는 체감과 함께**
+- 수치를 쓸 때는 체감으로 번역: "흡입력 11,000Pa" → "모래 위에서도 깨끗하게 빨아들이더라고요(흡입력 11,000Pa)"
+- 보도자료처럼 수치만 나열하지 마라
 
 **절대 금지 (AI 클리셰)**
 - "다양한", "혁신적인", "획기적인", "알아보겠습니다", "살펴보겠습니다"
@@ -195,8 +207,10 @@ def run(keyword: str):
     prompt = BLOG_SYSTEM_PROMPT.replace("{keyword}", keyword)
     user_message = f"Generate a blog post for the keyword: {keyword}"
 
-    # Collect agent text for local saving
-    agent_texts = []
+    # Collect content for local saving
+    agent_texts = []       # fallback: agent conversational messages
+    write_contents = []    # primary: content from write tool calls
+    bash_outputs = []      # secondary: bash tool outputs that may contain blog text
 
     # Open stream and send message
     with client.beta.sessions.events.stream(session_id=session.id) as stream:
@@ -222,8 +236,50 @@ def run(keyword: str):
                             print(f"  [agent] {text}")
 
             elif event.type == "agent.tool_use":
-                name = getattr(event, 'tool_name', None) or getattr(event, 'name', None) or event.type
-                print(f"  [tool] {name}")
+                # Debug: log all attributes so we can see the event structure
+                attrs = {k: getattr(event, k, None) for k in dir(event) if not k.startswith('_')}
+                tool_name = (
+                    getattr(event, 'tool_name', None)
+                    or getattr(event, 'name', None)
+                    or attrs.get('tool_name', 'unknown')
+                )
+                tool_input = getattr(event, 'input', None) or attrs.get('input', None)
+                print(f"  [tool_use] name={tool_name} | attrs={list(attrs.keys())}")
+
+                # Capture write tool file content (primary blog capture method)
+                if tool_name in ('write', 'Write', 'file_write', 'create_file'):
+                    if tool_input:
+                        # input is typically a dict with 'path' and 'content' keys
+                        if isinstance(tool_input, dict):
+                            content = tool_input.get('content') or tool_input.get('text') or tool_input.get('file_content')
+                            path = tool_input.get('path') or tool_input.get('file_path') or tool_input.get('filename', '')
+                        else:
+                            # May be raw string
+                            content = str(tool_input)
+                            path = ''
+                        if content:
+                            print(f"  [WRITE CAPTURED] path={path} len={len(content)}")
+                            write_contents.append({'path': path, 'content': content})
+                    else:
+                        print(f"  [tool_use:write] No input found. Full event attrs: {attrs}")
+
+                # Capture bash tool — look for heredoc/echo patterns with blog content
+                elif tool_name in ('bash', 'Bash', 'shell', 'computer'):
+                    if tool_input:
+                        cmd = str(tool_input.get('command', tool_input) if isinstance(tool_input, dict) else tool_input)
+                        # Heuristic: bash writing a markdown file
+                        if ('cat >' in cmd or 'tee ' in cmd or 'heredoc' in cmd.lower()) and len(cmd) > 500:
+                            print(f"  [BASH WRITE DETECTED] len={len(cmd)}")
+                            bash_outputs.append(cmd)
+
+            elif event.type == "agent.tool_result":
+                # Capture tool result output — may contain echoed file content
+                attrs = {k: getattr(event, k, None) for k in dir(event) if not k.startswith('_')}
+                output = getattr(event, 'output', None) or attrs.get('output', None)
+                print(f"  [tool_result] attrs={list(attrs.keys())}")
+                if output and isinstance(output, str) and len(output) > 1000:
+                    # Large tool output — likely blog content echoed back
+                    print(f"  [tool_result:large] len={len(output)} preview={output[:100]}")
 
             elif event.type == "session.status_idle":
                 stop_reason = getattr(event, "stop_reason", None)
@@ -245,6 +301,11 @@ def run(keyword: str):
                     print(f"  [usage] in={usage.input_tokens} out={usage.output_tokens} "
                           f"cache_read={usage.cache_read_input_tokens}")
 
+            elif "tool" in event.type.lower():
+                # Catch-all for any tool-related events not handled above
+                attrs = {k: getattr(event, k, None) for k in dir(event) if not k.startswith('_')}
+                print(f"  [TOOL EVENT:{event.type}] attrs={list(attrs.keys())}")
+
     # Download output files
     print("\nDownloading output files...")
     slug = keyword.replace(" ", "-")[:30]
@@ -252,11 +313,27 @@ def run(keyword: str):
     output_dir = DRAFTS_DIR / f"{date_str}-{slug}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Save streamed blog content from agent messages
-    if agent_texts:
+    # PRIMARY: Save content from write tool calls (actual blog file writes)
+    draft_saved = False
+    for item in write_contents:
+        path = item['path']
+        content = item['content']
+        # Map /mnt/session/outputs/draft.md → local draft.md
+        filename = Path(path).name if path else 'draft.md'
+        if not filename or filename == '.':
+            filename = 'draft.md'
+        out_path = output_dir / filename
+        out_path.write_text(content, encoding="utf-8")
+        print(f"  Saved (from write tool): {out_path}")
+        if 'draft' in filename.lower() or filename.endswith('.md'):
+            draft_saved = True
+
+    # SECONDARY: Save fallback from agent conversation text (if no write tool captured)
+    if not draft_saved and agent_texts:
         draft_path = output_dir / "draft.md"
         draft_path.write_text("\n".join(agent_texts), encoding="utf-8")
-        print(f"  Saved (from stream): {draft_path}")
+        print(f"  Saved (from stream fallback): {draft_path}")
+        draft_saved = True
 
     # Try downloading files from session outputs (with retry for indexing lag)
     for attempt in range(3):
@@ -301,6 +378,70 @@ def list_sessions():
         print(f"  {s.id} | {s.status} | {s.title or 'untitled'}")
 
 
+def retrieve(session_id: str):
+    """Send a follow-up message to an existing session asking for the full blog text."""
+    client = anthropic.Anthropic()
+
+    retrieve_message = (
+        "Output the full content of /mnt/session/outputs/draft.md as plain text. "
+        "Print the entire file content without truncation."
+    )
+    print(f"Retrieving blog from session: {session_id}")
+
+    collected = []
+
+    with client.beta.sessions.events.stream(session_id=session_id) as stream:
+        client.beta.sessions.events.send(
+            session_id=session_id,
+            events=[{
+                "type": "user.message",
+                "content": [{"type": "text", "text": retrieve_message}],
+            }],
+        )
+
+        for event in stream:
+            if event.type == "agent.message":
+                for block in event.content:
+                    if block.type == "text":
+                        collected.append(block.text)
+                        print(block.text[:500] if len(block.text) > 500 else block.text)
+
+            elif event.type == "agent.tool_use":
+                tool_name = getattr(event, 'tool_name', None) or getattr(event, 'name', None) or 'unknown'
+                tool_input = getattr(event, 'input', None)
+                print(f"  [tool] {tool_name}")
+                # Also capture write tool content during retrieve
+                if tool_name in ('write', 'Write', 'file_write', 'create_file') and tool_input:
+                    if isinstance(tool_input, dict):
+                        content = tool_input.get('content') or tool_input.get('text', '')
+                    else:
+                        content = str(tool_input)
+                    if content:
+                        collected.append(content)
+                        print(f"  [WRITE CAPTURED during retrieve] len={len(content)}")
+
+            elif event.type == "session.status_idle":
+                stop_reason = getattr(event, "stop_reason", None)
+                if stop_reason and getattr(stop_reason, "type", None) == "requires_action":
+                    continue
+                print("  [idle] Done.")
+                break
+
+            elif event.type == "session.status_terminated":
+                print("  [terminated]")
+                break
+
+    if collected:
+        date_str = time.strftime("%Y-%m-%d")
+        output_dir = DRAFTS_DIR / f"{date_str}-retrieve-{session_id[:8]}"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        draft_path = output_dir / "draft.md"
+        draft_path.write_text("\n".join(collected), encoding="utf-8")
+        print(f"\nSaved: {draft_path}")
+    else:
+        print("\nNo content retrieved.")
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -317,6 +458,11 @@ def main():
         run(sys.argv[2])
     elif cmd == "list":
         list_sessions()
+    elif cmd == "retrieve":
+        if len(sys.argv) < 3:
+            print("Usage: python managed-blog-agent.py retrieve <session_id>")
+            sys.exit(1)
+        retrieve(sys.argv[2])
     else:
         print(f"Unknown command: {cmd}")
         print(__doc__)

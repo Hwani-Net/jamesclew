@@ -1,0 +1,157 @@
+{
+  "seo": {
+    "primary_keyword": "2026 로봇청소기 추천 비교",
+    "secondary_keywords": [
+      "드리미 X60 Ultra",
+      "로보락 Qrevo Curv",
+      "삼성 비스포크 AI 스팀",
+      "로봇청소기 추천",
+      "로봇청소기 순위",
+      "2026 로봇청소기"
+    ],
+    "meta_description": "2026 로봇청소기 추천 비교! 드리미 X60 Ultra·로보락 Qrevo Curv·삼성 비스포크 AI 스팀 3종을 흡입력·물걸레·보안 기준으로 꼼꼼하게 비교했습니다.",
+    "meta_description_length": 87,
+    "primary_keyword_count": 3,
+    "h2_count": 3,
+    "h3_count": 6,
+    "faq_count": 4,
+    "estimated_character_count": 3600,
+    "image_tags": [
+      "[IMAGE:robot-vacuum-2026-hero]",
+      "[IMAGE:dreame-x60-ultra]",
+      "[IMAGE:roborock-qrevo-curv]",
+      "[IMAGE:samsung-bespoke-ai-steam]",
+      "[IMAGE:robot-vacuum-buying-guide]"
+    ],
+    "internal_links": [
+      "[INTERNAL_LINK:로봇청소기 구매 전 꼭 알아야 할 체크리스트]",
+      "[INTERNAL_LINK:삼성 스마트싱스 연동 가전 총정리]"
+    ]
+  },
+  "products": [
+    {
+      "name": "드리미 X60 Ultra",
+      "brand": "Dreame",
+      "suction_power": "35,000Pa",
+      "mop_wash_temp": "40℃ 보온수",
+      "price_range": "약 129만 원~",
+      "highlight": "최강 흡입력 + AI 블루라이트 오염 인식",
+      "best_for": "카펫 + 반려동물 털 많은 가정",
+      "fact_check_status": "verified",
+      "sources": ["EBN뉴스 2026-03-09", "다나와 pcode:107992037", "네이버블로그 yjg01212"]
+    },
+    {
+      "name": "로보락 Qrevo Curv",
+      "brand": "Roborock",
+      "suction_power": "18,500Pa",
+      "mop_wash_temp": "75℃ 온수",
+      "price_range": "약 159만 원",
+      "highlight": "듀얼 엉킴 방지 + FlexiArm 사각지대 커버",
+      "best_for": "긴 머리카락·반려동물 털 관리 우선 가정",
+      "fact_check_status": "verified",
+      "sources": ["매일일보 roborock-qrevo-curv", "로보락 공식사이트", "KREAM 발매가 1,590,000원"]
+    },
+    {
+      "name": "삼성 비스포크 AI 스팀 (일반형)",
+      "brand": "Samsung",
+      "suction_power": "6,000Pa / 최대 10W",
+      "mop_wash_temp": "100℃ 스팀 살균",
+      "price_range": "프리스탠딩 141만 원 / 급배수 159만 원",
+      "highlight": "Knox 보안 + 스팀 살균 + 전국 AS",
+      "best_for": "어린아이 있는 가정, 보안 민감 사용자",
+      "fact_check_status": "verified",
+      "sources": ["삼성전자 뉴스룸", "청년일보 no=212860", "인공지능신문 idxno=38610"]
+    },
+    {
+      "name": "드리미 L40s Pro Ultra (가성비픽)",
+      "brand": "Dreame",
+      "suction_power": "19,000Pa",
+      "mop_wash_temp": "75℃ 고온수",
+      "price_range": "40만 원대",
+      "highlight": "고성능 대비 가성비 최강",
+      "best_for": "예산 40~50만 원대, 로봇청소기 입문자",
+      "fact_check_status": "verified",
+      "sources": ["choicemon.com best-robot-vacuum-cleaner", "nosearch.com"]
+    }
+  ],
+  "fact_check_log": [
+    {
+      "claim": "드리미 X60 Ultra 흡입력 35,000Pa",
+      "status": "verified",
+      "source": "다나와 pcode:107992037, EBN뉴스 2026-03-09"
+    },
+    {
+      "claim": "로보락 Qrevo Curv 18,500Pa 흡입력",
+      "status": "verified",
+      "source": "Roborock 공식 영문 제품페이지, 매일일보"
+    },
+    {
+      "claim": "로보락 Qrevo Curv 가격 159만 원",
+      "status": "verified",
+      "source": "KREAM 발매가 1,590,000원, 롯데홈쇼핑 1,590,000원"
+    },
+    {
+      "claim": "로보락 Qrevo Curv 75℃ 온수 세척, 박테리아 99.99% 제거",
+      "status": "verified",
+      "source": "매일일보 roborock-qrevo-curv 기사"
+    },
+    {
+      "claim": "삼성 비스포크 AI 스팀 100℃ 스팀, 세균 99.999% 살균",
+      "status": "verified",
+      "source": "삼성전자 뉴스룸, 인공지능신문 2026-02-11"
+    },
+    {
+      "claim": "삼성 비스포크 AI 스팀 일반형 가격 141만 원(프리스탠딩)",
+      "status": "verified",
+      "source": "삼성전자 뉴스룸, 청년일보 2026-02-11"
+    },
+    {
+      "claim": "삼성 UL Solutions IoT 보안 다이아몬드 등급",
+      "status": "verified",
+      "source": "삼성전자 뉴스룸, 인공지능신문"
+    },
+    {
+      "claim": "드리미 X60 문턱 등판 4.5cm",
+      "status": "verified",
+      "source": "다나와 pcode:107992037 스펙"
+    },
+    {
+      "claim": "드리미 L40s Pro Ultra 19,000Pa, 75℃ 세척",
+      "status": "verified",
+      "source": "choicemon.com, nosearch.com"
+    },
+    {
+      "claim": "삼성 비스포크 AI 스팀 이지패스 휠 45mm 문턱 등판",
+      "status": "verified",
+      "source": "인공지능신문 idxno=38610"
+    }
+  ],
+  "competitor_analysis": {
+    "top_competitors": [
+      "nosearch.com/recommendation/pick/living/robotic_vacuum_cleaner",
+      "choicemon.com/best-robot-vacuum-cleaner",
+      "wellness.raiself.com/24"
+    ],
+    "competitor_h2_patterns": [
+      "스펙 표 먼저 배치 후 제품 설명 (리포트형)",
+      "제품별 단순 나열 구조",
+      "마무리 구매 가이드 일반형"
+    ],
+    "differentiation_points": [
+      "체험 에피소드 선 배치 → 스펙 후 설명 (독자 몰입 강화)",
+      "제품 간 자연스러운 전환 연결 문장 추가",
+      "카메라 보안 이슈 직접 언급 및 해결 (경쟁사 누락 포인트)",
+      "가성비 4번째 픽 추가로 예산대별 완결성 강화",
+      "4개 FAQ로 실구매 의사결정 불안 해소"
+    ]
+  },
+  "writing_style_benchmark": {
+    "reference_blog": "wellness.raiself.com (티스토리 한국 블로그)",
+    "tone": "해요체 + 구어체 혼용, 개인 체험 에피소드 선 배치",
+    "colloquial_ratio_target": "40% 이상",
+    "ai_cliche_removed": [
+      "다양한", "혁신적인", "획기적인", "알아보겠습니다",
+      "살펴보겠습니다", "한 차원 끌어올렸다", "진가를 발휘하다"
+    ]
+  }
+}
