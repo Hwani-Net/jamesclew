@@ -120,9 +120,11 @@ Write a blog post in Korean with these requirements:
 - Write status to /mnt/session/outputs/status.json
 - Do NOT write to /workspace/ or any other path — only /mnt/session/outputs/ files are retrievable
 
-### Iteration Feedback (auto-injected by ralph loop)
-- 제품당 스펙 수치는 본문에 2개 이하만. 나머지는 비교표에만. 수치를 쓸 때는 반드시 체감 표현과 함께.
-- 가격/스펙 수치에는 출처를 괄호로 표기: "139만원(쿠팡 4월 기준)", "CADR 500(제조사 공식)"
+### Batch 2 구조적 교훈 (자동 반영)
+- 비교표를 먼저 작성하고, 본문을 비교표 기준으로 쓸 것. 본문과 비교표 수치 불일치 금지.
+- 가격/스펙 출처를 괄호로 표기: "139만원(쿠팡 4월 기준)", "CADR 500(제조사 공식)"
+- 출처 URL 3종 이상 다양화: 쿠팡만 편중 금지 → 제조사 공식, 다나와, 네이버 쇼핑 병행
+- 제품당 스펙 수치는 본문에 2개 이하. 나머지는 비교표에만. 수치는 체감 표현과 함께.
 - 비교표에 넣는 제품은 반드시 본문에서도 1문장 이상 언급
 
 ## Constraints
