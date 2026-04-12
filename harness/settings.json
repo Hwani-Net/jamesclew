@@ -1,4 +1,7 @@
 {
+  "thinking": {
+    "budget_tokens": 10000
+  },
   "env": {
     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}",
     "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
@@ -145,12 +148,32 @@
         ]
       },
       {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/read-once.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
         "matcher": "Read|Grep|Glob|Bash|Edit|Write",
         "hooks": [
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/explore-router.sh",
             "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/log-filter.sh",
+            "timeout": 5000
           }
         ]
       },
