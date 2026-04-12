@@ -55,7 +55,18 @@ for (( i=0; i<${#ACCTS[@]}; i++ )); do
 done
 
 # All accounts exhausted
-echo "[codex-rotate] All ${#ACCTS[@]} accounts rate limited. Falling back to gemma4." >&2
+echo "[codex-rotate] All ${#ACCTS[@]} accounts rate limited. Trying GLM-5.1 via ollama-cloud-rotate.sh..." >&2
+
+# GLM-5.1 cloud fallback (7 accounts, free)
+GLM_RESULT=$(bash "$(dirname "$0")/ollama-cloud-rotate.sh" "$PROMPT" 2>/dev/null)
+
+if [ -n "$GLM_RESULT" ]; then
+  echo "[codex-rotate] GLM-5.1 fallback result:"
+  echo "$GLM_RESULT"
+  exit 0
+fi
+
+echo "[codex-rotate] GLM-5.1 also failed. Falling back to gemma4." >&2
 
 # Gemma4 fallback
 RESULT=$(curl -s http://localhost:11434/api/generate -d "{
