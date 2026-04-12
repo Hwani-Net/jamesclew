@@ -6,6 +6,6 @@
 - [x] 2026 로봇청소기 추천 비교 (v6, score 58, loop seed)
 
 ## Batch 2 (Ralph Loop 대상)
-- [x] 2026 공기청정기 추천 비교 (score 48, needs fix, $0.04)
-- [x] 2026 노트북 추천 대학생 (score 76, PASS, $0.24)
-- [x] 2026 전동킥보드 추천 출퇴근 (score 68, near-pass, $0.34, billing error)
+- [x] 2026 공기청정기 추천 비교 (score 48→67, ESCALATED 4회, $0.04)
+- [x] 2026 노트북 추천 대학생 (score 76, PASS ✅, $0.24)
+- [x] 2026 전동킥보드 추천 출퇴근 (score 68→65, ESCALATED 3회, $0.34)
