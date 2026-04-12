@@ -1,0 +1,37 @@
+{
+  "slug": "2026-04-12-wireless-earbuds-2026",
+  "timestamp": "2026-04-12T14:10:00Z",
+  "expectGates": "SKIPPED (no preview server)",
+  "aiSmell": {
+    "codex": 82,
+    "antigravity": "SKIPPED (Google ToS ban)",
+    "final": 82,
+    "verdict": "FAIL",
+    "issues": [
+      "규격화된 구조 (동일 틀 반복)",
+      "과장 표현 반복 (역대 최고, 새 기준, 압도)",
+      "실사용 체험 서술 결핍",
+      "스펙/수치 과다 밀도",
+      "FAQ 무난한 결론"
+    ]
+  },
+  "seo": {
+    "keywordCount": { "value": 3, "min": 3, "verdict": "PASS" },
+    "metaDesc": { "value": 84, "range": [120, 155], "verdict": "FAIL" },
+    "h2Count": { "value": 3, "min": 3, "verdict": "PASS" },
+    "internalLinks": { "value": 0, "min": 2, "verdict": "FAIL" },
+    "faqCount": { "value": 3, "min": 2, "verdict": "PASS" },
+    "imageCount": { "value": 0, "min": 1, "verdict": "FAIL" },
+    "bodyLength": { "value": 1850, "min": 2000, "verdict": "FAIL" },
+    "overallVerdict": "FAIL"
+  },
+  "pitfalls": { "loadingLazy": "PASS", "aiCliches": "PASS", "verdict": "PASS" },
+  "overall": "FAIL",
+  "failedGates": [
+    "aiSmell",
+    "seo.metaDesc",
+    "seo.internalLinks",
+    "seo.imageCount",
+    "seo.bodyLength"
+  ]
+}

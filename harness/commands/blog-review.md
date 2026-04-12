@@ -64,25 +64,37 @@ $DRAFT"
 ```
 출력에서 `SCORE: NN` 파싱 → `aiSmell.antigravity` 필드에 기록.
 
-**2-2. Codex 검사**
+**2-2. 벤치마크 비교 평가 (단독 평가보다 우선)**
 ```bash
-codex exec "다음 블로그 글의 AI 생성 확률을 0~100으로 평가하라. AI 특유의 표현 패턴을 찾아 지적하라. 마지막 줄에 'SCORE: NN' 형식으로 점수 출력.
+# Step 1: 같은 키워드 상위 인간 블로그 2개를 Tavily extract로 수집
+# Step 2: 인간 글 + 우리 글을 함께 제시하여 비교 평가
+bash harness/scripts/codex-rotate.sh "아래 글A는 인간 블로거가 쓴 상위 랭킹 블로그 글이다. 글C는 평가 대상이다.
+글C가 글A와 비교하여 자연스러움, 톤, 문체에서 어떤 차이가 있는지 분석하라.
+평가 기준: 종결어미 다양성, 개인 경험 구체성, 독자 대화감, 스펙vs상황 비율, 전체 자연스러움(0~100).
+마지막 줄에 'SCORE: NN' 형식으로 점수 출력. 개선 포인트 3가지 구체적 지적.
 
----
+=== 글A (인간) ===
+{tavily_extract로 수집한 인간 블로그 본문}
+
+=== 글C (평가 대상) ===
 $(cat MultiBlog/drafts/{slug}/draft.md)"
 ```
-출력에서 `SCORE: NN` 파싱 → `aiSmell.codex` 필드에 기록.
+출력에서 `SCORE: NN` 파싱 → `aiSmell.benchmark` 필드에 기록.
+**인간 블로그 수집 실패 시**: Tavily search → extract 재시도. 실패 시 단독 평가로 폴백.
 
 **2-3. 최종 AI냄새 점수 산출**
 ```
-finalScore = (antigravity + codex) / 2
-- < 30: PASS ✅
-- 30~50: WARN ⚠️ (통과하지만 /blog-fix 권고)
-- > 50: FAIL ❌
-- 두 점수 차이 > 30: Opus 재판단 (어느 모델이 맞는지 분석)
-```
+기본: benchmark 점수 사용 (0~100, 높을수록 자연스러움)
+- > 65: PASS ✅
+- 50~65: WARN ⚠️ (통과하지만 /blog-fix 권고)
+- < 50: FAIL ❌
 
-**외부 CLI 실패 시**: 3회 재시도. 전부 실패 → Sonnet 서브에이전트로 대체 검수 (임시 폴백).
+폴백 (벤치마크 불가 시): 단독 평가 (antigravity + codex) / 2
+- < 30: PASS, 30~50: WARN, > 50: FAIL
+```
+⚠️ 단독 평가는 한국어 블로그에 대해 정확도가 낮음 (78~86 고정 범위 관찰). 벤치마크 비교를 우선 사용할 것.
+
+**외부 CLI 실패 시**: codex-rotate.sh가 6계정 로테이션 + gemma4 폴백 자동 처리.
 
 ### Phase 3: SEO 점수 검사
 

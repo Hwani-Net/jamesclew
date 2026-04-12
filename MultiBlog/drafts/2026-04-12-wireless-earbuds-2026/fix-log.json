@@ -1,0 +1,37 @@
+{
+  "slug": "2026-04-12-wireless-earbuds-2026",
+  "originalFailedGates": [
+    "aiSmell",
+    "seo.metaDesc",
+    "seo.internalLinks",
+    "seo.imageCount",
+    "seo.bodyLength"
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "model": "sonnet",
+      "fixApplied": "체험 문장 4개, 메타디스크립션 84→138자, 내부링크 2개, IMAGE 4개, 본문 1850→2150자",
+      "reviewResult": "SEO 전항목 PASS. aiSmell 82→78 (개선, 여전히 FAIL)",
+      "regression": false
+    },
+    {
+      "round": 2,
+      "model": "codex (gpt-5.2)",
+      "fixApplied": "구어체 전환, 쿠팡 구매팁 추가, 제품 시작 다양화",
+      "reviewResult": "aiSmell 78→86 (악화). R1 버전으로 롤백",
+      "regression": true
+    },
+    {
+      "round": 3,
+      "model": "gemma4:e4b (local)",
+      "fixApplied": "종결어미 다양화, 단점 솔직하게 강화, 스펙 나열 축소",
+      "reviewResult": "aiSmell 86 (변화 없음)",
+      "regression": false
+    }
+  ],
+  "finalStatus": "escalated",
+  "escalationReason": "Codex 평가기가 한국어 블로그에 대해 78-86 범위에서 일관적으로 높은 점수. 3개 모델 수정 후에도 변화 미미. 평가기 한계로 판단.",
+  "seoStatus": "ALL PASS (7/7)",
+  "recommendation": "SEO 전항목 통과. AI냄새는 Codex 단일 평가기 한계. 다른 탐지 도구 교차검증 또는 대표님 직접 판단 권장."
+}

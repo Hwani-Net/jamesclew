@@ -1,0 +1,98 @@
+{
+  "seo": {
+    "primaryKeyword": "2026 무선 이어폰 추천",
+    "relatedKeywords": [
+      "무선이어폰 비교",
+      "가성비 무선이어폰",
+      "노이즈캔슬링 이어폰",
+      "블루투스 이어폰 추천",
+      "갤럭시 버즈4 프로",
+      "에어팟 프로3",
+      "앤커 사운드코어"
+    ],
+    "questions": [
+      "무선 이어폰 고를 때 가장 중요한 기준은?",
+      "가성비 무선 이어폰과 프리미엄 제품의 차이는?",
+      "아이폰과 안드로이드에서 각각 어떤 이어폰이 좋은지?",
+      "노이즈캔슬링 성능은 가격대별로 얼마나 차이나는지?",
+      "2026년 새로 출시된 이어폰 중 주목할 모델은?"
+    ],
+    "serpMeta": [
+      {
+        "url": "https://almyunjoa.tistory.com/entry/무선이어폰-추천",
+        "title": "무선이어폰 추천 2026 노이즈캔슬링 LDAC 삼성 버즈3 소니 인존 비교",
+        "products": ["QCY MeloBuds Pro", "삼성 갤럭시 버즈3", "소니 인존 버즈"],
+        "structure": "제품군 소개 → 스펙 비교표 → 용도별 추천"
+      },
+      {
+        "url": "https://ourblogis.tistory.com/30",
+        "title": "무선이어폰 추천 2026 - 가성비부터 프리미엄까지",
+        "products": [
+          "앤커 P40i",
+          "앤커 P31i",
+          "앤커 스페이스A40",
+          "JBL TUNE BEAM2",
+          "갤럭시 버즈3"
+        ],
+        "structure": "가격순 정렬 → 장단점 → 추천대상 → FAQ"
+      },
+      {
+        "url": "https://tech-review-lab.tistory.com/entry/2026년-무선이어폰-추천-TOP-5",
+        "title": "2026년 무선이어폰 추천 TOP 5: 예산별 완벽 구매 가이드",
+        "products": [
+          "QCY HT16",
+          "Anker Liberty 4 NC",
+          "갤럭시 버즈 FE",
+          "갤럭시 버즈4 프로",
+          "에어팟 프로3"
+        ],
+        "structure": "예산별 → 한눈에 비교표 → 구매팁"
+      },
+      {
+        "url": "https://calvin-hs.tistory.com/81",
+        "title": "2026 무선 이어폰 추천 총정리 | 에어팟 프로 3 · 버즈4 프로 · WF-1000XM6",
+        "products": ["에어팟 프로3", "버즈4 프로", "소니 WF-1000XM6"],
+        "structure": "3대 브랜드 비교 → ANC/음질/배터리 비교"
+      },
+      {
+        "url": "https://diary0896.tistory.com/297",
+        "title": "2026 무선 블루투스 이어폰 추천 TOP 5",
+        "products": ["갤럭시 버즈3 프로", "펭카 커널형", "갤럭시 버즈3"],
+        "structure": "TOP 5 나열"
+      }
+    ],
+    "competitorAvgLength": 3500,
+    "differentiationPoint": "용도별(통근/운동/수면/게임) 실사용 시나리오 + 가격대별 교차 매트릭스. 경쟁사는 대부분 '예산별' 또는 '제품 나열'이지만, 용도×예산 2축 비교는 없음",
+    "topProducts2026": [
+      {
+        "name": "삼성 갤럭시 버즈4 프로",
+        "price": "30만원대",
+        "strength": "올라운더 1등, Galaxy AI"
+      },
+      {
+        "name": "애플 에어팟 프로3",
+        "price": "30만원대",
+        "strength": "아이폰 최적화"
+      },
+      {
+        "name": "소니 WF-1000XM6",
+        "price": "28만원대",
+        "strength": "음질 최강"
+      },
+      {
+        "name": "앤커 사운드코어 P40i",
+        "price": "4.5만원",
+        "strength": "가성비 끝판왕"
+      },
+      { "name": "QCY HT16", "price": "2만원대", "strength": "ANC 최저가" },
+      {
+        "name": "베이서스 EP10 Pro",
+        "price": "2-3만원대",
+        "strength": "가성비 ANC"
+      }
+    ]
+  },
+  "generator": null,
+  "factCheck": [],
+  "createdAt": "2026-04-12"
+}

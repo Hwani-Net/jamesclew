@@ -1,0 +1,76 @@
+{
+  "file": "draft.md",
+  "checked_at": "2026-04-12",
+  "seo_checks": {
+    "keyword_frequency": {
+      "item": "핵심 키워드 '무선 이어폰 추천' 본문 3회+",
+      "result": "PASS",
+      "detail": "총 4회 출현 (frontmatter 1 + 본문 3). 본문 기준 3회 충족",
+      "count": 4
+    },
+    "meta_description_length": {
+      "item": "메타 디스크립션 120~155자",
+      "result": "FAIL",
+      "detail": "현재 84자 — 120자 최소치 미달 (36자 부족)",
+      "length": 84,
+      "required_range": "120~155"
+    },
+    "h2_count": {
+      "item": "H2 (##) 최소 3개",
+      "result": "PASS",
+      "detail": "H2 3개 확인: '2026 무선 이어폰 추천 TOP 4', '2026 무선 이어폰 구매 가이드', '자주 묻는 질문 (FAQ)'",
+      "count": 3
+    },
+    "internal_links": {
+      "item": "내부링크 2개+ ([INTERNAL_LINK:] 또는 마크다운 링크)",
+      "result": "FAIL",
+      "detail": "내부링크 0개. [INTERNAL_LINK:] 태그 및 마크다운 링크([text](url)) 모두 없음",
+      "count": 0,
+      "required": 2
+    },
+    "faq_pairs": {
+      "item": "FAQ 섹션 2개+ 질문-답변 쌍",
+      "result": "PASS",
+      "detail": "Q1(아이폰-타사 이어폰 호환), Q2(ANC 건강 영향), Q3(LDAC vs AAC) — 3쌍",
+      "count": 3
+    },
+    "image_tags": {
+      "item": "이미지 alt 태그 또는 [IMAGE:] 태그 존재",
+      "result": "FAIL",
+      "detail": "이미지 마크다운(![alt](url)) 및 [IMAGE:] 태그 모두 없음. 제품 이미지 0개",
+      "count": 0
+    },
+    "body_length": {
+      "item": "본문 2,000자+ (frontmatter 제외)",
+      "result": "FAIL",
+      "detail": "본문 약 1,850자 — 2,000자 최소치 미달 (약 150자 부족)",
+      "estimated_chars": 1850,
+      "required": 2000
+    }
+  },
+  "pitfalls_checks": {
+    "loading_lazy": {
+      "pitfall": "P-001",
+      "item": "loading='lazy' 사용 여부",
+      "result": "PASS",
+      "detail": "loading='lazy' 속성 없음"
+    },
+    "ai_cliches": {
+      "item": "AI 클리셰 ('다양한', '혁신적인', '획기적인', '알아보겠습니다')",
+      "result": "PASS",
+      "detail": "4개 패턴 모두 미출현"
+    }
+  },
+  "summary": {
+    "total_checks": 9,
+    "pass": 5,
+    "fail": 4,
+    "overall": "FAIL",
+    "critical_failures": [
+      "meta_description_length (84자, 120자 필요)",
+      "internal_links (0개, 2개 필요)",
+      "image_tags (0개)",
+      "body_length (1,850자, 2,000자 필요)"
+    ]
+  }
+}

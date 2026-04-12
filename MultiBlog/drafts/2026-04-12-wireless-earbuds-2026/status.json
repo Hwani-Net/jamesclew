@@ -1,0 +1,7 @@
+{
+  "status": "escalated",
+  "seoVerdict": "PASS",
+  "aiSmellVerdict": "FAIL (evaluator limitation)",
+  "attempts": 3,
+  "escalatedAt": "2026-04-12T15:00:00Z"
+}
