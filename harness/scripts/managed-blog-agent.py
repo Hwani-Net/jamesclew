@@ -30,7 +30,10 @@ if sys.stdout.encoding != 'utf-8':
 from dotenv import load_dotenv
 
 # Load API keys — .env-keys has ANTHROPIC_API_KEY, ~/.env has CLAUDE_API_KEY as fallback
-load_dotenv(Path("D:/jamesclew/.env-keys"))
+_env_keys = Path.cwd() / ".env-keys"
+if not _env_keys.exists():
+    _env_keys = Path.home() / ".env-keys"
+load_dotenv(_env_keys)
 load_dotenv(Path.home() / ".env")
 if not os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("CLAUDE_API_KEY"):
     os.environ["ANTHROPIC_API_KEY"] = os.environ["CLAUDE_API_KEY"]
@@ -40,7 +43,7 @@ import anthropic
 # Config paths
 CONFIG_DIR = Path.home() / ".harness-state"
 CONFIG_FILE = CONFIG_DIR / "managed-agent-config.json"
-DRAFTS_DIR = Path("MultiBlog/drafts")
+DRAFTS_DIR = Path(os.environ.get("BLOG_DRAFTS_DIR", "drafts"))
 
 BLOG_SYSTEM_PROMPT = """You are a Korean SEO blog writer agent. You generate high-quality blog posts optimized for Korean search engines.
 
