@@ -120,6 +120,11 @@ Write a blog post in Korean with these requirements:
 - Write status to /mnt/session/outputs/status.json
 - Do NOT write to /workspace/ or any other path — only /mnt/session/outputs/ files are retrievable
 
+### Iteration Feedback (auto-injected by ralph loop)
+- 제품당 스펙 수치는 본문에 2개 이하만. 나머지는 비교표에만. 수치를 쓸 때는 반드시 체감 표현과 함께.
+- 가격/스펙 수치에는 출처를 괄호로 표기: "139만원(쿠팡 4월 기준)", "CADR 500(제조사 공식)"
+- 비교표에 넣는 제품은 반드시 본문에서도 1문장 이상 언급
+
 ## Constraints
 - Draft must be 2000+ characters with H2 x3+, FAQ x2+
 - All facts must be verified or flagged

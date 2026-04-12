@@ -1,0 +1,33 @@
+{
+  "status": "COMPLETE",
+  "keyword": "2026 공기청정기 추천 비교",
+  "generated_at": "2026-04-12",
+  "phases_completed": ["Phase 1: SEO Research", "Phase 1.5: Benchmark Blogs", "Phase 2: Draft Generation", "Phase 3: Fact Verification", "Phase 4: Save Output"],
+  "output_files": {
+    "draft": "/mnt/session/outputs/draft.md",
+    "meta": "/mnt/session/outputs/meta.json",
+    "status": "/mnt/session/outputs/status.json"
+  },
+  "draft_stats": {
+    "estimated_characters": 3650,
+    "h2_count": 5,
+    "h3_count": 7,
+    "faq_count": 2,
+    "products_covered": 4,
+    "internal_links": 2,
+    "image_placeholders": 2,
+    "verified_facts": 9,
+    "partially_verified_facts": 1,
+    "unverified_facts": 0
+  },
+  "seo_checks": {
+    "primary_keyword_in_title": true,
+    "primary_keyword_in_description": true,
+    "primary_keyword_mentions_in_body": 4,
+    "meta_description_length": 84,
+    "meta_description_ok": true,
+    "h2_minimum_met": true,
+    "faq_minimum_met": true,
+    "character_minimum_met": true
+  }
+}
