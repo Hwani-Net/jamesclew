@@ -1,0 +1,94 @@
+<!-- 감사 없이 구현: 개발자가 "대충 비슷하게" Tailwind로 변환 -->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WITHOUT Audit — 감사 없이 구현</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f1f5f9;
+        padding: 40px 20px;
+      }
+      .label {
+        font-size: 12px;
+        color: #ef4444;
+        text-align: center;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="label">❌ WITHOUT AUDIT — 감사 없이 "대충 비슷하게" 구현</p>
+
+    <div class="max-w-md mx-auto">
+      <!-- 근사화 1: rounded-2xl(16px) vs 원본 18px -->
+      <!-- 근사화 2: bg-blue-800(#1e40af) vs 원본 #1e3a5f -->
+      <!-- 누락: linear-gradient 제거 -->
+      <!-- 누락: box-shadow 제거 -->
+      <div class="bg-blue-800 rounded-2xl p-7 text-white">
+        <div class="flex items-center gap-3 mb-5">
+          <!-- 근사화 3: rounded-xl(12px) vs 원본 14px -->
+          <!-- 누락: backdrop-filter: blur 제거 -->
+          <div
+            class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center"
+          >
+            <span class="text-xl">📊</span>
+          </div>
+          <div>
+            <!-- 근사화 4: text-lg(18px) vs 원본 19px -->
+            <h2 class="text-lg font-bold tracking-tight">월간 수익 리포트</h2>
+            <!-- 근사화 5: text-white/70 vs 원본 rgba(255,255,255,0.72) -->
+            <p class="text-sm text-white/70 mt-1">2026년 4월 기준</p>
+          </div>
+        </div>
+
+        <!-- 근사화 6: rounded-xl(12px) vs 원본 14px -->
+        <div class="bg-white/10 rounded-xl p-5 mb-4">
+          <p class="text-xs text-white/60 uppercase tracking-wider mb-1">
+            총 수익
+          </p>
+          <!-- 근사화 7: text-4xl(36px) — 이건 맞음 -->
+          <p class="text-4xl font-extrabold tracking-tighter">₩2,847,500</p>
+          <div class="flex items-center gap-1.5 mt-2">
+            <!-- 근사화 8: bg-green-400(#4ade80) vs 원본 #34d399 -->
+            <!-- 근사화 9: text-green-900(#14532d) vs 원본 #064e3b -->
+            <span
+              class="bg-green-400 text-green-900 text-xs font-semibold px-2 py-0.5 rounded-full"
+              >+23.4%</span
+            >
+            <span class="text-xs text-white/50">전월 대비</span>
+          </div>
+        </div>
+
+        <!-- 근사화 10: rounded-lg(8px) vs 원본 12px -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white/10 rounded-lg p-4">
+            <p class="text-xs text-white/50 mb-1">블로그 수익</p>
+            <p class="text-xl font-bold">₩1,250,000</p>
+          </div>
+          <div class="bg-white/10 rounded-lg p-4">
+            <p class="text-xs text-white/50 mb-1">앱 수익</p>
+            <p class="text-xl font-bold">₩1,597,500</p>
+          </div>
+        </div>
+
+        <!-- 근사화 11: rounded-lg(8px) vs 원본 12px -->
+        <!-- 누락: backdrop-filter: blur(4px) -->
+        <!-- 누락: transition: background 0.2s -->
+        <button
+          class="w-full mt-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white text-sm font-semibold"
+        >
+          상세 리포트 보기 →
+        </button>
+      </div>
+    </div>
+  </body>
+</html>

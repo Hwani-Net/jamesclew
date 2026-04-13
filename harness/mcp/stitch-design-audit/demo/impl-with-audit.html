@@ -1,0 +1,100 @@
+<!-- 감사 적용 후 구현: audit_design으로 위반 0건 달성 -->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WITH Audit — 감사 적용 후 구현</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #f1f5f9;
+        padding: 40px 20px;
+      }
+      .label {
+        font-size: 12px;
+        color: #22c55e;
+        text-align: center;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="label">✅ WITH AUDIT — 감사 적용, Stitch 원본과 동일</p>
+
+    <div class="max-w-[420px] mx-auto">
+      <!-- 정확: rounded-[18px], 정확한 그라데이션 색상, box-shadow 보존 -->
+      <div
+        class="rounded-[18px] p-[28px] text-white"
+        style="
+          background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+          box-shadow: 0 8px 32px rgba(30, 58, 95, 0.35);
+        "
+      >
+        <div class="flex items-center gap-[14px] mb-[22px]">
+          <!-- 정확: rounded-[14px], backdrop-blur 보존 -->
+          <div
+            class="w-12 h-12 rounded-[14px] bg-white/[0.15] backdrop-blur-[8px] flex items-center justify-center"
+          >
+            <span class="text-[22px]">📊</span>
+          </div>
+          <div>
+            <!-- 정확: text-[19px], letter-spacing-[-0.3px] -->
+            <h2 class="text-[19px] font-bold" style="letter-spacing: -0.3px">
+              월간 수익 리포트
+            </h2>
+            <!-- 정확: text-[13px], rgba(255,255,255,0.72) -->
+            <p class="text-[13px] text-white/[0.72] mt-1">2026년 4월 기준</p>
+          </div>
+        </div>
+
+        <!-- 정확: rounded-[14px], bg-white/[0.08], p-[20px] -->
+        <div class="bg-white/[0.08] rounded-[14px] p-[20px] mb-[18px]">
+          <p
+            class="text-[12px] text-white/[0.6] uppercase mb-[6px]"
+            style="letter-spacing: 1.2px"
+          >
+            총 수익
+          </p>
+          <!-- 정확: text-[36px], font-weight-800, letter-spacing-[-1.5px] -->
+          <p class="text-[36px] font-extrabold" style="letter-spacing: -1.5px">
+            ₩2,847,500
+          </p>
+          <div class="flex items-center gap-[6px] mt-[8px]">
+            <!-- 정확: bg-[#34d399], text-[#064e3b] — 표준 TW 아닌 정확한 hex -->
+            <span
+              class="bg-[#34d399] text-[#064e3b] text-[11px] font-semibold px-[8px] py-[2px] rounded-full"
+              >+23.4%</span
+            >
+            <span class="text-[12px] text-white/[0.55]">전월 대비</span>
+          </div>
+        </div>
+
+        <!-- 정확: gap-[12px], rounded-[12px], p-[16px] -->
+        <div class="grid grid-cols-2 gap-[12px]">
+          <div class="bg-white/[0.08] rounded-[12px] p-[16px]">
+            <p class="text-[11px] text-white/[0.55] mb-[4px]">블로그 수익</p>
+            <p class="text-[20px] font-bold">₩1,250,000</p>
+          </div>
+          <div class="bg-white/[0.08] rounded-[12px] p-[16px]">
+            <p class="text-[11px] text-white/[0.55] mb-[4px]">앱 수익</p>
+            <p class="text-[20px] font-bold">₩1,597,500</p>
+          </div>
+        </div>
+
+        <!-- 정확: rounded-[12px], backdrop-blur, transition 보존 -->
+        <button
+          class="w-full mt-[18px] py-[14px] bg-white/[0.12] border border-white/[0.18] rounded-[12px] text-white text-[14px] font-semibold cursor-pointer backdrop-blur-[4px] transition-colors duration-200"
+        >
+          상세 리포트 보기 →
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
