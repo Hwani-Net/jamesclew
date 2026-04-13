@@ -144,6 +144,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/post-edit-dispatcher.sh",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/enforce-cross-review.sh",
+            "timeout": 3000
           }
         ]
       },
