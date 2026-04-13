@@ -176,11 +176,12 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - 컨텍스트 수치는 `telegram-notify.sh heartbeat`로 확인. 추측 금지.
 
 ## Model Selection
-- **Opus 오케스트레이터** (기본): 계획·판단·대화·커밋. 실행은 Sonnet 서브에이전트 위임.
-- **GPT-4.1** (copilot-api): Opus 대체가 아닌 **Codex CLI 상위 대안**. 단순 반복/벌크 작업 전용. 오케스트레이터 부적합 (같은 에러 4회 반복, 자기 과신, 규칙 학습 느림). `ANTHROPIC_BASE_URL=http://localhost:4141`. 서브에이전트는 `model: "haiku"`만 가능.
-- **Sonnet 메인**: 단순 단일 작업 시에만. `/model sonnet`으로 전환.
-- Sonnet 서브에이전트: Opus 세션 내에서 `model: "sonnet"`으로 자동 사용. 별도 전환 불필요.
-- **Sonnet 서브에이전트 한계**: 지시 이해력 부족 → 단순 코딩/배포만 배정. 복잡한 판단/대화는 Opus.
+- **opusplan** (권장 기본): `/model opusplan` — Plan(설계)=Opus, 실행=Sonnet 자동 분리. Opus 7D 풀 보존 + Sonnet이 코딩/배포 수행. Ralph Loop, 장기 작업에 최적.
+- **Opus 오케스트레이터**: `/model opus` — 모든 것을 Opus가 직접. 짧은 대화·판단·커밋에 적합. 5H 소비 큼.
+- **Sonnet 메인**: `/model sonnet` — 단순 단일 작업 전용. Opus advisor 없음.
+- **GPT-4.1** (copilot-api): `ANTHROPIC_BASE_URL=http://localhost:4141`. 무료(multiplier 0). 오케스트레이터 부적합 — 단순 반복/벌크 작업만.
+- Sonnet 서브에이전트: Opus/opusplan 세션 내에서 `Agent(model: "sonnet")`으로 자동 사용.
+- **Advisor API** (참고): Messages API에서 `tools=[{"type":"advisor_20260301","model":"claude-opus-4-6"}]`로 Sonnet+Opus 자문 패턴 구현 가능. SWE-bench +2.7%, 비용 -11.9%.
 
 ## Prerequisites (다른 프로젝트에서도 동작하려면)
 - `~/.claude/` 에 hooks, rules, scripts, commands 배포됨 (`bash harness/deploy.sh`)
