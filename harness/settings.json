@@ -242,6 +242,11 @@
             "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/curation.ts\"",
             "timeout": 120000
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\" && gbrain sync --repo . --no-pull --no-embed 2>/dev/null && echo \"[gbrain] synced\" || true'",
+            "timeout": 15000
           }
         ]
       }
