@@ -97,6 +97,85 @@ async function main() {
     const turnCount = getTurnCount() + 1;
     setTurnCount(turnCount);
 
+    // === STUCK STATE DETECTION (gbrain Search-Before-Solve enforcement) ===
+    // Reads ~/.harness-state/ files written by other hooks/agents
+    let isStuck = false;
+    let isNewToolDiscovered = false;
+    try {
+      const fs = require("fs");
+
+      // Check recent error count file (written by stop-dispatcher.sh or similar)
+      const errorCountFile = `${STATE_DIR}/error_count`;
+      if (fs.existsSync(errorCountFile)) {
+        const errorCount =
+          parseInt(fs.readFileSync(errorCountFile, "utf8").trim()) || 0;
+        if (errorCount >= 2) {
+          isStuck = true;
+        }
+      }
+
+      // Check retry log for repeated failure patterns (last 5 entries)
+      const retryLog = `${STATE_DIR}/retry_log.jsonl`;
+      if (fs.existsSync(retryLog)) {
+        const lines = fs
+          .readFileSync(retryLog, "utf8")
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .slice(-5);
+        const recentErrors = lines.filter((line: string) => {
+          try {
+            const entry = JSON.parse(line);
+            const ageMs = Date.now() - new Date(entry.ts || 0).getTime();
+            // Consider errors within last 10 minutes as "recent"
+            return ageMs < 10 * 60 * 1000 && entry.status === "error";
+          } catch {
+            return false;
+          }
+        });
+        if (recentErrors.length >= 2) {
+          isStuck = true;
+        }
+      }
+
+      // Check new_tool_discovered flag (written when npm install or new MCP add happens)
+      const newToolFile = `${STATE_DIR}/new_tool_discovered.txt`;
+      if (fs.existsSync(newToolFile)) {
+        const toolInfo = fs.readFileSync(newToolFile, "utf8").trim();
+        if (toolInfo) {
+          isNewToolDiscovered = true;
+          // Clear after reading so we don't repeat the reminder
+          try {
+            fs.unlinkSync(newToolFile);
+          } catch {}
+        }
+      }
+    } catch {}
+
+    // Also detect stuck patterns from prompt text (error/failure keywords)
+    const stuckTextPatterns = [
+      /에러.*반복|같은.*에러|계속.*실패|또.*에러/, // "에러가 반복", "같은 에러"
+      /timeout.*다시|다시.*timeout|연결.*실패|접근.*실패/, // "timeout 다시", "연결 실패"
+      /not\s*found.*다시|찾을\s*수\s*없|모르겠|막혔/, // "not found 다시", "막혔어"
+      /3번|세\s*번|여러\s*번.*실패|재시도.*실패/, // "3번 시도", "재시도 실패"
+    ];
+    if (!isStuck && stuckTextPatterns.some((p) => p.test(prompt))) {
+      isStuck = true;
+    }
+
+    // Detect new npm package / API discovery in prompt
+    const newToolTextPatterns = [
+      /npm\s+install|npm\s+i\s+|npx\s+[-a-z]|yarn\s+add/, // npm/yarn install
+      /새로운?\s*(도구|패키지|라이브러리|API|서비스)\s*(발견|찾|알게)/, // "새로운 도구 발견"
+      /처음\s*(쓰는|사용|알게|발견)/, // "처음 쓰는", "처음 알게 된"
+    ];
+    if (
+      !isNewToolDiscovered &&
+      newToolTextPatterns.some((p) => p.test(prompt))
+    ) {
+      isNewToolDiscovered = true;
+    }
+
     // === FEEDBACK DETECTION FIRST (before memory server, which may timeout) ===
     const feedbackPatterns = [
       /왜.*안\s*해|또.*그러|몇\s*번|지적.*했/, // "왜 안 해?", "또 그러네", "몇번이나"
@@ -216,6 +295,20 @@ async function main() {
       }
     } catch {}
 
+    // === SEARCH-BEFORE-SOLVE: gbrain enforcement ===
+    if (isStuck) {
+      parts.push(
+        `[🔍 SEARCH-FIRST] 이전에 유사한 문제를 해결한 적이 있을 수 있습니다. 코드 수정 전에 반드시:\n1. gbrain query "관련 키워드" 로 먼저 검색 (과거 세션 지식, 디버깅 패턴)\n2. PITFALLS.md 에서 유사 증상 확인\n3. 옵시디언 세션 노트 검색\n같은 접근법 반복 변형 금지 — 새 정보 없으면 대표님께 보고.`,
+      );
+    }
+
+    // === GBRAIN SAVE: new tool/technique discovered ===
+    if (isNewToolDiscovered) {
+      parts.push(
+        `[💾 GBRAIN SAVE] 새로운 도구/기법을 발견했습니다. 작업 완료 후 즉시 저장하세요:\n  gbrain put <slug> <<EOF\n  # 도구명\n  설치: ...\n  용도: ...\n  주의: ...\n  EOF\n또는 MCP: mcp__gbrain__put_page`,
+      );
+    }
+
     // If feedback detected, inject stronger reminder + PITFALLS auto-record instruction
     if (isFeedback) {
       parts.push(`[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요. 선언만 하지 말고 즉시 실행하세요. 안 된다고 단정하기 전에 웹 검색으로 확인하세요.
@@ -320,7 +413,8 @@ async function main() {
       if (!fs.existsSync(titleDoneFile)) {
         fs.writeFileSync(titleDoneFile, new Date().toISOString());
         // Extract meaningful title from first prompt
-        const stopWords = /^(해줘|진행해|해|줘|주세요|부탁|알려줘|보여줘|확인해|실행해|해주세요|좀|그냥|이제|일단|먼저|빨리|바로)$/;
+        const stopWords =
+          /^(해줘|진행해|해|줘|주세요|부탁|알려줘|보여줘|확인해|실행해|해주세요|좀|그냥|이제|일단|먼저|빨리|바로)$/;
         const words = prompt
           .replace(/[<>[\]{}()]/g, " ")
           .split(/\s+/)
