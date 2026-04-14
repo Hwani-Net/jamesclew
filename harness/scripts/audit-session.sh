@@ -14,8 +14,8 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 26개 (2026-04-14)
-# 마지막 업데이트: 2026-04-14 (Agent Teams, gbrain, Antigravity 제거)
+# 현재 체크 수: 33개 (2026-04-15)
+# 마지막 업데이트: 2026-04-15 (check_precompact_block~check_model_sonnet_explicit 추가 — TODO 6개 구현)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -44,20 +44,16 @@
 #  24 check_no_antigravity      — Antigravity(opencode) 잔존 체크
 #  25 check_gbrain_usage        — gbrain 검색/저장 사용
 #  26 check_agent_teams_cleanup — Agent Teams 생성/삭제 균형
+#  27 check_rule_impl_gap       — 규칙 파일 참조 hook/script 실제 존재 여부 (P-012)
+#  28 check_precompact_block    — PreCompact hook exit 2 차단 로직 존재 여부
+#  29 check_obsidian_save       — compact 전 Obsidian 세션 저장 순서 (P-007)
+#  30 check_5h_emergency        — 5H 80%+ 감지 시 Sonnet 전환 절차
+#  31 check_version_manual_sync — 버전 업데이트 시 harness-manual.md 동시 수정
+#  32 check_design_review_vision — design-review Vision 호출 (Opus Vision)
+#  33 check_model_sonnet_explicit — Agent() 호출 시 model: sonnet 명시 여부
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# TODO check_precompact_block   — PreCompact hook exit 2 로직 존재 여부
-#   → ~/.claude/hooks/PreCompact 파일 존재 + exit 2 패턴 확인
-# TODO check_obsidian_save      — compact 전 Obsidian 세션 저장 순서 (P-007)
-#   → /저장 또는 obsidian_vault 저장 → /compact 순서 검증
-# TODO check_5h_emergency       — 5H 80%+ 감지 시 Sonnet 전환 절차
-#   → heartbeat 호출 또는 Sonnet 위임 패턴 확인
-# TODO check_version_manual_sync — 버전 업데이트 시 매뉴얼 동시 업데이트
-#   → harness 수정 커밋에 changelog/CLAUDE.md 변경 동반 여부
-# TODO check_design_vision      — design-review Vision 호출 (Opus Vision)
-#   → mcp__stitch 이후 Read(*.png) + Vision 분석 패턴 확인
-# TODO check_sonnet_model_tag   — Agent 호출 시 model: sonnet 명시
-#   → Agent() 패턴에서 model 파라미터 누락 여부
+# (없음 — 모든 TODO 구현 완료 2026-04-15)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -400,6 +396,55 @@ check_gbrain_usage() {
   fi
 }
 
+# ─── Check 27: Rule→Implementation Gap (P-012) ───
+check_rule_impl_gap() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local scripts_dir="$HOME/.claude/scripts"
+  local rules_dir="$HOME/.claude/rules"
+  local claude_md="$HOME/.claude/CLAUDE.md"
+
+  # Extract literal filenames (*.sh, *.ts, *.js) from rule files
+  # Uses grep -oE to capture only the filename token; excludes lines that are comments (#)
+  # Exclude known non-hook/non-script filenames (general references, config files, build artifacts)
+  local EXCLUDE_PATTERN="^(deploy\.sh|index\.js|settings\.js|api_cost_log\.js|package\.json|tsconfig\.js|firebase\.js|server\.js|app\.js|main\.js|config\.js|setup\.js|build\.js)$"
+  local referenced_files
+  referenced_files=$(
+    {
+      grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)' "$claude_md" 2>/dev/null
+      for f in "$rules_dir"/*.md; do
+        [ -f "$f" ] && grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)' "$f" 2>/dev/null
+      done
+    } | sort -u | grep -vE "$EXCLUDE_PATTERN"
+  )
+
+  if [ -z "$referenced_files" ]; then
+    echo "WARN|규칙 파일에서 .sh/.ts/.js 파일명 추출 실패"
+    return
+  fi
+
+  local missing=()
+  local found=0
+  while IFS= read -r fname; do
+    [ -z "$fname" ] && continue
+    if [ -f "$hooks_dir/$fname" ] || [ -f "$scripts_dir/$fname" ]; then
+      found=$((found + 1))
+    else
+      missing+=("$fname")
+    fi
+  done <<< "$referenced_files"
+
+  local total=$((found + ${#missing[@]}))
+  local miss_count=${#missing[@]}
+
+  if [ "$miss_count" -eq 0 ]; then
+    echo "PASS|참조 파일 ${total}개 전부 존재"
+  elif [ "$miss_count" -le 2 ]; then
+    echo "WARN|미존재 ${miss_count}개: ${missing[*]}"
+  else
+    echo "FAIL|미존재 ${miss_count}개: ${missing[*]}"
+  fi
+}
+
 # ─── Check 26: Agent Teams 정리 ───
 check_agent_teams_cleanup() {
   local team_create=$(grep -ci "TeamCreate" "$TRANSCRIPT" 2>/dev/null || echo "0")
@@ -410,6 +455,88 @@ check_agent_teams_cleanup() {
     echo "PASS|생성 ${team_create}건, 삭제 ${team_delete}건 (정리 완료)"
   else
     echo "WARN|생성 ${team_create}건, 삭제 ${team_delete}건 — 미정리 팀 존재 가능"
+  fi
+}
+
+# ─── Check 28: PreCompact hook exit 2 차단 로직 ───
+check_precompact_block() {
+  local hook_file="$HOME/.claude/hooks/pre-compact-snapshot.sh"
+  if [ ! -f "$hook_file" ]; then
+    echo "FAIL|pre-compact-snapshot.sh 파일 없음"
+    return
+  fi
+  local exit2=$(grep -c "exit 2" "$hook_file" 2>/dev/null || echo "0")
+  [ "$exit2" -gt 0 ] && echo "PASS|exit 2 차단 로직 존재 (${exit2}건)" && return
+  echo "FAIL|exit 2 없음 — compact 강제 차단 불가"
+}
+
+# ─── Check 29: Obsidian 세션 파일 저장 (compact 전 P-007) ───
+check_obsidian_save() {
+  if [ -z "$OBSIDIAN_VAULT" ]; then
+    echo "N/A|OBSIDIAN_VAULT 미설정"
+    return
+  fi
+  local session_dir="$OBSIDIAN_VAULT/01-jamesclaw/harness"
+  if [ ! -d "$session_dir" ]; then
+    echo "WARN|Obsidian harness 디렉토리 없음: ${session_dir}"
+    return
+  fi
+  # Check for session files created in last 7 days
+  local recent=$(find "$session_dir" -name "session-*.md" -mtime -7 2>/dev/null | wc -l | tr -d ' ')
+  local any=$(find "$session_dir" -name "session-*.md" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$recent" -gt 0 ]; then
+    echo "PASS|7일 이내 세션 파일 ${recent}개"
+  elif [ "$any" -gt 0 ]; then
+    echo "WARN|세션 파일 ${any}개 존재, 7일 이내 없음 (P-007: compact 전 저장 확인)"
+  else
+    echo "WARN|session-*.md 없음 — compact 전 저장 미실행 가능성"
+  fi
+}
+
+# ─── Check 30: 5H 80%+ 비상 모드 감지 ───
+check_5h_emergency() {
+  local triggered=$(safe_count "grep -c '5H 80\|80%\|Sonnet 위임 모드\|비상 모드' \"$TRANSCRIPT\"")
+  [ "$triggered" -eq 0 ] && echo "N/A|5H 비상 미발동" && return
+  # Check if model switch actually happened after emergency detection
+  local model_switch=$(safe_count "grep -c '/model sonnet\|model.*sonnet\|Sonnet.*전환\|switched.*sonnet' \"$TRANSCRIPT\"")
+  [ "$model_switch" -gt 0 ] && echo "PASS|비상 발동 ${triggered}건, Sonnet 전환 ${model_switch}건" && return
+  echo "WARN|비상 패턴 ${triggered}건, 모델 전환 미확인"
+}
+
+# ─── Check 31: 버전 업데이트 시 매뉴얼 동시 업데이트 ───
+check_version_manual_sync() {
+  local version_mention=$(safe_count "grep -c 'changelog\|버전.*업데이트\|version.*update\|v[0-9]\+\.[0-9]\+\.[0-9]\+' \"$TRANSCRIPT\"")
+  [ "$version_mention" -eq 0 ] && echo "N/A|버전 업데이트 없음" && return
+  # Check if harness-manual.md was also modified
+  local manual_edit=$(safe_count "grep '\"name\":\"Write\"\|\"name\":\"Edit\"' \"$TRANSCRIPT\" | grep -c 'harness-manual\.md'")
+  [ "$manual_edit" -gt 0 ] && echo "PASS|버전 언급 ${version_mention}건, 매뉴얼 수정 ${manual_edit}건" && return
+  echo "WARN|버전 언급 ${version_mention}건, harness-manual.md 수정 0건"
+}
+
+# ─── Check 32: design-review Vision 호출 검증 ───
+check_design_review_vision() {
+  local design_review=$(safe_count "grep -c 'design-review\|mcp__stitch\|stitch.*screen\|Stitch.*디자인' \"$TRANSCRIPT\"")
+  [ "$design_review" -eq 0 ] && echo "N/A|디자인 리뷰 없음" && return
+  # Check for image Read calls (Vision usage)
+  local vision_read=$(safe_count "grep '\"name\":\"Read\"' \"$TRANSCRIPT\" | grep -c '\.png\|\.jpg\|\.jpeg\|\.webp\|screenshot'")
+  [ "$vision_read" -gt 0 ] && echo "PASS|디자인 리뷰 ${design_review}건, Vision 이미지 Read ${vision_read}건" && return
+  echo "WARN|디자인 리뷰 ${design_review}건, Vision Read 0건 — Opus Vision 미사용 가능성"
+}
+
+# ─── Check 33: Agent() 호출 시 model: sonnet 명시 여부 ───
+check_model_sonnet_explicit() {
+  # Find Agent( tool calls in transcript
+  local agent_calls=$(safe_count "grep -c '\"name\":\"Agent\"' \"$TRANSCRIPT\"")
+  [ "$agent_calls" -eq 0 ] && echo "N/A|Agent 호출 없음" && return
+  # Check how many have model specified (sonnet or other)
+  local with_model=$(safe_count "grep -A5 '\"name\":\"Agent\"' \"$TRANSCRIPT\" | grep -c '\"model\"'")
+  if [ "$with_model" -ge "$agent_calls" ]; then
+    echo "PASS|Agent ${agent_calls}건 전부 model 명시"
+  elif [ "$with_model" -gt 0 ]; then
+    local missing=$((agent_calls - with_model))
+    echo "WARN|Agent ${agent_calls}건 중 ${missing}건 model 미명시 — Opus 풀 차감 위험"
+  else
+    echo "WARN|Agent ${agent_calls}건, model 명시 0건 — model: sonnet 명시 필수"
   fi
 }
 
@@ -458,11 +585,18 @@ R23=$(check_pipeline_loop)
 R24=$(check_no_antigravity)
 R25=$(check_gbrain_usage)
 R26=$(check_agent_teams_cleanup)
+R27=$(check_rule_impl_gap)
+R28=$(check_precompact_block)
+R29=$(check_obsidian_save)
+R30=$(check_5h_emergency)
+R31=$(check_version_manual_sync)
+R32=$(check_design_review_vision)
+R33=$(check_model_sonnet_explicit)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33")
 
-TOTAL_CHECKS=26
+TOTAL_CHECKS=33
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0

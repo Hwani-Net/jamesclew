@@ -3,7 +3,8 @@
     "budget_tokens": 10000
   },
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "ENABLE_PROMPT_CACHING_1H": "1"
   },
   "permissions": {
     "allow": [
@@ -75,6 +76,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/quality-gate.sh pre-commit",
             "if": "Bash(git commit *)",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/pre-commit-conventional.sh",
             "timeout": 5000
           },
           {
@@ -233,6 +239,11 @@
             "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/user-prompt.ts\"",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/user-prompt-declare-warn.sh",
+            "timeout": 5000
           }
         ]
       }
