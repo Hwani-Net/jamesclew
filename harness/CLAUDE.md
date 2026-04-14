@@ -115,7 +115,7 @@
 - **용도**: teammate 간 소통이 필요한 복잡한 병렬 작업 (리뷰, 디버깅, 멀티 프로젝트)
 - **teammate 갯수 제한 없음**: 작업 복잡도에 따라 자율 결정. Sonnet(7D 별도 풀) + HydraTeams(5H 0) 조합이므로 비용 병목 없음
 - **모델 선택**: 리드=Opus, 구현 teammate=Sonnet(`model: sonnet`), 리뷰 teammate=GPT via HydraTeams(`localhost:3456`)
-- **HydraTeams 프록시**: `/tmp/HydraTeams/` — Agent Teams teammate를 GPT-4o-mini 등 외부 모델로 라우팅. `node dist/index.js --model gpt-4o-mini --provider openai --port 3456 --passthrough lead`
+- **HydraTeams 프록시**: `harness/tools/HydraTeams/` — Agent Teams teammate를 GPT-4o-mini 등 외부 모델로 라우팅. `node dist/index.js --model gpt-4o-mini --provider openai --port 3456 --passthrough lead`
 - **copilot-api와 역할 분리**: copilot-api(`localhost:4141`) = 단일 API 호출(검수, AI냄새). HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
 - **서브에이전트 vs Agent Teams**: 결과만 반환하면 서브에이전트, teammate 간 대화/태스크 조율이 필요하면 Agent Teams
 - **in-process 모드 기본**: tmux 불필요. Windows Terminal에서 바로 동작. `Shift+Down`으로 teammate 전환
