@@ -109,6 +109,8 @@
 - 브랜치별 1 에이전트 원칙 (동일 브랜치 2개 worktree 금지)
 - 공유 리소스(DB, 포트, .env) 격리 필수
 - 현재 단일 에이전트 운영 — 병렬 전환 시 이 규칙 활성화
+- `EnterWorktree(path: "existing/worktree")` — v2.1.105+에서 기존 worktree로 재진입 가능. 에이전트 재시작 시 유용
+- **서브에이전트 MCP 도구 상속** (v2.1.101+): `Agent(model: "sonnet")` 호출 시 동적으로 추가된 MCP 도구(stitch, korean-law 등)도 자동 상속됨. 별도 전달 불필요.
 
 ## Self-Healing
 1. 에러 메시지 정독 2. 근본 원인 파악 3. 수정 적용

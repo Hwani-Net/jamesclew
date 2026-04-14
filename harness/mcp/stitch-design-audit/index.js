@@ -69,6 +69,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const result = auditDesignCompliance(stitch_html, impl_code);
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      _meta: { "anthropic/maxResultSizeChars": 500000 },
     };
   }
 
@@ -110,6 +111,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const result = auditDesignCompliance(stitchHtml, implCode);
     return {
       content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      _meta: { "anthropic/maxResultSizeChars": 500000 },
     };
   }
 

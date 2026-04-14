@@ -66,7 +66,7 @@ const VISUAL_EFFECTS = [
   { css: "filter:", tailwind: ["filter", "blur-", "brightness-", "contrast-"] },
   { css: "opacity:", tailwind: ["opacity-"] },
   {
-    css: "transform:",
+    css: "transform_meaningful",
     tailwind: ["transform", "rotate-", "scale-", "translate-"],
   },
   { css: "transition:", tailwind: ["transition", "duration-", "ease-"] },
@@ -122,17 +122,46 @@ function auditDesignCompliance(stitchHtml, implCode) {
 
 // ── Rule 1 checks ─────────────────────────────────────────────────────────────
 
+/**
+ * Returns true if a CSS border-radius value is a "pill shape" (≥50px or 9999px).
+ * rounded-full (9999px) is visually equivalent to any large radius ≥50px.
+ */
+function isPillRadius(value) {
+  const match = value.match(/^([\d.]+)px$/);
+  if (!match) return false;
+  return parseFloat(match[1]) >= 50;
+}
+
 function checkBorderRadiusApproximation(stitchHtml, implCode, violations) {
   const radiusRegex = /border-radius:\s*([\d.]+)(px|rem|%)/gi;
   let match;
+
+  // Collect all reference radius values first
+  const refRadii = [];
   while ((match = radiusRegex.exec(stitchHtml)) !== null) {
-    const value = `${match[1]}${match[2]}`;
+    refRadii.push(`${match[1]}${match[2]}`);
+  }
+
+  // If reference has ANY pill radius (≥50px), rounded-full in impl is a valid match globally
+  const refHasPillRadius = refRadii.some(isPillRadius);
+
+  for (const value of refRadii) {
+    // If Stitch uses a pill-shape radius (≥50px), rounded-full is a valid equivalent
+    if (isPillRadius(value)) {
+      continue;
+    }
 
     const twStandard = Object.entries(TW_BORDER_RADIUS).find(
       ([, px]) => px === value,
     );
 
     if (twStandard) {
+      continue;
+    }
+
+    const escapedValue = value.replace(".", "\\.");
+    const arbitraryRegex = new RegExp(`rounded-\\[${escapedValue}\\]`);
+    if (arbitraryRegex.test(implCode)) {
       continue;
     }
 
@@ -144,6 +173,11 @@ function checkBorderRadiusApproximation(stitchHtml, implCode, violations) {
       const twKey = implMatch[1] || "DEFAULT";
       const twValue = TW_BORDER_RADIUS[twKey];
 
+      // If impl uses rounded-full AND ref has a pill radius, it's a valid match — skip
+      if (twClass === "rounded-full" && refHasPillRadius) {
+        continue;
+      }
+
       if (twValue && twValue !== value) {
         violations.push({
           rule: "NO_APPROXIMATION",
@@ -153,12 +187,6 @@ function checkBorderRadiusApproximation(stitchHtml, implCode, violations) {
           implValue: twClass,
         });
       }
-    }
-
-    const escapedValue = value.replace(".", "\\.");
-    const arbitraryRegex = new RegExp(`rounded-\\[${escapedValue}\\]`);
-    if (arbitraryRegex.test(implCode)) {
-      continue;
     }
   }
 }
@@ -274,6 +302,30 @@ function measureMaxNestingDepth(code) {
 
 function checkEffectPreservation(stitchHtml, implCode, violations) {
   for (const effect of VISUAL_EFFECTS) {
+    // Special handling for transform — only flag if reference uses a meaningful transform
+    // (translate/rotate/scale values), NOT just "transform" appearing inside a transition property
+    if (effect.css === "transform_meaningful") {
+      const meaningfulTransformRegex =
+        /(?:^|[;\s{])transform\s*:\s*(?:translate|rotate|scale|matrix|skew)/m;
+      if (!meaningfulTransformRegex.test(stitchHtml)) {
+        continue;
+      }
+      const implHasEffect =
+        effect.tailwind.some((tw) => implCode.includes(tw)) ||
+        /(?:^|[;\s{])transform\s*:\s*(?:translate|rotate|scale|matrix|skew)/m.test(
+          implCode,
+        );
+      if (!implHasEffect) {
+        violations.push({
+          rule: "EFFECT_PRESERVATION",
+          severity: "error",
+          message: `시각 효과 누락: Stitch에 'transform' 효과가 있지만 구현 코드에서 찾을 수 없습니다.`,
+          stitchValue: "transform:",
+        });
+      }
+      continue;
+    }
+
     if (stitchHtml.includes(effect.css)) {
       const implHasEffect =
         effect.tailwind.some((tw) => implCode.includes(tw)) ||

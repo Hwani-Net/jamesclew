@@ -134,7 +134,7 @@ _run_codex() {
 }
 
 # ── 5단계 모델 로테이션: codex → copilot(GPT-4.1) → openrouter무료 → gemma4로컬 → codex backoff ──
-# opencode(Antigravity) 일괄 차단 (Google ToS 자동차단, 2026-04)
+# [DEPRECATED] Antigravity(opencode) 2026-04 폐기 → GPT-4.1(copilot-api) + Gemma 4로 대체
 # copilot-api 프록시 추가 (localhost:4141, GitHub Copilot 인증)
 MODELS=("codex" "copilot_gpt" "openrouter_free" "gemma4_local" "codex_backoff")
 OPENROUTER_KEYS_FILE="$HOME/.claude/openrouter-keys.json"

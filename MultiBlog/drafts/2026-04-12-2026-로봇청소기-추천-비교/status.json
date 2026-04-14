@@ -1,5 +1,5 @@
 {
-  "status": "complete",
+  "status": "published",
   "keyword": "2026 로봇청소기 추천 비교",
   "generated_at": "2026-04-12",
   "phases_completed": {
@@ -33,5 +33,7 @@
     "/mnt/session/outputs/meta.json",
     "/mnt/session/outputs/status.json"
   ],
-  "warnings": []
+  "warnings": [],
+  "publishedAt": "2026-04-12T12:16:57Z",
+  "url": "https://smartreview-kr.web.app/2026-04-12-2026-로봇청소기-추천-비교/"
 }

@@ -37,14 +37,14 @@ if [ "$MODE" = "--checkpoint" ]; then
       ;;
     7)
       # After Step 7: verify external model was ACTUALLY called
-      OPENCODE=$(safe_count "grep -c 'opencode run\|antigravity' \"$TRANSCRIPT\"")
+      GPT41=$(safe_count "grep -c 'localhost:4141\|gpt-4.1' \"$TRANSCRIPT\"")
       CODEX=$(safe_count "grep -c 'codex exec' \"$TRANSCRIPT\"")
-      TOTAL=$((OPENCODE + CODEX))
+      TOTAL=$((GPT41 + CODEX))
       if [ "$TOTAL" -lt 2 ]; then
-        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 7 FAIL — 1회차] 외부 모델 실제 호출 ${TOTAL}건 (최소 2건 필요: opencode + codex). 지금 실행하세요:\\n1. opencode run -m google/antigravity-gemini-3.1-pro-high \\\"코드 리뷰 요청\\\"\\n2. codex exec \\\"코드 리뷰 요청\\\"\\n완료 후: bash ~/.claude/scripts/audit-session.sh --checkpoint 7\"}"
+        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 7 FAIL — 1회차] 외부 모델 실제 호출 ${TOTAL}건 (최소 2건 필요: GPT-4.1 + codex). 지금 실행하세요:\\n1. curl -s http://localhost:4141/v1/chat/completions -d '{...}' 로 GPT-4.1 코드 리뷰\\n2. codex exec \\\"코드 리뷰 요청\\\"\\n완료 후: bash ~/.claude/scripts/audit-session.sh --checkpoint 7\"}"
       else
         echo "done" > "$STATE_DIR/step7_review_done"
-        echo "{\"systemMessage\":\"[✅ CHECKPOINT 7 PASS] 외부 모델 ${TOTAL}건 (OC:${OPENCODE} CX:${CODEX}). step7_review_done 생성됨.\"}"
+        echo "{\"systemMessage\":\"[✅ CHECKPOINT 7 PASS] 외부 모델 ${TOTAL}건 (GPT41:${GPT41} CX:${CODEX}). step7_review_done 생성됨.\"}"
       fi
       ;;
     10)
@@ -164,7 +164,7 @@ check_quality_loop() {
 check_external_review() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
   [ -f "$STATE_DIR/step7_review_done" ] && echo "PASS|증거 파일 존재" && return
-  local ext=$(safe_count "grep -c 'opencode run\|codex exec\|codex ' \"$TRANSCRIPT\"")
+  local ext=$(safe_count "grep -c 'localhost:4141\|gpt-4.1\|codex exec\|codex ' \"$TRANSCRIPT\"")
   [ "$ext" -gt 0 ] && echo "WARN|외부 모델 ${ext}건, 증거 파일 없음" && return
   echo "FAIL|외부 검수 0회"
 }
@@ -266,11 +266,11 @@ check_error_retry() {
 # ─── Check 18: 외부 모델 실제 호출 (Claude 자기 검수 금지) ───
 check_external_model_calls() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  local opencode=$(safe_count "grep -c 'opencode run\|opencode exec\|antigravity' \"$TRANSCRIPT\"")
+  local gpt41=$(safe_count "grep -c 'localhost:4141\|gpt-4.1' \"$TRANSCRIPT\"")
   local codex=$(safe_count "grep -c 'codex exec\|codex ' \"$TRANSCRIPT\"")
   local gemini=$(safe_count "grep -c 'gemini ' \"$TRANSCRIPT\"")
-  local total=$((opencode + codex + gemini))
-  [ "$total" -ge 2 ] && echo "PASS|외부 모델 ${total}건 (OC:${opencode} CX:${codex} GM:${gemini})" && return
+  local total=$((gpt41 + codex + gemini))
+  [ "$total" -ge 2 ] && echo "PASS|외부 모델 ${total}건 (GPT41:${gpt41} CX:${codex} GM:${gemini})" && return
   [ "$total" -gt 0 ] && echo "WARN|외부 모델 ${total}건 (이중 검수 미달)" && return
   echo "FAIL|외부 모델 호출 0건 — Claude 자기 검수 금지"
 }

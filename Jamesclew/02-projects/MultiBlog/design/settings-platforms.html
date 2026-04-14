@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Multi Blog Settings - Platforms</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#ccd4ee",
+                    "on-primary-container": "#14007e",
+                    "primary-fixed": "#9795ff",
+                    "on-secondary-fixed": "#2a4700",
+                    "on-secondary-container": "#ebffcc",
+                    "surface-container": "#1c113f",
+                    "on-primary": "#1c00a0",
+                    "background": "#10062d",
+                    "tertiary-dim": "#ccd4ee",
+                    "on-secondary": "#375b00",
+                    "error-container": "#a70138",
+                    "error-dim": "#d73357",
+                    "secondary-dim": "#9ee939",
+                    "inverse-primary": "#4e45e4",
+                    "error": "#ff6e84",
+                    "tertiary-fixed": "#dae2fd",
+                    "on-primary-fixed": "#000000",
+                    "on-tertiary": "#525a70",
+                    "surface-dim": "#10062d",
+                    "on-tertiary-fixed": "#373f54",
+                    "on-surface": "#eae1ff",
+                    "primary-container": "#9795ff",
+                    "secondary": "#84CC16",
+                    "primary-fixed-dim": "#8885ff",
+                    "surface-container-lowest": "#000000",
+                    "on-secondary-fixed-variant": "#3f6600",
+                    "on-error-container": "#ffb2b9",
+                    "on-tertiary-fixed-variant": "#535b71",
+                    "surface-tint": "#a7a5ff",
+                    "on-primary-fixed-variant": "#1a0099",
+                    "surface-bright": "#30215d",
+                    "secondary-fixed": "#acf847",
+                    "surface": "#0F172A",
+                    "secondary-fixed-dim": "#9ee939",
+                    "on-error": "#490013",
+                    "on-background": "#eae1ff",
+                    "primary-dim": "#645efb",
+                    "on-surface-variant": "#b0a4d3",
+                    "inverse-on-surface": "#594f78",
+                    "surface-container-highest": "#291c53",
+                    "surface-container-high": "#231649",
+                    "outline": "#7a6f9b",
+                    "surface-variant": "#291c53",
+                    "on-tertiary-container": "#4a5167",
+                    "primary": "#4F46E5",
+                    "tertiary-container": "#dae2fd",
+                    "surface-container-low": "#160b36",
+                    "inverse-surface": "#fdf7ff",
+                    "secondary-container": "#416900",
+                    "tertiary": "#eef0ff",
+                    "outline-variant": "#4b426a",
+                    "warning": "#F59E0B"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-on-surface min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-slate-900 text-indigo-600 dark:text-indigo-400 font-['Inter'] antialiased border-b border-slate-800 flex justify-between items-center px-6 py-3 w-full fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-indigo-500">Multi Blog</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-800 transition-colors active:scale-95 duration-150 text-slate-400">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-800 transition-colors active:scale-95 duration-150 text-slate-400">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-indigo-500/30">
+<img alt="User profile" data-alt="Close-up professional headshot of a smiling man with clean lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGCFVFocaUTgIGNf-FaO4xCNdmO73zpdwurTrG5wtmLZM2lLuq2vpTZDUnGc0fyUlNNaxWkmiZLgWBUF6O_sQt5-w6bS18YZIReunWIXgSGzxW4yHNItCyjqigqPnqEY0p-yS3yFTLiYheM04r4Q4hWCFfjOOd0IY5FxUj7ZoCvWyQlfB4PoWFHFtfTog_equx7DqfOGHvBKjNuJ2tPNFghGCmhL-F14eZUH6LgpVTVQfA5kF9C5Y_8-YRhWvkh2rrir1tNl-NN8W9"/>
+</div>
+</div>
+</header>
+<div class="flex pt-[60px]">
+<!-- SideNavBar -->
+<nav class="bg-slate-900 font-['Inter'] text-sm fixed left-0 top-0 h-screen w-64 flex flex-col pt-20 pb-4 border-r border-slate-800">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3 mb-2">
+<img alt="Admin avatar" class="w-10 h-10 rounded-xl" data-alt="Abstract colorful 3D avatar icon for a technology administrator on a clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyGlPT-6-MXQz-msJcuAk49qZ59ETMhqrh4YhByXObTIT0l4gPO94UFARkmyi_5QPhqB_AH3UFPDhmDO1LaWzHaZohCVKpBulLGuRVXj0BKpLloBe5g_ZUPdAJ5_WE1SSYJmVrbHLrK5gJMVyijxWHnks75k9pTRqDmdMgiJCcMnWXFkPy8b00robMddcUcy0sbJ4ZMJVuVKOnZ03NiLxBeEvN33HTWL151LQy1PhqfC4zNLL8jeMDjVBf6HIxwtrI7kX4nG7sCiQN"/>
+<div>
+<h2 class="text-lg font-black text-slate-100 leading-tight">Multi Blog</h2>
+<p class="text-[10px] text-slate-500">1인 운영자 자동화 도구</p>
+</div>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Account</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-indigo-400 font-bold border-r-4 border-indigo-500 bg-slate-800/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span>Platforms</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="extension">extension</span>
+<span>BYOC</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span>Helper</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span>Advanced</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 p-8 bg-[#0F172A] min-h-screen">
+<div class="max-w-5xl mx-auto">
+<header class="mb-10">
+<h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Connected Platforms</h1>
+<p class="text-slate-400">Manage your blog destinations and API connections across the ecosystem.</p>
+</header>
+<!-- Platforms Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- 1. WordPress -->
+<div class="bg-slate-800/40 border border-slate-700/50 p-6 rounded-xl hover:border-indigo-500/50 transition-all group">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-indigo-600/10 rounded-lg flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined text-3xl" data-icon="language">language</span>
+</div>
+<span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary/10 text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Connected
+                            </span>
+</div>
+<h3 class="text-xl font-bold text-white mb-1">WordPress</h3>
+<p class="text-slate-400 text-sm mb-6">Self-hosted or WordPress.com managed instances.</p>
+<button class="w-full py-2.5 rounded-lg border border-slate-600 text-slate-300 font-medium hover:bg-slate-700 transition-colors">
+                            Disconnect
+                        </button>
+</div>
+<!-- 2. Blogger -->
+<div class="bg-slate-800/40 border border-slate-700/50 p-6 rounded-xl hover:border-indigo-500/50 transition-all group">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-orange-600/10 rounded-lg flex items-center justify-center text-orange-400">
+<span class="material-symbols-outlined text-3xl" data-icon="auto_stories">auto_stories</span>
+</div>
+<span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary/10 text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Connected
+                            </span>
+</div>
+<h3 class="text-xl font-bold text-white mb-1">Blogger</h3>
+<p class="text-slate-400 text-sm mb-6">Google's publishing platform integration.</p>
+<button class="w-full py-2.5 rounded-lg border border-slate-600 text-slate-300 font-medium hover:bg-slate-700 transition-colors">
+                            Disconnect
+                        </button>
+</div>
+<!-- 3. Naver -->
+<div class="bg-slate-800/40 border border-warning/30 p-6 rounded-xl hover:border-warning/50 transition-all shadow-[0_0_20px_rgba(245,158,11,0.05)]">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-green-600/10 rounded-lg flex items-center justify-center text-green-400">
+<span class="material-symbols-outlined text-3xl" data-icon="rss_feed">rss_feed</span>
+</div>
+<span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+                                Credentials Warning
+                            </span>
+</div>
+<h3 class="text-xl font-bold text-white mb-1">Naver</h3>
+<p class="text-slate-400 text-sm mb-6">Primary South Korean portal blog synchronization.</p>
+<button class="w-full py-2.5 rounded-lg bg-warning text-slate-950 font-bold hover:brightness-110 transition-all">
+                            Update Credentials
+                        </button>
+</div>
+<!-- 4. Tistory -->
+<div class="bg-slate-900 border border-dashed border-slate-700 p-6 rounded-xl group grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined text-3xl" data-icon="post_add">post_add</span>
+</div>
+<span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-500">
+                                Not Connected
+                            </span>
+</div>
+<h3 class="text-xl font-bold text-white mb-1">Tistory</h3>
+<p class="text-slate-400 text-sm mb-6">Kakao-driven customizable blogging service.</p>
+<button class="w-full py-2.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-all">
+                            Connect
+                        </button>
+</div>
+<!-- 5. Personal Blog -->
+<div class="bg-slate-800/40 border border-slate-700/50 p-6 rounded-xl hover:border-indigo-500/50 transition-all group lg:col-span-1">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500">
+<span class="material-symbols-outlined text-3xl" data-icon="terminal">terminal</span>
+</div>
+<span class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary/10 text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Connected
+                            </span>
+</div>
+<h3 class="text-xl font-bold text-white mb-1">Personal Blog (Firebase)</h3>
+<p class="text-slate-400 text-sm mb-6">Custom headless deployment via Firebase Hosting.</p>
+<button class="w-full py-2.5 rounded-lg border border-slate-600 text-slate-300 font-medium hover:bg-slate-700 transition-colors">
+                            Disconnect
+                        </button>
+</div>
+<!-- Add New Placeholder -->
+<div class="bg-slate-900/50 border border-dashed border-slate-800 p-6 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-800/30 hover:border-indigo-500/30 transition-all">
+<div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-4 group-hover:text-indigo-400">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</div>
+<p class="font-bold text-slate-400">Add New Platform</p>
+<p class="text-xs text-slate-600 mt-1">Ghost, Medium, or Custom API</p>
+</div>
+</div>
+<!-- Integration Summary Card (Asymmetric Layout Element) -->
+<div class="mt-12 bg-gradient-to-br from-indigo-900/20 to-slate-800/40 border border-slate-700/50 rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+<div class="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full"></div>
+<div class="flex-1">
+<h2 class="text-2xl font-bold text-white mb-3">Centralized Publishing Power</h2>
+<p class="text-slate-400 leading-relaxed max-w-lg">
+                            Your active connections allow for <span class="text-secondary font-bold">5-platform simultaneous publishing</span>. 
+                            The automated delay tier system is currently active for WordPress and Blogger.
+                        </p>
+<div class="flex gap-4 mt-6">
+<div class="bg-slate-800/60 px-4 py-2 rounded-lg border border-slate-700">
+<p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Today's Queue</p>
+<p class="text-xl font-black text-white">12 <span class="text-sm font-normal text-slate-400">posts</span></p>
+</div>
+<div class="bg-slate-800/60 px-4 py-2 rounded-lg border border-slate-700">
+<p class="text-xs text-slate-500 uppercase tracking-wider font-bold">Rate Limit</p>
+<p class="text-xl font-black text-secondary">84% <span class="text-sm font-normal text-slate-400">safe</span></p>
+</div>
+</div>
+</div>
+<div class="w-full md:w-64 aspect-square rounded-2xl overflow-hidden shadow-2xl">
+<img alt="Dashboard visualization" class="w-full h-full object-cover" data-alt="Digital dashboard interface showing vibrant data charts and analytics curves with glowing blue and purple highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4GWWSJYCpZuRjIfyjB_IlLBF6UFYlwMImyscmyBOpqHDZjmhAze0LmeSe0p7bna0DhHkMo_srMYbzn3rmqCG_ewbt-zJbHvECOjW9KKnD__2_Bx8khvtxSHzhkyEIw2nLwF36USwIFZb1rKVLT29jGE_4CM_p5-Q6bFXxwG0pUqhzD-eHqKKjWiSv8t6H22SMw1H3juIqSyaZjNroCCkURzhDjv3GexmQoH7QEUuj5GCtgjks39vQWC7Qvk0ZLflQ11xQ9P2MwzWl"/>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

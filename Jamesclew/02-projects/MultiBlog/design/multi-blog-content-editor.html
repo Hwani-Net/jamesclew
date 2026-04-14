@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MultiBlog Editor | Advanced Content Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#10062d",
+                    "on-secondary-fixed-variant": "#3f6600",
+                    "secondary-container": "#416900",
+                    "error": "#ff6e84",
+                    "primary": "#a7a5ff",
+                    "secondary-fixed-dim": "#9ee939",
+                    "error-container": "#a70138",
+                    "outline-variant": "#4b426a",
+                    "secondary-dim": "#9ee939",
+                    "secondary": "#acf847",
+                    "primary-dim": "#645efb",
+                    "on-tertiary-fixed": "#373f54",
+                    "on-tertiary": "#525a70",
+                    "on-surface": "#eae1ff",
+                    "inverse-primary": "#4e45e4",
+                    "on-tertiary-fixed-variant": "#535b71",
+                    "on-secondary-container": "#ebffcc",
+                    "on-tertiary-container": "#4a5167",
+                    "on-primary-container": "#14007e",
+                    "inverse-surface": "#fdf7ff",
+                    "on-surface-variant": "#b0a4d3",
+                    "on-secondary-fixed": "#2a4700",
+                    "tertiary-fixed-dim": "#ccd4ee",
+                    "surface-bright": "#30215d",
+                    "inverse-on-surface": "#594f78",
+                    "error-dim": "#d73357",
+                    "surface-container-lowest": "#000000",
+                    "primary-fixed": "#9795ff",
+                    "outline": "#7a6f9b",
+                    "surface-container": "#1c113f",
+                    "on-background": "#eae1ff",
+                    "tertiary-dim": "#ccd4ee",
+                    "primary-fixed-dim": "#8885ff",
+                    "on-primary-fixed-variant": "#1a0099",
+                    "on-primary": "#1c00a0",
+                    "tertiary-fixed": "#dae2fd",
+                    "surface-container-highest": "#291c53",
+                    "surface-variant": "#291c53",
+                    "on-error-container": "#ffb2b9",
+                    "on-secondary": "#375b00",
+                    "surface": "#10062d",
+                    "tertiary": "#eef0ff",
+                    "surface-container-low": "#160b36",
+                    "secondary-fixed": "#acf847",
+                    "primary-container": "#9795ff",
+                    "surface-container-high": "#231649",
+                    "surface-dim": "#10062d",
+                    "on-primary-fixed": "#000000",
+                    "tertiary-container": "#dae2fd",
+                    "on-error": "#490013",
+                    "surface-tint": "#a7a5ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .markdown-editor::-webkit-scrollbar { width: 6px; }
+        .markdown-editor::-webkit-scrollbar-track { background: transparent; }
+        .markdown-editor::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .syntax-keyword { color: #a7a5ff; }
+        .syntax-string { color: #acf847; }
+        .syntax-comment { color: #64748b; font-style: italic; }
+        .line-numbers { user-select: none; border-right: 1px solid #1e293b; }
+    </style>
+</head>
+<body class="bg-background text-on-background overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 shadow-sm">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-tight text-indigo-500">MultiBlog Editor</span>
+<div class="h-4 w-px bg-slate-800 mx-2"></div>
+<span class="text-slate-400 font-inter text-sm md:text-base">Unsaved Draft: "Modern UI Trends..."</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 rounded-lg text-slate-400 font-inter text-sm hover:bg-slate-800/50 hover:text-white transition-colors active:scale-95 duration-150">Save Draft</button>
+<button class="px-6 py-2 bg-indigo-500 text-white rounded-lg font-semibold text-sm hover:bg-indigo-600 transition-colors active:scale-95 duration-150 shadow-lg shadow-indigo-500/20">Publish All</button>
+<div class="flex items-center gap-1 ml-4 text-slate-400">
+<button class="p-2 hover:bg-slate-800/50 rounded-full transition-colors"><span class="material-symbols-outlined">settings</span></button>
+<button class="p-2 hover:bg-slate-800/50 rounded-full transition-colors"><span class="material-symbols-outlined">history</span></button>
+<button class="p-2 hover:bg-slate-800/50 rounded-full transition-colors"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</header>
+<div class="flex h-full pt-16">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col fixed left-0 top-16 bottom-0 z-40 bg-slate-900 w-64 border-r border-slate-800 no-shadow">
+<div class="p-6 flex flex-col gap-1">
+<div class="flex items-center gap-3 mb-6 p-2 rounded-xl bg-slate-800/30">
+<img alt="User Profile" class="w-10 h-10 rounded-lg" data-alt="professional male avatar with neutral background in minimalist photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxcN8UMxKFG7GrQMpb25vO-UQ80D9NcIToELKMuW9QdMD-AodOG_ab38OEsrKSFCRraxmVdjyeRjcsN84mmRu7hb52VFnNkEM-r1z7ldZurhLy3wFRERy8FjiIj1FIvlroyc6_Dw5OnX1HdE3ZpgIMK-Hg1BngtfpavvFPhTttJrzqHbX1tcuH03YMKyFAwh2DNWg9Q3mTZ7h5Z-v3gbQqDiMtL2YYo2b8EqSU1ey4XU99TNgSI1Ltur28xuTCKMl3xgAp094jTD59"/>
+<div>
+<p class="text-sm font-bold text-white leading-none">Admin Dashboard</p>
+<p class="text-xs text-indigo-400 mt-1">Pro Plan</p>
+</div>
+</div>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all duration-200">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="text-sm font-inter">Editor</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200">
+<span class="material-symbols-outlined">hub</span>
+<span class="text-sm font-inter">Channels</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-inter">Analytics</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200">
+<span class="material-symbols-outlined">manage_accounts</span>
+<span class="text-sm font-inter">Accounts</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-200">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="text-sm font-inter">Automation</span>
+</button>
+<button class="mt-4 w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">add</span>
+                    New Post
+                </button>
+</div>
+<div class="mt-auto p-6 border-t border-slate-800">
+<button class="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-slate-200 transition-all duration-200">
+<span class="material-symbols-outlined">help</span>
+<span class="text-sm font-inter">Help</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-rose-400 transition-all duration-200">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-inter">Logout</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 flex flex-col h-full bg-slate-950">
+<!-- Toolbar -->
+<div class="px-8 py-4 bg-slate-900/50 border-b border-slate-800 flex items-center gap-4">
+<div class="flex-1 relative">
+<input class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-lg font-bold text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all" placeholder="Enter post title..." type="text" value="The Future of AI-Driven Content Automation in 2024"/>
+</div>
+<div class="w-48">
+<select class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+<option>Technology</option>
+<option>Marketing</option>
+<option>Automation</option>
+<option>Design</option>
+</select>
+</div>
+<div class="flex-1 flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-400 overflow-hidden">
+<span class="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">#AI <span class="material-symbols-outlined text-[10px] cursor-pointer">close</span></span>
+<span class="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">#Automation <span class="material-symbols-outlined text-[10px] cursor-pointer">close</span></span>
+<input class="bg-transparent border-none focus:ring-0 p-0 text-sm placeholder-slate-600 flex-1" placeholder="Add tags..." type="text"/>
+</div>
+</div>
+<!-- Content Workspace -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Column: Markdown Editor -->
+<div class="flex-1 flex border-r border-slate-800 relative bg-slate-950">
+<div class="w-12 bg-slate-900/30 flex flex-col items-center py-6 text-slate-700 font-mono text-sm leading-relaxed line-numbers">
+<span>01</span><span>02</span><span>03</span><span>04</span><span>05</span><span>06</span><span>07</span><span>08</span><span>09</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+</div>
+<div class="flex-1 p-6 font-mono text-sm leading-relaxed overflow-y-auto markdown-editor">
+<div class="mb-4">
+<span class="syntax-keyword"># The Future of AI-Driven Content Automation</span><br/>
+<br/>
+<span>Content automation is evolving at a breakneck speed. Today, we look at how </span><span class="syntax-string">"Large Language Models"</span><span> are changing the landscape of multi-platform distribution.</span><br/>
+<br/>
+<span class="syntax-keyword">## Key Benefits</span><br/>
+<span>- Speed of execution</span><br/>
+<span>- Multi-channel consistency</span><br/>
+<span>- Personalized messaging</span><br/>
+<br/>
+<span class="syntax-comment">// Code block example</span><br/>
+<span class="syntax-keyword">const</span><span> distributeContent = (post) =&gt; {</span><br/>
+<span class="pl-4">  publishToPlatforms(post.targets);</span><br/>
+<span>};</span><br/>
+<br/>
+<span>One of the biggest hurdles for creators is keeping up with different platform specifications. Tools like MultiBlog handle the heavy lifting...</span>
+</div>
+</div>
+<div class="absolute bottom-4 right-4 text-[10px] text-slate-500 font-mono flex gap-4 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800 backdrop-blur">
+<span>Words: 428</span>
+<span>Lines: 52</span>
+<span>UTF-8</span>
+</div>
+</div>
+<!-- Right Column: Multi-Tab Preview -->
+<div class="flex-1 bg-slate-900 flex flex-col">
+<div class="flex border-b border-slate-800 bg-slate-950/50">
+<button class="px-6 py-3 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 bg-indigo-500/5 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            WordPress
+                        </button>
+<button class="px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors">Naver</button>
+<button class="px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors">Tistory</button>
+<button class="px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors">Blogger</button>
+</div>
+<div class="flex-1 p-8 overflow-y-auto">
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-2xl overflow-hidden">
+<!-- Platform Specific Wrapper -->
+<div class="bg-slate-50 p-6 border-b border-slate-100 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">W</div>
+<span class="text-slate-800 font-bold text-sm">Site Preview</span>
+</div>
+<span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Standard Theme</span>
+</div>
+<div class="p-10 text-slate-800">
+<h1 class="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">The Future of AI-Driven Content Automation in 2024</h1>
+<div class="flex items-center gap-4 mb-8 text-sm text-slate-500">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+                                        Oct 24, 2024
+                                    </div>
+<div class="flex items-center gap-1 text-indigo-600 font-medium">
+<span class="material-symbols-outlined text-sm">folder</span>
+                                        Technology
+                                    </div>
+</div>
+<img alt="Feature Image" class="w-full h-64 object-cover rounded-xl mb-8 shadow-lg" data-alt="futuristic artificial intelligence neural network visualization with glowing fiber optic data streams in deep blue and indigo tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcKWAbJeGWZnWkO9wgNmupnesPAVsoqfGEN7v5lQdS2oMtQuhK71nErpXX2ffg9V67fXPyNMG0W-Gj-LDv2ffbvLOdCbhUE7ly11nV68NIkHfXv9dVbSlc-O-p0LMugyhdsvdCL1f8nHEpzo-TvuithXK4GxDcSBDkF36lciKW6FQtT_HsJy5QWl60S7eOIzMPels58jbk39clCoykRfDU_yCdWhSxz5p1mKzTWIDhPgRsC6DczvrY1zkNbnUjH4S6O5j9kX0175-_"/>
+<p class="text-lg leading-relaxed mb-6 text-slate-700">Content automation is evolving at a breakneck speed. Today, we look at how "Large Language Models" are changing the landscape of multi-platform distribution.</p>
+<h2 class="text-2xl font-bold text-slate-900 mb-4">Key Benefits</h2>
+<ul class="list-disc pl-5 space-y-2 mb-6 text-slate-700">
+<li>Speed of execution</li>
+<li>Multi-channel consistency</li>
+<li>Personalized messaging</li>
+</ul>
+<div class="bg-slate-900 rounded-lg p-6 text-indigo-300 font-mono text-sm overflow-hidden shadow-inner">
+<span class="text-slate-500">// Code block example</span><br/>
+<span class="text-indigo-400">const</span> distributeContent = (post) =&gt; {<br/>
+                                      publishToPlatforms(post.targets);<br/>
+                                    };
+                                </div>
+</div>
+</div>
+<!-- Status Indicators -->
+<div class="max-w-2xl mx-auto mt-8 flex gap-4">
+<div class="flex-1 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-lime-500/20 flex items-center justify-center text-lime-400">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 uppercase font-bold tracking-wider">SEO Score</p>
+<p class="text-lg font-bold text-white">94/100</p>
+</div>
+</div>
+<div class="flex-1 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">image</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Media</p>
+<p class="text-lg font-bold text-white">3 Assets</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Status Bar -->
+<div class="px-6 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 uppercase tracking-widest font-bold">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></span>
+                        Auto-sync enabled
+                    </span>
+<span class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">cloud_done</span>
+                        All platforms connected
+                    </span>
+</div>
+<div class="flex items-center gap-4">
+<span>Draft ID: 8291-XA</span>
+<span>Last Saved: 2 mins ago</span>
+</div>
+</div>
+</main>
+</div>
+</body></html>

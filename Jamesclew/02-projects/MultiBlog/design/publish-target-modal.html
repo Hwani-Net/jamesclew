@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#eae1ff",
+                        "primary-fixed-dim": "#8885ff",
+                        "surface-tint": "#a7a5ff",
+                        "primary-container": "#9795ff",
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "secondary": "#acf847",
+                        "outline": "#7a6f9b",
+                        "on-error": "#490013",
+                        "error-container": "#a70138",
+                        "on-secondary-fixed": "#2a4700",
+                        "primary-dim": "#645efb",
+                        "tertiary-dim": "#ccd4ee",
+                        "error": "#ff6e84",
+                        "secondary-fixed-dim": "#9ee939",
+                        "on-secondary-fixed-variant": "#3f6600",
+                        "inverse-on-surface": "#594f78",
+                        "surface-container-low": "#160b36",
+                        "inverse-surface": "#fdf7ff",
+                        "inverse-primary": "#4e45e4",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "surface-variant": "#291c53",
+                        "surface-container-high": "#231649",
+                        "secondary-dim": "#9ee939",
+                        "on-secondary-container": "#ebffcc",
+                        "on-primary": "#1c00a0",
+                        "surface-dim": "#10062d",
+                        "primary-fixed": "#9795ff",
+                        "on-tertiary-container": "#4a5167",
+                        "on-surface": "#eae1ff",
+                        "on-surface-variant": "#b0a4d3",
+                        "on-tertiary": "#525a70",
+                        "on-error-container": "#ffb2b9",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary-fixed": "#373f54",
+                        "surface-container": "#1c113f",
+                        "on-primary-fixed": "#000000",
+                        "outline-variant": "#4b426a",
+                        "surface-bright": "#30215d",
+                        "on-primary-fixed-variant": "#1a0099",
+                        "tertiary-container": "#dae2fd",
+                        "secondary-container": "#416900",
+                        "on-secondary": "#375b00",
+                        "surface": "#10062d",
+                        "error-dim": "#d73357",
+                        "background": "#10062d",
+                        "surface-container-highest": "#291c53",
+                        "on-primary-container": "#14007e",
+                        "tertiary": "#eef0ff",
+                        "primary": "#a7a5ff",
+                        "secondary-fixed": "#acf847"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-[#020617] text-on-surface antialiased min-h-screen overflow-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 font-inter antialiased">
+<div class="text-xl font-bold text-indigo-500 tracking-tight">MultiBlog Auto</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg text-slate-400">
+<span class="material-symbols-outlined text-sm">notifications</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg text-slate-400">
+<span class="material-symbols-outlined text-sm">settings</span>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-slate-700">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional system operator in a modern office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_Z2LWEk40TUzhOsuD4EK-Dvny6eYo6PL5MqDI10HO1Al6Y-yzOAR8__tdaQH0aWoVZOUFRhaYQKu3-2Gqe7aFzgp19w9OioPmpxTcsEImXKuM22YPghV3So1ubLvE4JmXNSlMhmJUGBgC4aRVYRh6VeVAnsKc_vr1Owd5Sm2zWzn8JT-r11OSAws9gebtfgEPJuQJY2CdJPhftI139ESzJP9HurBjIny-KZzzkd9KARllocTlnGsHVtLh8bEM9uNxB-yIFs_NlZrF"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-full py-6 fixed left-0 h-full w-64 bg-slate-900 border-r border-slate-800 shadow-xl z-30">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+<span class="material-symbols-outlined">robot</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">Operator Console</div>
+<div class="text-[10px] text-slate-500">v1.2.0 Active</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1 px-3">
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</div>
+<!-- Active Tab: Editor (Since we are in a publishing modal flow) -->
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Editor</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">auto_mode</span>
+<span>Automation</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">manage_accounts</span>
+<span>Accounts</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">analytics</span>
+<span>Analytics</span>
+</div>
+</div>
+<div class="mt-auto px-3 border-t border-slate-800 pt-4 flex flex-col gap-1">
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">help_center</span>
+<span>Support</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-800 hover:text-slate-300 cursor-pointer duration-200 text-sm font-medium">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas (Background for the Modal) -->
+<main class="lg:pl-64 pt-16 min-h-screen">
+<div class="p-8 space-y-8">
+<div class="h-64 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center gap-4 opacity-50">
+<span class="material-symbols-outlined text-4xl text-slate-700">article</span>
+<p class="text-slate-600">Draft Content Visualizer</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-30">
+<div class="h-32 bg-slate-900 border border-slate-800 rounded-xl"></div>
+<div class="h-32 bg-slate-900 border border-slate-800 rounded-xl"></div>
+<div class="h-32 bg-slate-900 border border-slate-800 rounded-xl"></div>
+</div>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+<!-- Modal Card -->
+<div class="w-full max-w-lg bg-[#10062d] border border-outline-variant rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[921px]">
+<!-- Modal Header -->
+<div class="px-6 py-5 border-b border-outline-variant flex justify-between items-center bg-surface-container-high">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">send</span>
+<h2 class="text-xl font-bold tracking-tight text-on-surface">발행 설정</h2>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-6 overflow-y-auto space-y-8">
+<!-- Section 1: Platforms -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<label class="text-sm font-semibold text-on-surface-variant">발행 플랫폼 선택</label>
+<span class="text-[11px] font-medium text-primary px-2 py-0.5 bg-primary/10 rounded-full">5 Platforms Available</span>
+</div>
+<div class="grid grid-cols-1 gap-2">
+<label class="flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:border-primary-container bg-surface-container transition-all cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">language</span>
+<span class="text-sm font-medium">WordPress</span>
+</div>
+<input checked="" class="w-5 h-5 rounded border-outline bg-transparent text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:border-primary-container bg-surface-container transition-all cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">rss_feed</span>
+<span class="text-sm font-medium">Blogger</span>
+</div>
+<input checked="" class="w-5 h-5 rounded border-outline bg-transparent text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:border-primary-container bg-surface-container transition-all cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">grid_view</span>
+<span class="text-sm font-medium">네이버 블로그</span>
+</div>
+<input class="w-5 h-5 rounded border-outline bg-transparent text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:border-primary-container bg-surface-container transition-all cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">auto_stories</span>
+<span class="text-sm font-medium">티스토리</span>
+</div>
+<input checked="" class="w-5 h-5 rounded border-outline bg-transparent text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+<label class="flex items-center justify-between p-3 rounded-lg border border-outline-variant hover:border-primary-container bg-surface-container transition-all cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">person</span>
+<span class="text-sm font-medium">개인 블로그</span>
+</div>
+<input class="w-5 h-5 rounded border-outline bg-transparent text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+</label>
+</div>
+</section>
+<!-- Section 2: Tiers -->
+<section>
+<label class="block text-sm font-semibold text-on-surface-variant mb-4">발행 티어 설정</label>
+<div class="grid grid-cols-3 gap-3">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="tier" type="radio"/>
+<div class="flex flex-col items-center justify-center p-3 gap-1 rounded-xl border border-outline-variant bg-surface-container peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+<span class="text-[10px] font-bold text-on-surface-variant">Tier 1</span>
+<span class="text-xs font-medium text-on-surface">즉시 발행</span>
+<div class="mt-2 w-2 h-2 rounded-full bg-primary opacity-0 peer-checked:opacity-100"></div>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="tier" type="radio"/>
+<div class="flex flex-col items-center justify-center p-3 gap-1 rounded-xl border border-outline-variant bg-surface-container peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+<span class="text-[10px] font-bold text-on-surface-variant">Tier 2</span>
+<span class="text-xs font-medium text-on-surface">+2시간 지연</span>
+<div class="mt-2 w-2 h-2 rounded-full bg-primary opacity-0 peer-checked:opacity-100"></div>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="tier" type="radio"/>
+<div class="flex flex-col items-center justify-center p-3 gap-1 rounded-xl border border-outline-variant bg-surface-container peer-checked:border-primary peer-checked:bg-primary/5 transition-all">
+<span class="text-[10px] font-bold text-on-surface-variant">Tier 3</span>
+<span class="text-xs font-medium text-on-surface">+24시간 지연</span>
+<div class="mt-2 w-2 h-2 rounded-full bg-primary opacity-0 peer-checked:opacity-100"></div>
+</div>
+</label>
+</div>
+</section>
+<!-- Section 3: Canonical URL -->
+<section>
+<label class="block text-sm font-semibold text-on-surface-variant mb-2">Canonical URL</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3 text-sm text-on-surface-variant font-mono cursor-default focus:ring-0 focus:border-outline-variant" readonly="" type="text" value="https://myblog.com/posts/ai-automation-2026"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary-container">
+<span class="material-symbols-outlined text-lg">content_copy</span>
+</button>
+</div>
+<p class="mt-2 text-[11px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">info</span>
+                        검색 엔진 최적화를 위해 원본 콘텐츠의 URL을 지정합니다.
+                    </p>
+</section>
+</div>
+<!-- Modal Footer -->
+<div class="px-6 py-5 border-t border-outline-variant flex items-center gap-3 bg-surface-container-high">
+<button class="flex-1 py-3 px-4 rounded-xl border border-outline text-sm font-semibold text-on-surface hover:bg-surface-variant transition-colors">
+                    취소
+                </button>
+<button class="flex-1 py-3 px-4 rounded-xl bg-primary text-on-primary text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">rocket_launch</span>
+                    발행하기
+                </button>
+</div>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-2 pb-6 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 shadow-[0_-4px_12px_rgba(0,0,0,0.5)] rounded-t-2xl">
+<div class="flex flex-col items-center justify-center text-slate-500 py-1">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[11px] font-medium mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-indigo-400 bg-indigo-500/5 rounded-xl py-1 px-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_box</span>
+<span class="text-[11px] font-medium mt-1">Write</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 py-1">
+<span class="material-symbols-outlined">schedule</span>
+<span class="text-[11px] font-medium mt-1">Queue</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 py-1">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[11px] font-medium mt-1">Profile</span>
+</div>
+</nav>
+</body></html>

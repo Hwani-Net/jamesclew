@@ -54,15 +54,15 @@ expect MCP 7단계를 스킵하고 Phase 2~4만 실행. `quality-report.json`에
 
 ### Phase 2: AI 냄새 검사 (외부 모델 교차검수)
 
-**2-1. Antigravity 검사**
+**2-1. GPT-4.1 검사**
 ```bash
 DRAFT=$(cat "MultiBlog/drafts/{slug}/draft.md")
-opencode run -m "anthropic/claude-sonnet-4-20250514" "다음 블로그 글이 AI가 쓴 것처럼 느껴지는 부분을 지적하라. 각 부분에 대해 이유를 설명하고, 전체 AI 생성 확률을 0~100 점수로 평가하라. 점수만 마지막 줄에 'SCORE: NN' 형식으로 출력.
-
----
-$DRAFT"
+curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"다음 블로그 글이 AI가 쓴 것처럼 느껴지는 부분을 지적하라. 각 부분에 대해 이유를 설명하고, 전체 AI 생성 확률을 0~100 점수로 평가하라. 점수만 마지막 줄에 'SCORE: NN' 형식으로 출력.\\n\\n---\\n$(cat MultiBlog/drafts/{slug}/draft.md)\"}]}" \
+  | jq -r '.choices[0].message.content'
 ```
-출력에서 `SCORE: NN` 파싱 → `aiSmell.antigravity` 필드에 기록.
+출력에서 `SCORE: NN` 파싱 → `aiSmell.gpt41` 필드에 기록.
 
 **2-2. 벤치마크 비교 평가 (단독 평가보다 우선)**
 ```bash
@@ -89,7 +89,7 @@ $(cat MultiBlog/drafts/{slug}/draft.md)"
 - 50~65: WARN ⚠️ (통과하지만 /blog-fix 권고)
 - < 50: FAIL ❌
 
-폴백 (벤치마크 불가 시): 단독 평가 (antigravity + codex) / 2
+폴백 (벤치마크 불가 시): 단독 평가 (gpt41 + codex) / 2
 - < 30: PASS, 30~50: WARN, > 50: FAIL
 ```
 ⚠️ 단독 평가는 한국어 블로그에 대해 정확도가 낮음 (78~86 고정 범위 관찰). 벤치마크 비교를 우선 사용할 것.
@@ -153,7 +153,7 @@ cat ~/.claude/PITFALLS.md
   "slug": "...",
   "timestamp": "...",
   "expectGates": [...],
-  "aiSmell": { "antigravity": 25, "codex": 20, "final": 22, "verdict": "PASS" },
+  "aiSmell": { "gpt41": 25, "codex": 20, "final": 22, "verdict": "PASS" },
   "seo": { "keywordCount": 5, "metaDesc": 142, "h2Count": 4, ... , "verdict": "PASS" },
   "images": { "count": 4, "allValid": true, "topicMatch": true, "verdict": "PASS" },
   "pitfalls": { "violations": [], "verdict": "PASS" },
@@ -169,7 +169,7 @@ cat ~/.claude/PITFALLS.md
 ```
 ✅ /blog-review 완료 — PASS
 📄 "{제목}"
-🤖 AI냄새: 22/100 (PASS) — Antigravity 25, Codex 20
+🤖 AI냄새: 22/100 (PASS) — GPT-4.1 25, Codex 20
 🔍 SEO: 6/7 통과 — 키워드 5회, FAQ 3개
 🖼️ 이미지: 4/4 검증 완료
 ➡️ 다음: /blog-publish 로 발행
@@ -178,7 +178,7 @@ cat ~/.claude/PITFALLS.md
 
 ❌ /blog-review 완료 — FAIL
 📄 "{제목}"
-🤖 AI냄새: 55/100 (FAIL) — Antigravity 60, Codex 50
+🤖 AI냄새: 55/100 (FAIL) — GPT-4.1 60, Codex 50
 🔍 SEO: 4/7 통과 — 내부링크 부족, FAQ 부족
 ➡️ 다음: /blog-fix 로 자동 수정
 ```

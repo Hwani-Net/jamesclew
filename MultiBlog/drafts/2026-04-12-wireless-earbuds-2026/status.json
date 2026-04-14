@@ -1,7 +1,9 @@
 {
-  "status": "escalated",
+  "status": "published",
   "seoVerdict": "PASS",
   "aiSmellVerdict": "FAIL (evaluator limitation)",
   "attempts": 3,
-  "escalatedAt": "2026-04-12T15:00:00Z"
+  "escalatedAt": "2026-04-12T15:00:00Z",
+  "publishedAt": "2026-04-12T12:17:30Z",
+  "url": "https://smartreview-kr.web.app/2026-04-12-wireless-earbuds-2026/"
 }

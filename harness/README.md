@@ -38,7 +38,7 @@ cd jamesclew
 - Node.js 20+
 - Git
 - [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) (`claude` 명령어)
-- (선택) `codex`, `opencode`, `gemini` CLI — 외부 모델 검수용
+- (선택) `codex`, `gemini` CLI — 외부 모델 검수용; `copilot-api` (GPT-4.1, localhost:4141)
 
 ### 3. 인스톨 실행
 ```bash

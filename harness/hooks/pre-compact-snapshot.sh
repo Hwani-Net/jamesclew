@@ -37,3 +37,50 @@ EOF
 SNAPSHOT_CONTENT=$(cat "$SNAPSHOT_FILE" | head -c 2000 | sed 's/"/\\"/g' | tr '\n' ' ')
 
 echo "{\"systemMessage\":\"[PRE-COMPACT SNAPSHOT] $SNAPSHOT_CONTENT\"}"
+
+# --- Obsidian Session Summary (auto-save on compact) ---
+OBSIDIAN_VAULT="${OBSIDIAN_VAULT:-}"
+if [ -n "$OBSIDIAN_VAULT" ]; then
+  OBSIDIAN_DIR="$OBSIDIAN_VAULT/01-jamesclaw/harness"
+  mkdir -p "$OBSIDIAN_DIR"
+
+  # Topic from last commit's conventional commit prefix (e.g., feat(mcp) → mcp)
+  TOPIC=$(git log --oneline -1 2>/dev/null | sed -E 's/^[a-f0-9]+ [a-z]+\(([^)]+)\).*/\1/' | head -c 20)
+  [ -z "$TOPIC" ] && TOPIC="auto"
+
+  SESSION_FILE="$OBSIDIAN_DIR/session-$(date +%Y-%m-%d)-${TOPIC}.md"
+
+  # Don't overwrite existing session file for same day+topic
+  if [ ! -f "$SESSION_FILE" ]; then
+    COMMITS=$(git log --oneline -20 2>/dev/null)
+    CHANGED=$(git diff --stat HEAD~10..HEAD 2>/dev/null | tail -1)
+    LAST_RESULT=$(cat "$STATE_DIR/last_result.txt" 2>/dev/null | head -10)
+
+    cat > "$SESSION_FILE" <<OBSEOF
+# Session $(date +%Y-%m-%d) — ${TOPIC}
+
+## 기간
+- 시작: $(git log --reverse -20 --format="%ai" 2>/dev/null | head -1 || echo "unknown")
+- 저장: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+## 커밋 이력
+${COMMITS:-"(no commits in last 12h)"}
+
+## 변경 요약
+${CHANGED:-"(no changes)"}
+
+## 작업 결과
+${LAST_RESULT:-"(no result logged)"}
+
+## 다음 세션
+- [ ] TODO
+OBSEOF
+    echo "[obsidian] Session saved: $SESSION_FILE" >&2
+  fi
+fi
+
+# Block compact if obsidian save was expected but failed
+if [ -n "$OBSIDIAN_VAULT" ] && [ ! -d "$OBSIDIAN_DIR" ]; then
+  echo '{"decision":"block","reason":"Obsidian vault not accessible. Run /저장 manually before compact."}'
+  exit 2
+fi

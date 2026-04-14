@@ -34,7 +34,7 @@ case "$TOOL_NAME" in
     CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
     case "$CMD" in
       *codex\ exec*)       SERVICE="codex";      MODEL="codex-cli";           COST=0 ;;  # subscription
-      *opencode\ run*)     SERVICE="antigravity";MODEL="gemini-3.1-pro";      COST=0 ;;  # free via antigravity
+      *localhost:4141*)    SERVICE="gpt-4.1";    MODEL="gpt-4.1";             COST=0 ;;  # free via copilot-api
       *gemini*)            SERVICE="gemini";     MODEL="gemini-cli";          COST=0 ;;
       *) exit 0 ;;
     esac

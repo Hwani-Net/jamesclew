@@ -16,7 +16,7 @@ const CORE_RULES = `[CORE RULES - ALWAYS ACTIVE]
 2. "안 됩니다" 금지 — 웹 검색 + 3회 시도 + 대안 2개 후에만 불가 판정.
 3. Evidence-First — 증거(도구 출력) 없이 상태 보고 금지. 추측 금지.
 4. Search-Before-Solve — 막히면 LESSONS_LEARNED, 옵시디언, 이전 세션에서 먼저 검색.
-5. 완성형까지 반복 — Multi-Pass Review 최소 2라운드. 검수는 외부 모델(Antigravity + Codex) 위임.
+5. 완성형까지 반복 — Multi-Pass Review 최소 2라운드. 검수는 외부 모델(GPT-4.1 + Codex) 위임.
 6. Built-in > Bash > MCP (비용순). 하네스는 ~/.claude/ → deploy.sh로 배포됨.
 7. 컨텍스트 20%마다 외부 모델 검수 + Self-Evolving Loop 자동 트리거.`;
 

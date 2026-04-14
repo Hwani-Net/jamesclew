@@ -52,8 +52,8 @@ WordPress 사용하지 않음 — Firebase + SSG로 대체.
 
 | 용도 | 기본 모델 | 이유 |
 |------|----------|------|
-| AI냄새 검수 | Antigravity + Codex | 톤/문체 비교에 강함 |
-| 차별화 분석 | Antigravity + Gemini | 경쟁 글 대비 분석 |
+| AI냄새 검수 | GPT-4.1 + Codex | 톤/문체 비교에 강함 |
+| 차별화 분석 | GPT-4.1 + Gemini | 경쟁 글 대비 분석 |
 | 전체 교차 검수 | 3모델 전부 | 다수결 |
 | 이미지-제품 매칭 | Opus + Sonnet 서브에이전트 | Vision 정확도 최고 |
 | 이미지 자동 검증 (코드 내) | OpenAI gpt-4o-mini + Codex -i | API 호출 가능 |

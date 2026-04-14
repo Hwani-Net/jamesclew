@@ -126,64 +126,7 @@ for keyword in keywords:
 
 ---
 
-## 3. 활용 패턴
-
-### 패턴 A: Opus 어드바이저 (Sonnet 세션 → Opus 판단)
-
-Sonnet 세션에서 복잡한 판단이 필요할 때, Managed Agent(Opus)에 질문하여 답을 받는 구조.
-
-```python
-# 1회 설정: Opus 어드바이저 Agent 생성
-advisor = client.beta.agents.create(
-    name="Opus Advisor",
-    model="claude-opus-4-6",
-    system="당신은 JamesClaw 에이전트의 어드바이저입니다. 질문에 대해 간결하게 판단/방향을 제시하세요. 3문장 이내로 답하세요.",
-    tools=[],  # 도구 없음 — 순수 판단만
-)
-# agent_id 저장
-
-# Sonnet 세션에서 필요할 때 호출
-def ask_opus(question: str) -> str:
-    session = client.beta.sessions.create(agent=advisor_id, environment_id=env_id)
-    with client.beta.sessions.events.stream(session_id=session.id) as stream:
-        client.beta.sessions.events.send(
-            session_id=session.id,
-            events=[{"type": "user.message", "content": [{"type": "text", "text": question}]}],
-        )
-        for event in stream:
-            if hasattr(event, 'content'):
-                return event.content[0].text
-```
-
-비용: Opus $5/$25 per MTok + $0.08/h. 짧은 판단 질문은 ~$0.05/회.
-대안(무료): copilot-api의 gpt-4.1 또는 codex-rotate.sh로 대체 가능.
-
-### 패턴 B: 멀티에이전트 파이프라인
-
-서로 다른 역할의 Agent를 만들어 파이프라인 구성:
-- Agent 1 (Sonnet): 블로그 초안 생성
-- Agent 2 (Opus): 품질 검수 + 판단
-- Agent 3 (Haiku): 메타데이터/SEO 체크
-
-### 패턴 C: 1세션 다중 작업 (배치 처리)
-
-같은 세션에 여러 키워드를 순차 전송 → 캐시 누적으로 비용 절감.
-```python
-session = create_session(agent_id)
-for keyword in ["키워드1", "키워드2", "키워드3"]:
-    send_message(session, f"Generate blog for: {keyword}")
-    collect_results(session)
-    # 세션 유지 → 다음 키워드에서 캐시 히트
-```
-
-### 패턴 D: 장기 실행 에이전트 (연구/분석)
-
-세션을 닫지 않고 여러 턴에 걸쳐 대화 → 분석 결과 누적.
-file_upload로 대용량 데이터 전달 가능.
-
----
-
-## 4. 금지 패턴 (P-016/P-017 교훈)
+## 3. 금지 패턴 (P-016/P-017 교훈)
 
 ### P-016: setup() 반복 호출
 

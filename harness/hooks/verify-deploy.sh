@@ -44,9 +44,9 @@ if [ ! -f "$STEP7_FILE" ]; then
   MISSING_STEPS="${MISSING_STEPS}Step 7 (교차검수) "
 elif [ "$(wc -c < "$STEP7_FILE" 2>/dev/null)" -lt 100 ] 2>/dev/null; then
   MISSING_STEPS="${MISSING_STEPS}Step 7 (증거 불충분 — 외부 모델 응답 포함 필수, 현재 $(wc -c < "$STEP7_FILE")byte) "
-elif ! grep -qiE 'codex|antigravity|opencode|gemini|gpt|verdict|PASS|FAIL|REWORK' "$STEP7_FILE" 2>/dev/null; then
+elif ! grep -qiE 'codex|gpt-4.1|localhost:4141|gemini|gpt|verdict|PASS|FAIL|REWORK' "$STEP7_FILE" 2>/dev/null; then
   # Must contain external model signature — prevents self-review bypass
-  MISSING_STEPS="${MISSING_STEPS}Step 7 (외부 모델 시그니처 없음 — codex/antigravity/opencode 출력이어야 함) "
+  MISSING_STEPS="${MISSING_STEPS}Step 7 (외부 모델 시그니처 없음 — codex/gpt-4.1/localhost:4141 출력이어야 함) "
 fi
 
 if [ -n "$MISSING_STEPS" ]; then

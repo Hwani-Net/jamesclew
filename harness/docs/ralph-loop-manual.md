@@ -69,7 +69,7 @@ Stop hook 인터셉트 → 상태 파일 확인
 | 개입 필요 | 없음 (완전 자율) | 없음 (자동 파이프라인) |
 | 적합한 작업 | 코드 구현 + 테스트 통과 | 콘텐츠 품질 검토 (블로그 등) |
 | 완료 조건 | `<promise>` 태그 or max-iterations | 11단계 전체 PASS |
-| 외부 모델 교차검수 | 없음 (단일 Claude) | Codex + Antigravity 필수 |
+| 외부 모델 교차검수 | 없음 (단일 Claude) | Codex + GPT-4.1 필수 |
 | 토큰 소비 | 반복당 전체 컨텍스트 | 단계별 누적 |
 
 **결론**: 코드 자동 구현/수정은 ralph-loop, 블로그 품질 검수는 pipeline-run.
@@ -210,7 +210,12 @@ npm test 전체 PASS + firebase deploy 성공 후 COMPLETE 출력."
 | hooks.json (Windows 패치됨) | `…/hooks/hooks.json` |
 | 상태 파일 (런타임) | `<project>/.claude/ralph-loop.local.md` |
 
+## Plugin Monitors (v2.1.105+)
+v2.1.105에서 플러그인 매니페스트에 `monitors` 최상위 키가 추가됨.
+세션 시작 또는 스킬 호출 시 백그라운드 모니터가 자동 활성화(auto-arm).
+현재 생태계에 사용 예시 없음 — 공식 문서 확인 후 ralph-loop 적용 검토.
+
 ---
-*작성: 2026-04-12 | 업데이트: 2026-04-12*
+*작성: 2026-04-12 | 업데이트: 2026-04-14*
 *출처: anthropics/claude-code plugins/ralph-wiggum README.md (공식) + 영상 실천법 교차 검증*
 *팩트체크: ✅ 공식 확인 | ⚠️ 영상 실천법 (공식 미확인)*

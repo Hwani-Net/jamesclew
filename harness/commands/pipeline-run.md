@@ -38,7 +38,7 @@
 - Playwright 주요 화면 캡처 또는 이미지 검증
 
 **Step 7: 교차검수 (체크포인트) + Design Rubric 평가**
-- 외부 모델 실제 호출 필수 (codex exec / opencode run)
+- 외부 모델 실제 호출 필수 (codex exec / curl GPT-4.1)
 - UI 프로젝트: `$HOME/.claude/rules/design_rubric.md` 기반 4축 등급 평가 강제
 - 완료 시:
   ```bash

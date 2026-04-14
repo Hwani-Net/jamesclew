@@ -250,7 +250,7 @@
           },
           {
             "type": "command",
-            "command": "bash -c 'cd \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\" && gbrain sync --repo . --no-pull --no-embed 2>/dev/null && echo \"[gbrain] synced\" || true'",
+            "command": "bash -c 'ROOT=$(git rev-parse --show-toplevel 2>/dev/null); if [ -n \"$ROOT\" ]; then cd \"$ROOT\" && gbrain sync --repo . --no-pull --no-embed 2>/dev/null && echo \"[gbrain] synced (git)\"; else gbrain import . --max-depth 2 2>/dev/null && echo \"[gbrain] imported (non-git)\"; fi || true'",
             "timeout": 15000
           }
         ]

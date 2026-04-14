@@ -29,7 +29,7 @@
 | 4 | 저장 | 로컬 드래프트 저장 |
 | 5 | 품질루프 | 6패스(구조/SEO/AI냄새/팩트/이미지/차별화) × 2라운드+ saturation |
 | 6 | 이미지+링크 | og:image CDN → Playwright → fallback + 대표이미지 적합성 Vision 검증 + 전 외부링크 유효성 확인 |
-| 7 | 교차검수 | 외부 3모델 (Antigravity + Codex + Gemini) avg 7/10+ |
+| 7 | 교차검수 | 외부 3모델 (GPT-4.1 + Codex + Gemini) avg 7/10+ |
 | 8 | DB저장 | Firestore에 publish 상태 저장 |
 | 9 | 빌드 | CSS + SSG 정적 생성 |
 | 10 | 배포 | Firebase Hosting deploy |
@@ -142,7 +142,7 @@ TodoWrite([
 ```
 - 각 Step 완료 시 `status: "completed"`로 업데이트
 - **Step 5 완료 후**: 품질루프 결과를 `echo "패스별 결과 요약" > ~/.harness-state/step5_quality_done` 에 기록
-- **Step 7 완료 후**: 외부 모델 응답을 `~/.harness-state/step7_review_done`에 기록. **실제 외부 모델(codex exec/opencode run) 출력을 포함해야 하며, 100byte 미만이면 deploy hook이 차단합니다.**
+- **Step 7 완료 후**: 외부 모델 응답을 `~/.harness-state/step7_review_done`에 기록. **실제 외부 모델(codex exec/curl GPT-4.1) 출력을 포함해야 하며, 100byte 미만이면 deploy hook이 차단합니다.**
   ```bash
   # 올바른 예시:
   codex exec "코드 리뷰" 2>&1 | tee ~/.harness-state/step7_review_done
