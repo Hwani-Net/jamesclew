@@ -7,6 +7,58 @@
 #   audit-session.sh --full <session-id>    # Specific session, detailed report
 #   audit-session.sh --compact <jsonl-path> # Specific file, compact
 # ============================================================================
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# AUDIT CHECK REGISTRY — 신규 기능 추가 시 여기에 check_ 함수 등록
+#
+# 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
+# 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
+#
+# 현재 체크 수: 26개 (2026-04-14)
+# 마지막 업데이트: 2026-04-14 (Agent Teams, gbrain, Antigravity 제거)
+#
+# 등록된 체크 목록:
+#  01 check_build_transition    — Build Transition Rule (/plan 먼저)
+#  02 check_prd                 — /prd 실행
+#  03 check_pipeline            — /pipeline-install 실행
+#  04 check_quality_loop        — Multi-Pass Review 5패스 2라운드
+#  05 check_external_review     — 외부 모델 검수 (step7)
+#  06 check_deploy_verify       — 배포 후 HTTP 200 검증
+#  07 check_todowrite           — TodoWrite 작업 분할
+#  08 check_ghost_mode          — "할까요?" 패턴 금지
+#  09 check_evidence_first      — Evidence-First (추측 금지)
+#  10 check_telegram_result     — last_result.txt 작성
+#  11 check_no_impossibility    — "안 됩니다" 금지 (검색 우선)
+#  12 check_multipass           — Multi-Pass Review 2라운드
+#  13 check_pitfalls            — PITFALLS 기록
+#  14 check_commits             — Conventional Commits
+#  15 check_harness_location    — harness/ 편집 → deploy.sh 경로 준수
+#  16 check_error_retry         — 에러 재시도 (3회 원칙)
+#  17 check_design              — 디자인 레퍼런스/Stitch 사용
+#  18 check_external_model_calls — 외부 모델 실제 호출 (Claude 자기검수 금지)
+#  19 check_tool_priority       — Tool Priority (Built-in > Bash > MCP)
+#  20 check_cost_logging        — API 비용 로깅
+#  21 check_search_before_solve — Search-Before-Solve
+#  22 check_screenshot_verify   — 배포 후 스크린샷 검증
+#  23 check_pipeline_loop       — Pipeline Loop (11단계 FAIL→수정→재실행)
+#  24 check_no_antigravity      — Antigravity(opencode) 잔존 체크
+#  25 check_gbrain_usage        — gbrain 검색/저장 사용
+#  26 check_agent_teams_cleanup — Agent Teams 생성/삭제 균형
+#
+# ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
+# TODO check_precompact_block   — PreCompact hook exit 2 로직 존재 여부
+#   → ~/.claude/hooks/PreCompact 파일 존재 + exit 2 패턴 확인
+# TODO check_obsidian_save      — compact 전 Obsidian 세션 저장 순서 (P-007)
+#   → /저장 또는 obsidian_vault 저장 → /compact 순서 검증
+# TODO check_5h_emergency       — 5H 80%+ 감지 시 Sonnet 전환 절차
+#   → heartbeat 호출 또는 Sonnet 위임 패턴 확인
+# TODO check_version_manual_sync — 버전 업데이트 시 매뉴얼 동시 업데이트
+#   → harness 수정 커밋에 changelog/CLAUDE.md 변경 동반 여부
+# TODO check_design_vision      — design-review Vision 호출 (Opus Vision)
+#   → mcp__stitch 이후 Read(*.png) + Vision 분석 패턴 확인
+# TODO check_sonnet_model_tag   — Agent 호출 시 model: sonnet 명시
+#   → Agent() 패턴에서 model 파라미터 누락 여부
+# ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
 TARGET="${2:-}"
@@ -327,6 +379,40 @@ check_pipeline_loop() {
 }
 
 # (check_design is already defined above, moving marker)
+# ─── Check 24: Antigravity 잔존 체크 ───
+check_no_antigravity() {
+  local opencode_calls=$(grep -ci "opencode run\|opencode serve" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  if [ "$opencode_calls" -gt 0 ]; then
+    echo "FAIL|opencode 호출 ${opencode_calls}건 — 2026-04 폐기됨, GPT-4.1(copilot-api) 사용"
+  else
+    echo "PASS|opencode 호출 0건 (폐기 준수)"
+  fi
+}
+
+# ─── Check 25: gbrain 자율 저장/검색 ───
+check_gbrain_usage() {
+  local gbrain_query=$(grep -ci "gbrain query\|gbrain search\|mcp__gbrain__query\|mcp__gbrain__search" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  local gbrain_put=$(grep -ci "gbrain put\|mcp__gbrain__put_page" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  if [ "$gbrain_query" -gt 0 ] || [ "$gbrain_put" -gt 0 ]; then
+    echo "PASS|검색 ${gbrain_query}건, 저장 ${gbrain_put}건"
+  else
+    echo "WARN|gbrain 사용 0건 — Search-Before-Solve에서 gbrain query 미사용"
+  fi
+}
+
+# ─── Check 26: Agent Teams 정리 ───
+check_agent_teams_cleanup() {
+  local team_create=$(grep -ci "TeamCreate" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  local team_delete=$(grep -ci "TeamDelete" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  if [ "$team_create" -eq 0 ]; then
+    echo "N/A|팀 미사용"
+  elif [ "$team_delete" -ge "$team_create" ]; then
+    echo "PASS|생성 ${team_create}건, 삭제 ${team_delete}건 (정리 완료)"
+  else
+    echo "WARN|생성 ${team_create}건, 삭제 ${team_delete}건 — 미정리 팀 존재 가능"
+  fi
+}
+
 # ─── Run all checks below ───
 check_design() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
@@ -369,11 +455,14 @@ R20=$(check_cost_logging)
 R21=$(check_search_before_solve)
 R22=$(check_screenshot_verify)
 R23=$(check_pipeline_loop)
+R24=$(check_no_antigravity)
+R25=$(check_gbrain_usage)
+R26=$(check_agent_teams_cleanup)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26")
 
-TOTAL_CHECKS=23
+TOTAL_CHECKS=26
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0

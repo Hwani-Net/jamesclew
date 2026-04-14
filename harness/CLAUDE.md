@@ -34,6 +34,12 @@
   - 디버깅 핵심 원인 발견 (증상→원인→해결 3줄)
   - 외부 API/서비스 연동 패턴 확인 (엔드포인트, 인증, 제약)
   - 대표님이 명시적으로 "기억해" / "저장해" 요청
+- **자동 스킬 생성** (agentskills.io 영감): 복잡한 작업 완료 후 "이 작업을 다시 하게 되면?" 자율 판단하여 재사용 가능한 절차를 `commands/`에 스킬로 저장. 트리거 조건:
+  - 5회+ 도구 호출이 필요한 복합 작업 완료 후
+  - 에러→해결 성공 패턴 (dead-end 돌파) 후
+  - 대표님 교정이 있었던 접근법 발견 후
+  - 저장 형식: `harness/commands/{skill-name}.md` (YAML frontmatter + 절차 Markdown)
+  - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
 - **Claude Code 기능 참조**: 새 기능/도구 도입 전 반드시 (1) NotebookLM `notebook_query`로 공식 매뉴얼 조회 (2) `~/.claude/cache/changelog.md`에서 최신 릴리즈 확인. 추측으로 기능 존재 여부를 판단하지 않는다.
   - NLM CLI: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` (Claude Code Official Docs)
   - NLM 하네스: `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` (Agent Harness Blueprint)
@@ -96,6 +102,15 @@
 - **병렬 실행**: 독립 작업은 반드시 병렬로 동시 실행 (Sonnet + Codex 동시 등)
 - **독립적인 도구 호출은 반드시 병렬로 묶어서 실행. 순차 실행 금지 (의존성 있는 경우 제외)**
 
+### Agent Teams (v2.1.107+, 실험적)
+- **용도**: teammate 간 소통이 필요한 복잡한 병렬 작업 (리뷰, 디버깅, 멀티 프로젝트)
+- **teammate 갯수 제한 없음**: 작업 복잡도에 따라 자율 결정. Sonnet(7D 별도 풀) + HydraTeams(5H 0) 조합이므로 비용 병목 없음
+- **모델 선택**: 리드=Opus, 구현 teammate=Sonnet(`model: sonnet`), 리뷰 teammate=GPT via HydraTeams(`localhost:3456`)
+- **HydraTeams 프록시**: `/tmp/HydraTeams/` — Agent Teams teammate를 GPT-4o-mini 등 외부 모델로 라우팅. `node dist/index.js --model gpt-4o-mini --provider openai --port 3456 --passthrough lead`
+- **copilot-api와 역할 분리**: copilot-api(`localhost:4141`) = 단일 API 호출(검수, AI냄새). HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
+- **서브에이전트 vs Agent Teams**: 결과만 반환하면 서브에이전트, teammate 간 대화/태스크 조율이 필요하면 Agent Teams
+- **in-process 모드 기본**: tmux 불필요. Windows Terminal에서 바로 동작. `Shift+Down`으로 teammate 전환
+
 ### Advisor Loop (Opus ↔ 모델 반복 대화)
 1. **라우팅**: Opus가 작업 유형 판단 → 최적 모델(들) 선택
 2. **1차 위임**: 상세 프롬프트 + 제약조건 → 모델 실행
@@ -131,6 +146,7 @@
 - 에러 → `~/.claude/PITFALLS.md`에 P-NNN 기록.
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/GPT-4.1) 검토 필수** — 충돌/회귀 사전 검토.
+- **감사 항목 동기화 필수**: CLAUDE.md에 규칙 추가 또는 Claude Code 버전 업데이트 시, `audit-session.sh`에 대응하는 `check_` 함수도 동시에 추가. `/audit` 결과가 신규 기능을 반영하지 않으면 감사 무의미.
 
 ## 5H Limit Optimization (Opus 사용량 보존)
 5H 롤링 윈도우는 **모든 모델 공통** — Sonnet 서브에이전트도 5H를 소비함 (Opus보다 느리게).

@@ -121,3 +121,19 @@
 - **원인**: architecture.md와 qa.md에 로테이션 규칙만 명시. 실제 스크립트에는 codex 단일 호출만 구현
 - **해결**: codex-rotate.sh 6계정 자동 로테이션 구현. ~~Antigravity(opencode)~~ 2026-04 폐기 → GPT-4.1(copilot-api) + Gemma 4 폴백으로 대체
 - **재발 방지**: 규칙 추가 시 구현 코드도 동시 작성. "규칙 vs 구현" 갭을 /audit 체크리스트에 추가
+
+## [P-019] gbrain PGLite DB 손상 — missing chunk 에러
+
+- **발견**: 2026-04-14
+- **증상**: `gbrain query` 실행 시 `missing chunk number 0 for toast value` PostgreSQL 에러. 검색 불가
+- **원인**: PGLite(WASM Postgres)가 대량 import + embed 후 toast 테이블 불일치. 동시 접근 또는 비정상 종료 가능성
+- **해결**: `rm -rf ~/.gbrain/brain.pglite` → `gbrain init --pglite` → `gbrain import` → `gbrain embed --all` 재구축
+- **재발 방지**: gbrain DB 손상 시 즉시 재초기화. compact hook에서 gbrain 에러 감지 시 자동 reinit 검토
+
+## [P-020] Ghost Mode "할까요" 패턴 반복 (23건/세션)
+
+- **발견**: 2026-04-14
+- **증상**: /audit에서 Ghost Mode FAIL — "할까요", "하시겠습니까", "진행하시겠습니까" 패턴 23건 감지. stop hook이 매번 차단하지만 발생 자체가 지속
+- **원인**: 위험 판단 시 확인 요청 습관. 특히 git rebase, 삭제, 설치 등 비가역 작업에서 발생
+- **해결**: stop-dispatcher.sh가 실시간 차단 중. 비가역 작업도 origin 미push 상태면 안전하므로 즉시 실행
+- **재발 방지**: "비가역 판단 기준"을 명확히 — origin에 push되지 않은 로컬 커밋은 자유롭게 조작 가능. push된 히스토리만 확인 필요
