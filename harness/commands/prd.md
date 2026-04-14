@@ -1,3 +1,7 @@
+---
+description: "PRD 생성 (Product Requirements Document)"
+---
+
 # /prd — PRD 생성 (Product Requirements Document)
 
 프로젝트의 PRD를 체계적으로 생성합니다.

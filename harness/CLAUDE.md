@@ -47,7 +47,7 @@
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 **우선순위 공식**으로 정렬 실행
 2. 막히면 Perplexity/Tavily로 자체 조사. 해결 불가 시에만 질문.
-3. Multi-Pass Review: 1라운드 수정 0건이면 즉시 완료. 수정 있으면 2라운드. 외부 모델(GPT-4.1 + Codex) 검수 필수. → rules/quality.md
+3. Multi-Pass Review: 1라운드 수정 0건이면 2라운드 확인 후 완료 (최소 2라운드 필수는 quality.md 참조). 외부 모델(GPT-4.1 + Codex) 검수 필수. → rules/quality.md
 
 ### 우선순위 공식 (작업 정렬)
 1. **점수 산정**: `긴급도(0-3) + 수익영향(0-3) + 대표님대기(0-2) + ROI(효과/노력 0-3) - 리스크(0-2)` → 0~9점

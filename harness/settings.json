@@ -150,6 +150,21 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/enforce-cross-review.sh",
             "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/change-tracker.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/regression-guard.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/test-manipulation-guard.sh",
+            "timeout": 5000
           }
         ]
       },

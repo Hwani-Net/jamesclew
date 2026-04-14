@@ -1,3 +1,7 @@
+---
+description: "초안 → Firebase Hosting 자동 발행"
+---
+
 # /blog-publish — 초안 → Firebase Hosting 자동 발행
 
 `/blog-review` PASS 또는 수동 승인된 초안을 Firebase Hosting에 발행합니다.

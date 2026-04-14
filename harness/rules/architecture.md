@@ -1,7 +1,7 @@
 # Architecture Rules
 
 ## Tool Selection
-Built-in > Bash commands > MCP servers (비용순)
+상세: CLAUDE.md Tool Priority 참조. 요약: Built-in > Bash commands > MCP servers (비용순)
 - GitHub: gh CLI (MCP 아님)
 - 브라우저: npx playwright CLI (MCP의 4x 저렴)
 - 웹 콘텐츠: curl r.jina.ai/URL
@@ -53,7 +53,7 @@ WordPress 사용하지 않음 — Firebase + SSG로 대체.
 | 용도 | 기본 모델 | 이유 |
 |------|----------|------|
 | AI냄새 검수 | GPT-4.1 + Codex | 톤/문체 비교에 강함 |
-| 차별화 분석 | GPT-4.1 + Gemini | 경쟁 글 대비 분석 |
+| 차별화 분석 | GPT-4.1 + Gemma 4 로컬 | 경쟁 글 대비 분석 |
 | 전체 교차 검수 | 3모델 전부 | 다수결 |
 | 이미지-제품 매칭 | Opus + Sonnet 서브에이전트 | Vision 정확도 최고 |
 | 이미지 자동 검증 (코드 내) | OpenAI gpt-4o-mini + Codex -i | API 호출 가능 |
@@ -69,7 +69,7 @@ WordPress 사용하지 않음 — Firebase + SSG로 대체.
 | Rate Limit | 429, Too Many Requests | 지수 백오프 (5→15→45초). Tavily는 키 로테이션 |
 | 봇 차단 | Access Denied (쿠팡 등) | 방식 전환 (headless→CDP→og:image). 같은 방식 재시도 무의미 |
 | 빌드/문법 | SyntaxError, build fail | 에러 메시지 정독 → 수정 → 재빌드 |
-| 외부 모델 실패 | Codex/Gemini timeout | 다른 모델로 대체. 3모델 중 2개 성공이면 진행 |
+| 외부 모델 실패 | Codex/GPT-4.1/Gemma timeout | 다른 모델로 대체. 3모델 중 2개 성공이면 진행 |
 
 ## 비용 추적
 API 호출 비용을 누적 로깅. 제한하지 않음, 관찰만.

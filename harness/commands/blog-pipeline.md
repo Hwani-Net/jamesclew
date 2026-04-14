@@ -1,3 +1,7 @@
+---
+description: "키워드 → 생성 → 검증 → 수정 → 발행 전체 파이프라인"
+---
+
 # /blog-pipeline — 키워드 → 생성 → 검증 → 수정 → 발행 전체 파이프라인
 
 `/blog-generate` → `/blog-review` → `/blog-fix`(필요 시) 전체 사이클을 한 번에 실행.

@@ -1,3 +1,7 @@
+---
+description: "품질 게이트 7단계 + AI냄새 검사 + SEO 점수"
+---
+
 # /blog-review — 품질 게이트 7단계 + AI냄새 검사 + SEO 점수
 
 `/blog-generate`로 생성된 초안을 발행 전 자동 검증하는 품질 게이트.
