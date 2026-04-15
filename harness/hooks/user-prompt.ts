@@ -412,18 +412,139 @@ async function main() {
       const titleDoneFile = `${STATE_DIR}/session_title_set`;
       if (!fs.existsSync(titleDoneFile)) {
         fs.writeFileSync(titleDoneFile, new Date().toISOString());
-        // Extract meaningful title from first prompt
-        const stopWords =
-          /^(해줘|진행해|해|줘|주세요|부탁|알려줘|보여줘|확인해|실행해|해주세요|좀|그냥|이제|일단|먼저|빨리|바로)$/;
-        const words = prompt
-          .replace(/[<>[\]{}()]/g, " ")
+
+        // Step 1: Detect task category for prefix
+        type CategoryRule = { pattern: RegExp; prefix: string };
+        const categoryRules: CategoryRule[] = [
+          {
+            pattern: /블로그|포스트|글\s*작성|콘텐츠|키워드/,
+            prefix: "블로그",
+          },
+          {
+            pattern: /하네스|hook|설정|config|rules|settings/,
+            prefix: "하네스",
+          },
+          {
+            pattern: /버그|에러|오류|fix|수정.*안\s*되|고쳐|안\s*돼/,
+            prefix: "버그 수정",
+          },
+          { pattern: /배포|deploy|firebase|빌드|build/, prefix: "배포" },
+          { pattern: /진단|audit|감사|점검|체크/, prefix: "진단" },
+          { pattern: /설계|PRD|계획|plan|아키텍처/, prefix: "설계" },
+          { pattern: /리서치|조사|분석|검색|research/, prefix: "리서치" },
+          { pattern: /이미지|사진|캡처|screenshot/, prefix: "이미지" },
+          { pattern: /테스트|test|검증|verify/, prefix: "테스트" },
+          { pattern: /스킬|커맨드|command|자동화/, prefix: "자동화" },
+        ];
+
+        let prefix = "";
+        for (const rule of categoryRules) {
+          if (rule.pattern.test(prompt)) {
+            prefix = rule.prefix;
+            break;
+          }
+        }
+
+        // Step 2: Extract meaningful keywords (nouns/topics)
+        const stopWords = new Set([
+          "해줘",
+          "진행해",
+          "주세요",
+          "부탁",
+          "알려줘",
+          "보여줘",
+          "확인해",
+          "실행해",
+          "해주세요",
+          "좀",
+          "그냥",
+          "이제",
+          "일단",
+          "먼저",
+          "빨리",
+          "바로",
+          "해",
+          "줘",
+          "하고",
+          "싶어",
+          "싶다",
+          "있어",
+          "있다",
+          "없어",
+          "없다",
+          "인데",
+          "인지",
+          "것을",
+          "것이",
+          "것은",
+          "것도",
+          "대해",
+          "위해",
+          "관련",
+          "사용",
+          "이용",
+          "처리",
+          "완료",
+          "진행",
+          "실행",
+          "작업",
+          "현재",
+          "지금",
+          "다시",
+          "새로",
+          "모든",
+          "전체",
+          "각각",
+        ]);
+
+        // Remove special chars, split on whitespace/punctuation
+        const rawWords = prompt
+          .replace(/[<>[\]{}()「」『』【】《》""''`]/g, " ")
+          .replace(/[.!?。，、:;]/g, " ")
           .split(/\s+/)
-          .filter((w: string) => w.length >= 2 && !stopWords.test(w));
-        const titleRaw = words.slice(0, 5).join(" ");
-        sessionTitle = titleRaw.substring(0, 30) || undefined;
+          .map((w: string) =>
+            w.replace(/^[^가-힣a-zA-Z0-9]+|[^가-힣a-zA-Z0-9]+$/g, ""),
+          )
+          .filter((w: string) => w.length >= 2 && !stopWords.has(w));
+
+        // Prefer longer, more meaningful words (likely nouns)
+        const keywords = rawWords
+          .filter((w: string) => w.length >= 2)
+          .slice(0, 6);
+
+        // Step 3: Compose title
+        let title = "";
+        if (prefix && keywords.length > 0) {
+          // "블로그 — 무선이어폰 추천"
+          const topicStr = keywords.slice(0, 3).join(" ");
+          title = `${prefix} — ${topicStr}`;
+        } else if (prefix) {
+          title = prefix;
+        } else if (keywords.length > 0) {
+          title = keywords.slice(0, 4).join(" ");
+        }
+
+        // Step 4: Enforce 30 char limit
+        if (title.length > 30) {
+          title = title.substring(0, 30);
+        }
+
+        sessionTitle = title || undefined;
       }
     } catch (e: any) {
+      // Non-fatal — session continues without title, but always log
       console.error(`[session-title] ${e?.message || e}`);
+      const fs2 = require("fs");
+      try {
+        fs2.appendFileSync(
+          `${STATE_DIR}/user-prompt-errors.log`,
+          `[${new Date().toISOString()}] [session-title] ${e?.message || e}\n`,
+        );
+      } catch (logErr: any) {
+        console.error(
+          `[session-title] log write failed: ${logErr?.message || logErr}`,
+        );
+      }
     }
 
     if (parts.length > 0 || sessionTitle) {

@@ -4,7 +4,10 @@
   },
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "ENABLE_PROMPT_CACHING_1H": "1"
+    "ENABLE_PROMPT_CACHING_1H": "1",
+    "CLAUDE_CODE_ENABLE_AWAY_SUMMARY": "1",
+    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
+    "CLAUDE_STREAM_IDLE_TIMEOUT_MS": "180000"
   },
   "permissions": {
     "allow": [
@@ -217,6 +220,7 @@
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/quality-gate.sh post-test",
+            "if": "Bash(*npm test*|*npm run test*|*jest*|*vitest*)",
             "timeout": 5000
           }
         ]
@@ -291,6 +295,17 @@
         ]
       }
     ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/telegram-notify.sh stop-failure",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
     "PostCompact": [
       {
         "hooks": [
@@ -303,6 +318,50 @@
             "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"[CONFIG-CHANGE] settings.json modified at $(date -u +%Y-%m-%dT%H:%M:%SZ)\" >> $HOME/.harness-state/config_changes.log'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"[WORKTREE-CREATE] $(date -u +%Y-%m-%dT%H:%M:%SZ)\" >> $HOME/.harness-state/worktree.log'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"[WORKTREE-REMOVE] $(date -u +%Y-%m-%dT%H:%M:%SZ)\" >> $HOME/.harness-state/worktree.log'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'MD5=$(md5sum $HOME/.claude/CLAUDE.md 2>/dev/null | cut -d\" \" -f1 || echo unknown); PREV=$(cat $HOME/.harness-state/claude_md_hash 2>/dev/null); if [ \"$MD5\" != \"$PREV\" ] && [ -n \"$PREV\" ]; then echo \"{\\\"systemMessage\\\":\\\"[CLAUDE.md CHANGED] 이전 해시와 다릅니다. 변경 내용을 확인하세요.\\\"}\"; fi; echo \"$MD5\" > $HOME/.harness-state/claude_md_hash'",
+            "timeout": 5000
           }
         ]
       }

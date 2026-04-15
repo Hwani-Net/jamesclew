@@ -140,6 +140,9 @@
 - Codex: `bash harness/scripts/codex-rotate.sh "프롬프트"` (6계정 자동 로테이션 + gemma4 폴백). 단일 계정: `codex exec "프롬프트"` — -q 옵션 없음, timeout 30초
 - GPT-4.1 (copilot-api): `curl -s --max-time 30 http://localhost:4141/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gpt-4.1","messages":[{"role":"user","content":"프롬프트"}]}'` — copilot-api 서버 실행 필수 (`copilot-api start --port 4141`)
 - Ollama: localhost:11434 API — 무제한, 최종 폴백
+- **Monitor tool**: 백그라운드 Bash의 stdout 실시간 감시. `run_in_background` 대신 빌드/배포 진행률 추적에 사용. `Monitor(command: "npm run build")` → 각 stdout 라인이 알림으로 전달.
+- **HTTP hooks** (v2.1.63): hook에서 `"type": "http"`로 URL에 POST 가능. bash 프로세스 스폰 없이 직접 HTTP 전송. Slack/Discord webhook 연동에 적합. 단, 환경변수 보간 미지원 — URL/body에 시크릿 하드코딩 필요하므로 현재 bash hook 유지. 향후 보간 지원 시 전환 고려.
+- **defer 결정** (v2.1.89): PreToolUse hook에서 `"permissionDecision": "defer"` 반환 → 도구 실행 일시정지 + 사용자 확인 요청. `deny`(완전 차단)보다 유연. headless 자동화 시 위험 작업 게이트로 활용. `irreversible-alert.sh`에서 사용 중.
 
 ## Tool Priority (비용순)
 1. 외부 모델(Codex/GPT-4.1/Gemma4, 5H 0) > Subagent(sonnet, 5H 느림) > Built-in > Bash > MCP
