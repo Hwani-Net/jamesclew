@@ -170,14 +170,43 @@ fmt_context() {
   echo "🧠 Context: ${CTX_K}K/${PCT}%${WARN}"
 }
 
-# ─── Format usage string ───
+# ─── Format UTC ISO string to KST short ───
+# Input: 2026-04-16T05:15:41Z  Output: 14:15 (today) or 4/20 11:00 (later)
+fmt_kst() {
+  local ISO="$1"
+  [ -z "$ISO" ] && { echo ""; return; }
+  python3 -c "
+import datetime as dt, sys
+try:
+    s = sys.argv[1].replace('Z','+00:00')
+    u = dt.datetime.fromisoformat(s).astimezone(dt.timezone(dt.timedelta(hours=9)))
+    n = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+    if u.date() == n.date():
+        print(u.strftime('%H:%M KST'))
+    else:
+        print(u.strftime('%m/%d %H:%M KST'))
+except Exception:
+    pass
+" "$ISO" 2>/dev/null
+}
+
+# ─── Format usage string (with KST reset times) ───
 fmt_usage() {
   local USAGE="$1"
   parse_usage "$USAGE"
+  local FIVE_RESET="" SEVEN_RESET=""
+  if [ -f "$STATE_DIR/next-reset.json" ]; then
+    FIVE_RESET=$(fmt_kst "$(jq -r '.five_hour.resets_at // empty' "$STATE_DIR/next-reset.json" 2>/dev/null)")
+    SEVEN_RESET=$(fmt_kst "$(jq -r '.seven_day.resets_at // empty' "$STATE_DIR/next-reset.json" 2>/dev/null)")
+  fi
   if [ "$FIVE" = "?" ]; then
     echo "📊 Usage: 확인 불가 (API rate limited)"
   else
-    echo "📊 5H: ${FIVE}% | 7D: ${SEVEN}%"
+    local LINE="📊 5H: ${FIVE}%"
+    [ -n "$FIVE_RESET" ] && LINE="$LINE (리셋 ${FIVE_RESET})"
+    LINE="$LINE | 7D: ${SEVEN}%"
+    [ -n "$SEVEN_RESET" ] && LINE="$LINE (리셋 ${SEVEN_RESET})"
+    echo "$LINE"
   fi
 }
 
