@@ -38,8 +38,40 @@ SNAPSHOT_CONTENT=$(cat "$SNAPSHOT_FILE" | head -c 2000 | sed 's/"/\\"/g' | tr '\
 
 echo "{\"systemMessage\":\"[PRE-COMPACT SNAPSHOT] $SNAPSHOT_CONTENT\"}"
 
-# --- Obsidian Session Summary (auto-save on compact) ---
+# --- Pending Tasks Extraction (BEFORE auto-save overwrites latest) ---
 OBSIDIAN_VAULT="${OBSIDIAN_VAULT:-}"
+PENDING_FILE="$STATE_DIR/pending_tasks.md"
+if [ -n "$OBSIDIAN_VAULT" ] && [ -d "$OBSIDIAN_VAULT/01-jamesclaw/harness" ]; then
+  BEST_SESSION=""
+  BEST_LINES=0
+  for f in $(ls -t "$OBSIDIAN_VAULT/01-jamesclaw/harness"/session-*.md 2>/dev/null); do
+    LINES=$(awk '
+      /^## 다음 세션/ { capture=1; next }
+      capture && /^## / { capture=0 }
+      capture && /^- \[ \]/ && !/TODO$/ { count++ }
+      END { print count+0 }
+    ' "$f")
+    if [ "$LINES" -gt "$BEST_LINES" ]; then
+      BEST_LINES=$LINES
+      BEST_SESSION=$f
+    fi
+  done
+  if [ -n "$BEST_SESSION" ] && [ "$BEST_LINES" -gt 0 ]; then
+    {
+      echo "# Pending Tasks (from $(basename "$BEST_SESSION"))"
+      echo "_Saved: $NOW_"
+      echo ""
+      awk '
+        /^## 다음 세션/ { capture=1; next }
+        capture && /^## / { capture=0 }
+        capture { print }
+      ' "$BEST_SESSION" | sed '/^$/d'
+    } > "$PENDING_FILE"
+    echo "[pending] $BEST_LINES pending tasks saved from $(basename "$BEST_SESSION")" >&2
+  fi
+fi
+
+# --- Obsidian Session Summary (auto-save on compact) ---
 if [ -n "$OBSIDIAN_VAULT" ]; then
   OBSIDIAN_DIR="$OBSIDIAN_VAULT/01-jamesclaw/harness"
   mkdir -p "$OBSIDIAN_DIR"

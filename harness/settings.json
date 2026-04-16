@@ -333,6 +333,11 @@
             "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/post-compact-resume.sh",
+            "timeout": 5000
           }
         ]
       }
