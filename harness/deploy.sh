@@ -62,5 +62,15 @@ if [ -d "$SCRIPT_DIR/../docs/adr" ]; then
   echo "✅ docs/adr/"
 fi
 
+# Mirror commands + rules to Obsidian for reference
+VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
+if [ -d "$VAULT/01-jamesclaw/harness" ]; then
+  mkdir -p "$VAULT/01-jamesclaw/harness/commands"
+  mkdir -p "$VAULT/01-jamesclaw/harness/rules"
+  cp -u "$SCRIPT_DIR/commands/"*.md "$VAULT/01-jamesclaw/harness/commands/" 2>/dev/null
+  cp -u "$SCRIPT_DIR/rules/"*.md "$VAULT/01-jamesclaw/harness/rules/" 2>/dev/null
+  echo "✅ commands/ + rules/ mirrored to Obsidian"
+fi
+
 echo ""
 echo "🎉 배포 완료. reload window 후 적용됩니다."

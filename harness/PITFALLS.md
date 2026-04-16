@@ -137,3 +137,19 @@
 - **원인**: 위험 판단 시 확인 요청 습관. 특히 git rebase, 삭제, 설치 등 비가역 작업에서 발생
 - **해결**: stop-dispatcher.sh가 실시간 차단 중. 비가역 작업도 origin 미push 상태면 안전하므로 즉시 실행
 - **재발 방지**: "비가역 판단 기준"을 명확히 — origin에 push되지 않은 로컬 커밋은 자유롭게 조작 가능. push된 히스토리만 확인 필요
+
+## [P-021] /tui fullscreen VS Code 터미널에서 크래시
+
+- **발견**: 2026-04-16
+- **증상**: `/tui fullscreen` 실행 시 세션 다운. Antigravity(VS Code 통합 터미널)에서 발생
+- **원인**: VS Code 터미널이 synchronized output 미지원. /tui fullscreen이 이 기능에 의존
+- **해결**: VS Code 터미널에서는 `/tui default` 사용. fullscreen은 Windows Terminal에서만
+- **재발 방지**: 터미널 호환성 확인 — `TERM_PROGRAM=vscode`이면 /tui fullscreen 사용 금지
+
+## [P-022] Agent Teams 해체 시 TeamDelete 누락 → 다음 팀 생성 블로킹
+
+- **발견**: 2026-04-16
+- **증상**: TeamCreate 호출 시 "Already leading team X. A leader can only manage one team at a time." 에러로 새 팀 생성 불가
+- **원인**: teammate에게 shutdown_request를 보내 프로세스 종료 확인(shutdown_approved)까지 했지만, TeamDelete 호출을 빠뜨림. teammate 종료 ≠ 팀 해체
+- **해결**: TeamDelete 즉시 호출 후 TeamCreate 진행
+- **재발 방지**: 팀 작업 완료 체크리스트 — ①모든 teammate에 shutdown_request ②shutdown_approved 확인 ③TeamDelete 호출 (이 3단계가 완전한 팀 해체)

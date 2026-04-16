@@ -27,11 +27,37 @@ echo "$INPUT" | bash "$HOME/.claude/hooks/change-tracker.sh" 2>/dev/null
 # 5. Test manipulation guard
 echo "$INPUT" | bash "$HOME/.claude/hooks/test-manipulation-guard.sh" 2>/dev/null
 
-# 6. Harness file change → Design Doc Sync reminder
+# 6. PITFALLS.md auto-sync (4-way: ~/.claude/ → harness source + obsidian + gbrain)
 if [ -n "$FILE" ]; then
   case "$FILE" in
+    */PITFALLS.md|*/.claude/PITFALLS.md)
+      PITFALLS_SRC="$HOME/.claude/PITFALLS.md"
+      if [ -f "$PITFALLS_SRC" ]; then
+        # harness source
+        HARNESS_ROOT=$(git -C "$(dirname "$FILE")" rev-parse --show-toplevel 2>/dev/null)
+        [ -n "$HARNESS_ROOT" ] && [ -d "$HARNESS_ROOT/harness" ] && cp "$PITFALLS_SRC" "$HARNESS_ROOT/harness/PITFALLS.md" 2>/dev/null
+        # obsidian
+        VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
+        [ -d "$VAULT/01-jamesclaw/harness" ] && cp "$PITFALLS_SRC" "$VAULT/01-jamesclaw/harness/PITFALLS.md" 2>/dev/null
+      fi
+      ;;
+  esac
+fi
+
+# 7. Harness file change → auto-sync docs to Obsidian + warning
+if [ -n "$FILE" ]; then
+  VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
+  OBSIDIAN_HARNESS="$VAULT/01-jamesclaw/harness"
+  case "$FILE" in
+    */harness/docs/harness-manual.md)
+      cp "$FILE" "$OBSIDIAN_HARNESS/harness-manual.md" 2>/dev/null
+      ;;
+    */harness/docs/harness_design.md)
+      cp "$FILE" "$OBSIDIAN_HARNESS/harness_design.md" 2>/dev/null
+      ;;
     */harness/hooks/*|*/harness/rules/*|*/harness/scripts/*|*/harness/CLAUDE.md|*/.claude/settings.json)
-      WARN="{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[📐 DESIGN DOC SYNC] 하네스 파일 수정 감지: $FILE. harness_design.md 변경 이력 업데이트 필수 (\$OBSIDIAN_VAULT/01-jamesclaw/harness/harness_design.md).\"}}"
+      # Still show warning for design doc update reminder
+      WARN="{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[📐 DESIGN DOC SYNC] 하네스 파일 수정: $FILE. harness_design.md 변경 이력 업데이트 필수.\"}}"
       echo "$WARN"
       ;;
   esac

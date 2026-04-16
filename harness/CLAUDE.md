@@ -113,6 +113,11 @@
 - **독립적인 도구 호출은 반드시 병렬로 묶어서 실행. 순차 실행 금지 (의존성 있는 경우 제외)**
 
 ### Agent Teams (v2.1.107+, 실험적)
+- **자율 투입 기준**: 대표님 지시 없이도 다음 조건에서 자율적으로 Agent Teams 구성:
+  - 독립 작업 3개+ 병렬 가능 + 작업 간 피드백 루프 필요 시
+  - 검수자가 작업자에게 직접 수정 지시해야 하는 구조 시
+  - /self-heal, /blog-pipeline 등 다중 에이전트 스킬 실행 시
+  - 단, 서브에이전트 병렬로 충분하면 Agent Teams 오버헤드 불필요 — 판단은 Opus
 - **용도**: teammate 간 소통이 필요한 복잡한 병렬 작업 (리뷰, 디버깅, 멀티 프로젝트)
 - **teammate 갯수 제한 없음**: 작업 복잡도에 따라 자율 결정. Sonnet(7D 별도 풀) + HydraTeams(5H 0) 조합이므로 비용 병목 없음
 - **모델 선택**: 리드=Opus, 구현 teammate=Sonnet(`model: sonnet`), 리뷰 teammate=GPT via HydraTeams(`localhost:3456`)
@@ -120,8 +125,9 @@
 - **copilot-api와 역할 분리**: copilot-api(`localhost:4141`) = 단일 API 호출(검수, AI냄새). HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
 - **서브에이전트 vs Agent Teams**: 결과만 반환하면 서브에이전트, teammate 간 대화/태스크 조율이 필요하면 Agent Teams
 - **in-process 모드 기본**: tmux 불필요. Windows Terminal에서 바로 동작. `Shift+Down`으로 teammate 전환
-- **"외부 팀" 패턴**: 대표님이 "외부 팀으로" 또는 "외부 에이전트 팀" 지시 시, 분석/검수는 GPT-4.1(copilot-api curl, 5H 0)에 위임하고 도구 필요한 구현만 Sonnet teammate에 배정. per-agent base URL 미지원이므로 Agent Teams teammate 자체를 GPT로 라우팅하는 것은 현재 불가.
-- **비용 최적 팀 구성**: Lead(Opus 판단) + 검수(GPT-4.1 curl, 5H 0) + 구현(Sonnet teammate, Sonnet 풀) = Opus 최소 소비
+- **"외부 팀" 패턴**: 대표님이 "외부 팀으로" 또는 "외부 에이전트 팀" 지시 시, Sonnet teammate 안에서 Bash로 `ANTHROPIC_BASE_URL=http://localhost:3456 claude --print --dangerously-skip-permissions "프롬프트"` 호출하여 GPT-4.1에 분석/검수를 위임. HydraTeams 프록시 경유 검증 완료 (로그: `→ gpt-4.1`). Sonnet이 도구를 쓰고 GPT가 판단하는 하이브리드 가능.
+- **비용 최적 팀 구성**: Lead(Opus 판단) + 검수(GPT-4.1 via copilot-api, 5H 0) + 구현(Sonnet teammate, Sonnet 풀) = Opus 최소 소비
+- **자율 외부 검수**: 대표님 지시 없이도, Agent Teams/서브에이전트 결과물에 검수가 필요하면 GPT-4.1(copilot-api)에 자동 위임. payload를 UTF-8 파일로 저장 후 `curl -d @file localhost:4141` 방식. "외부 팀으로" 명시 불필요 — 토큰 절약 + 품질 보장을 위해 항상 자율 판단.
 
 ### Advisor Loop (Opus ↔ 모델 반복 대화)
 1. **라우팅**: Opus가 작업 유형 판단 → 최적 모델(들) 선택

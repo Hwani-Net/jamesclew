@@ -1,6 +1,6 @@
 # JamesClaw Agent Harness — 사용 매뉴얼
 
-> 버전: 2026-04-15 | Claude Code v2.1.108 | 하네스 위치: `D:/jamesclew/harness/`
+> 버전: 2026-04-15 | Claude Code v2.1.110 | 하네스 위치: `D:/jamesclew/harness/`
 
 ---
 
@@ -620,6 +620,19 @@ mcp__gbrain__put_page(slug="...", content="...")
   - `03-knowledge/` — 영구 지식
 - **주의:** `OBSIDIAN_VAULT` 미설정 시 PreCompact hook이 실패하여 compact 차단됨.
 
+#### 03-knowledge/ — 영구 지식 큐레이션
+
+`03-knowledge/`는 프로젝트와 무관한 **범용·재사용 가능 지식**을 보관하는 공간이다.
+
+**규칙:**
+- 저장 대상: 도구 사용법, 디버깅 패턴, API 연동 방법, 외부 서비스 제약조건 등 어느 프로젝트에서도 쓸 수 있는 것
+- 저장 제외: 특정 프로젝트(블로그, 위키 등) 전용 내용 → `02-projects/`에 저장
+- **주 입력 경로:** `/wiki-sync` 커맨드로 gbrain에서 Obsidian으로 동기화 (`gbrain query` → 결과를 `03-knowledge/`에 저장)
+- **수동 큐레이션도 허용:** gbrain에 저장하기 애매한 판단·설계 철학은 직접 마크다운으로 작성
+- 파일명 컨벤션: `{YYYY-MM-DD}-{slug}.md` (날짜 + 슬러그)
+
+**현재 비어있는 이유:** 자동 인제스트 파이프라인(wiki-sync)이 점진적으로 채운다. 억지로 채우지 않는다 — 반드시 판단이 필요한 수동 큐레이션이므로 일괄 자동 마이그레이션은 하지 않는다.
+
 ### Telegram (알림 채널)
 
 - **알림 이벤트:** 세션 시작, Stop, compact, Bash 에러, 비가역 명령 실행
@@ -886,7 +899,17 @@ claude mcp remove stitch-design-audit
 
 ## 14. 버전 히스토리
 
-### v2.1.108 (현재) — 2026-04-15
+### v2.1.110 (현재) — 2026-04-15
+
+- Push notification tool: Remote Control 연동 모바일 푸시 알림 (`PushNotification` 도구)
+- /tui fullscreen: 플리커 없는 전체화면 렌더링 (`/tui fullscreen` 또는 `tui` 설정)
+- PreToolUse additionalContext 버그 수정: 도구 호출 실패 시 additionalContext 소실 방지
+- MCP SSE 안정성: SSE/HTTP 전송 중 연결 끊김 시 무한 대기 버그 수정
+- /focus 커맨드 추가: Ctrl+O는 verbose 토글 전용, focus 뷰는 /focus로 분리
+- stdio MCP stray non-JSON line 연결 해제 버그 수정 (2.1.105 회귀)
+- PermissionRequest updatedInput deny rule 재검사 버그 수정
+
+### v2.1.108 (이전) — 2026-04-15
 
 - 1시간 프롬프트 캐싱: `ENABLE_PROMPT_CACHING_1H` env var (BEDROCK 구버전 대체), `FORCE_PROMPT_CACHING_5M` 5분 TTL
 - /recap 세션 복귀 요약: 세션 복귀 시 컨텍스트 요약 자동 표시. `/config`에서 설정, `CLAUDE_CODE_ENABLE_AWAY_SUMMARY`로 강제

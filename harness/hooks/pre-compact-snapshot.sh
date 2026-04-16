@@ -85,6 +85,16 @@ if [ -n "$OBSIDIAN_VAULT" ] && [ ! -d "$OBSIDIAN_DIR" ]; then
   exit 2
 fi
 
+# --- Memory files sync to Obsidian ---
+MEMORY_SRC="$HOME/.claude/projects/D--jamesclew/memory"
+VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
+MEMORY_DST="$VAULT/01-jamesclaw/memory"
+if [ -d "$MEMORY_SRC" ] && [ -d "$VAULT" ]; then
+  mkdir -p "$MEMORY_DST"
+  cp -u "$MEMORY_SRC"/*.md "$MEMORY_DST/" 2>/dev/null
+  echo "[memory-sync] Memory files synced to Obsidian: $MEMORY_DST" >&2
+fi
+
 # --- Wiki Ingest Queue (session discoveries → wiki pipeline) ---
 WIKI_RAW="${OBSIDIAN_VAULT:-}/06-raw"
 WIKI_QUEUE="${OBSIDIAN_VAULT:-}/06-raw/.ingest-queue"

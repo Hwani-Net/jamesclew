@@ -215,6 +215,16 @@
         ]
       },
       {
+        "matcher": "mcp__perplexity__.*|mcp__tavily__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/wiki-raw-save.sh",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -248,6 +258,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/user-prompt-declare-warn.sh",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/capture-reset-times.sh",
+            "timeout": 3000
           }
         ]
       }
