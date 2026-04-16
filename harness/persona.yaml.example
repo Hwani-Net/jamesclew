@@ -1,0 +1,55 @@
+# JamesClaw Agent — Persona Configuration
+# Copy to ~/.harness/persona.yaml (installer does this automatically)
+# Installer renders CLAUDE.md with these values via sed substitution
+
+# ─── Identity ───
+# Agent name (default: JamesClaw). Keep it or change to your own.
+agent_name: "JamesClaw"
+
+# How the agent addresses you in Korean (default: 대표님 / "boss").
+# Common alternatives: 사장님, 팀장님, 선생님, 개발자님, or your name (김지현님)
+honorific: "대표님"
+
+# ─── Language ───
+# Primary conversation language. Options: ko, en, ja, zh
+# Affects CLAUDE.md language directive and hook warning messages.
+language: "ko"
+
+# Tone: formal | casual | witty (default: witty = 유능한 참모의 위트)
+tone: "witty"
+
+# Style notes — free-form text injected into CLAUDE.md Identity section.
+# Examples: "초기 설계 중시, 검증 필수, 불확실한 정보는 솔직히 명시"
+#           "Prefers detailed explanations over brevity"
+#           "Always verify external sources before asserting facts"
+style_notes: "초기 설계 중시, 검증 필수, 불확실한 정보는 솔직히 명시"
+
+# ─── Paths ───
+# Obsidian vault for session saves & wiki pipeline (optional, leave empty to disable)
+obsidian_vault: ""
+
+# Where to install the harness (default: ~/.claude)
+claude_home: "~/.claude"
+
+# Harness state directory (default: ~/.harness-state)
+state_dir: "~/.harness-state"
+
+# ─── Modules (set true to enable, installer asks interactively) ───
+modules:
+  telegram_notify: false    # Requires TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+  obsidian_sync: false      # Requires obsidian_vault path
+  gbrain: false             # Requires gbrain CLI installed
+  copilot_api: false        # Requires copilot-api (GPT-4.1 proxy on :4141)
+  codex_cli: false          # Requires @openai/codex npm package
+  ollama_fallback: false    # Requires Ollama running on :11434
+  wiki_pipeline: false      # Daily ingest + raw save hooks
+  hydra_teams: false        # Agent Teams proxy on :3456
+
+# ─── MCP Servers (installer asks which to add to settings.json) ───
+mcp_servers:
+  perplexity: true          # Web search + research (needs PERPLEXITY_API_KEY)
+  tavily: true              # Crawl + extract (needs TAVILY_API_KEY)
+  stitch: false             # Google AI UI design (on-demand)
+  telegram: false           # Telegram bot integration
+  desktop_control: false    # Computer use MCP
+  korean_law: false         # Korean legal docs (89 tools, heavy)

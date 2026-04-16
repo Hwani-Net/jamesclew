@@ -1,0 +1,91 @@
+# JamesClaw Agent — Module Catalog
+# Installer reads this to offer MCP/tool installation choices.
+# Each module: install command + verification + required env vars.
+
+modules:
+  # ─── MCP Servers ───
+  perplexity:
+    name: "Perplexity AI Search"
+    description: "Web-grounded search, Q&A, research (4 tools)"
+    install: "claude mcp add perplexity -s user -- npx -y server-perplexity-ask"
+    requires_env: ["PERPLEXITY_API_KEY"]
+    cost: "paid (~$0.006-0.80/call)"
+
+  tavily:
+    name: "Tavily Search & Crawl"
+    description: "Web search + site crawling + extract (5 tools)"
+    install: "claude mcp add tavily -s user -- node {{CLAUDE_HOME}}/scripts/tavily-rotator.mjs"
+    requires_env: ["TAVILY_API_KEY"]
+    cost: "free tier 1000/mo (6-key rotation supported)"
+
+  stitch:
+    name: "Google AI UI Designer"
+    description: "Generate UI designs, screens, design systems"
+    install: "claude mcp add stitch -s user -- npx -y @_davideast/stitch-mcp proxy"
+    requires_env: []
+    cost: "free 350/month"
+
+  telegram:
+    name: "Telegram Bot"
+    description: "Send/receive messages, react, reply, attachments"
+    install: "claude mcp add telegram -s user -- npx -y @modelcontextprotocol/server-telegram"
+    requires_env: ["TELEGRAM_BOT_TOKEN"]
+    cost: "free"
+
+  desktop_control:
+    name: "Desktop Control (Computer Use)"
+    description: "Cursor movement, click, type, screenshot"
+    install: "claude mcp add desktop-control -s user -- npx -y @anthropic/desktop-control-mcp"
+    requires_env: []
+    cost: "free (local only)"
+
+  # ─── External Model CLIs ───
+  codex:
+    name: "OpenAI Codex CLI"
+    description: "External code review model (5H/7D pool = 0)"
+    install: "npm install -g @openai/codex"
+    verify: "codex --version"
+    cost: "subject to ChatGPT Plus account"
+    notes: "Supports 6-account rotation via scripts/codex-rotate.sh"
+
+  copilot_api:
+    name: "GitHub Copilot API proxy (GPT-4.1)"
+    description: "GPT-4.1 as Anthropic-compatible endpoint on :4141"
+    install: "npm install -g copilot-api"
+    verify: "copilot-api --version"
+    startup: "copilot-api start --port 4141 &"
+    cost: "GitHub Copilot Pro $10/mo (unlimited) or Free (50 req/mo)"
+
+  ollama:
+    name: "Ollama Local LLM"
+    description: "Local model fallback (Gemma 4, Llama, etc)"
+    install_url: "https://ollama.com/download"
+    verify: "ollama --version"
+    port: 11434
+    cost: "free (local compute)"
+
+  gbrain:
+    name: "gbrain Knowledge Base"
+    description: "Permanent vector+keyword knowledge store"
+    install: "npm install -g gbrain-cli"
+    verify: "gbrain --version"
+    cost: "free (local PGLite)"
+
+  # ─── Harness Add-ons ───
+  obsidian_sync:
+    name: "Obsidian Vault Sync"
+    description: "Session saves + wiki pipeline + raw source archive"
+    requires_env: ["OBSIDIAN_VAULT"]
+    hooks_enabled: ["pre-compact-snapshot.sh", "wiki-raw-save.sh"]
+
+  wiki_pipeline:
+    name: "Daily Wiki Ingest"
+    description: "Auto-ingest Perplexity/Tavily results → Obsidian 06-raw/"
+    requires: ["obsidian_sync"]
+    scheduler: "Task Scheduler (Windows) / cron (Unix) at 09:17 local"
+
+  hydra_teams:
+    name: "HydraTeams Agent Proxy"
+    description: "Route Agent Teams teammates to external LLMs (GPT-4o-mini)"
+    path: "{{HARNESS_SRC}}/tools/HydraTeams"
+    startup: "node dist/index.js --model gpt-4o-mini --provider openai --port 3456"

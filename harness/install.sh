@@ -1,13 +1,21 @@
 #!/bin/bash
-# JamesClaw Agent — One-command installer for new machines
-# Usage: bash install.sh
+# JamesClaw Agent — Interactive Installer
+# Usage: bash install.sh                    (interactive wizard)
+#        bash install.sh --non-interactive  (use defaults + env vars)
+#
+# One-liner (after git clone):
+#   curl -fsSL https://raw.githubusercontent.com/<user>/jamesclew/main/harness/install.sh | bash
 
 set -e
 
-echo "🤖 JamesClaw Agent Installer"
-echo "════════════════════════════════"
+MODE="interactive"
+[[ "${1:-}" == "--non-interactive" ]] && MODE="non-interactive"
 
-# ─── 1. Detect environment ───
+echo "═══════════════════════════════════════════════"
+echo "  🤖 JamesClaw Agent — Interactive Installer"
+echo "═══════════════════════════════════════════════"
+
+# ─── 1. Platform detection ───
 PLATFORM="$(uname -s)"
 case "$PLATFORM" in
   Linux*)   OS=linux ;;
@@ -15,51 +23,160 @@ case "$PLATFORM" in
   MINGW*|MSYS*|CYGWIN*) OS=windows ;;
   *)        OS=unknown ;;
 esac
-echo "📍 Platform: $OS"
 
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
+STATE_DIR="$HOME/.harness-state"
+HARNESS_DIR="$HOME/.harness"
 HARNESS_SRC="$(cd "$(dirname "$0")" && pwd)"
-echo "📂 Harness source: $HARNESS_SRC"
-echo "📂 Claude home: $CLAUDE_HOME"
+ENV_FILE="$HOME/.harness.env"
+PERSONA_FILE="$HARNESS_DIR/persona.yaml"
 
-# ─── 2. Prerequisites check ───
+echo "📍 Platform: $OS"
+echo "📂 Harness source: $HARNESS_SRC"
+echo "📂 Claude home:    $CLAUDE_HOME"
+echo "📂 State dir:      $STATE_DIR"
 echo ""
+
+# ─── 2. Prerequisites ───
 echo "🔍 Checking prerequisites..."
 MISSING=()
-command -v node >/dev/null || MISSING+=("node")
+command -v node >/dev/null || MISSING+=("node (https://nodejs.org)")
 command -v git >/dev/null || MISSING+=("git")
-command -v claude >/dev/null || MISSING+=("claude (Claude Code CLI)")
+command -v claude >/dev/null || MISSING+=("claude CLI (https://docs.claude.com/en/docs/claude-code)")
 
 if [ ${#MISSING[@]} -gt 0 ]; then
-  echo "❌ Missing: ${MISSING[*]}"
-  echo "Install them first, then re-run this script."
+  echo "❌ Missing required tools:"
+  for item in "${MISSING[@]}"; do echo "   • $item"; done
   exit 1
 fi
 echo "✅ node, git, claude found"
+echo ""
 
-# ─── 3. Environment file ───
-ENV_FILE="$HOME/.harness.env"
-if [ ! -f "$ENV_FILE" ]; then
-  cp "$HARNESS_SRC/.env.example" "$ENV_FILE"
+# ─── 3. Persona wizard ───
+prompt_default() {
+  local label="$1" default="$2" var
+  if [[ "$MODE" == "non-interactive" ]]; then echo "$default"; return; fi
+  read -r -p "  $label [$default]: " var
+  echo "${var:-$default}"
+}
+
+prompt_yesno() {
+  local label="$1" default="$2" var
+  if [[ "$MODE" == "non-interactive" ]]; then echo "$default"; return; fi
+  local hint="[y/N]"
+  [[ "$default" == "y" ]] && hint="[Y/n]"
+  read -r -p "  $label $hint: " var
+  var="${var:-$default}"
+  [[ "${var,,}" == "y" || "${var,,}" == "yes" ]] && echo "y" || echo "n"
+}
+
+prompt_secret() {
+  local label="$1" var
+  if [[ "$MODE" == "non-interactive" ]]; then echo ""; return; fi
+  read -r -s -p "  $label (input hidden, empty to skip): " var
   echo ""
-  echo "📝 Created $ENV_FILE — EDIT IT to fill in your API keys"
-  echo "   Required: PERPLEXITY_API_KEY, TAVILY_API_KEY, OBSIDIAN_VAULT"
-  echo "   Optional: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID"
-else
-  echo "✅ $ENV_FILE already exists"
+  echo "$var"
+}
+
+# Escape user input for safe sed replacement (RHS of s|a|b|).
+# Escapes: backslash, pipe (delim), ampersand (backref), newline
+sed_escape() {
+  printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g' | tr -d '\n'
+}
+
+echo "🎭 Persona setup"
+AGENT_NAME=$(prompt_default "Agent name" "JamesClaw")
+HONORIFIC=$(prompt_default "How should the agent address you? (e.g. 대표님, Sir, your name)" "대표님")
+LANGUAGE=$(prompt_default "Primary language (ko/en/ja/zh)" "ko")
+TONE=$(prompt_default "Tone (formal/casual/witty)" "witty")
+STYLE_NOTES=$(prompt_default "Style notes (user profile)" "초기 설계 중시, 검증 필수, 불확실한 정보는 솔직히 명시")
+OBSIDIAN=$(prompt_default "Obsidian vault path (empty to disable)" "")
+echo ""
+
+# ─── 4. Module selection ───
+echo "🧩 Optional modules (y/n each)"
+MOD_TELEGRAM=$(prompt_yesno "Telegram notifications" "n")
+MOD_OBSIDIAN="n"
+[[ -n "$OBSIDIAN" ]] && MOD_OBSIDIAN="y"
+MOD_CODEX=$(prompt_yesno "Codex CLI (external code review)" "n")
+MOD_COPILOT=$(prompt_yesno "copilot-api (GPT-4.1 proxy on :4141)" "n")
+MOD_OLLAMA=$(prompt_yesno "Ollama local LLM fallback" "n")
+echo ""
+
+echo "🧩 MCP servers (y/n each)"
+MCP_PERPLEXITY=$(prompt_yesno "Perplexity (web search)" "y")
+MCP_TAVILY=$(prompt_yesno "Tavily (crawl+extract)" "y")
+MCP_STITCH=$(prompt_yesno "Stitch (Google UI designer)" "n")
+MCP_DESKTOP=$(prompt_yesno "Desktop Control (computer use)" "n")
+echo ""
+
+# ─── 5. API keys ───
+echo "🔑 API keys (press Enter to skip, edit $ENV_FILE later)"
+PPLX_KEY=""
+TVLY_KEY=""
+TG_TOKEN=""
+TG_CHAT=""
+OPENAI_KEY=""
+[[ "$MCP_PERPLEXITY" == "y" ]] && PPLX_KEY=$(prompt_secret "PERPLEXITY_API_KEY")
+[[ "$MCP_TAVILY" == "y" ]]     && TVLY_KEY=$(prompt_secret "TAVILY_API_KEY")
+[[ "$MOD_TELEGRAM" == "y" ]]   && TG_TOKEN=$(prompt_secret "TELEGRAM_BOT_TOKEN") && TG_CHAT=$(prompt_default "TELEGRAM_CHAT_ID" "")
+[[ "$MOD_CODEX" == "y" || "$MOD_COPILOT" == "y" ]] && OPENAI_KEY=$(prompt_secret "OPENAI_API_KEY")
+echo ""
+
+# ─── 6. Write env & persona ───
+# Reject symlinks at target paths to prevent TOCTOU overwrite of arbitrary files
+# (attacker could pre-create ~/.harness.env → /etc/passwd)
+for f in "$ENV_FILE" "$PERSONA_FILE" "$CLAUDE_HOME/CLAUDE.md"; do
+  if [ -L "$f" ]; then
+    echo "❌ Refusing to write: $f is a symlink (TOCTOU risk). Delete it and rerun." >&2
+    exit 1
+  fi
+done
+# Sanity-check $HOME to catch hostile env (HOME=/etc bash install.sh)
+if [ -z "${HOME:-}" ] || [ ! -d "$HOME" ]; then
+  echo "❌ \$HOME is unset or invalid: '${HOME:-}'" >&2
+  exit 1
 fi
 
-# ─── 4. State directory ───
-STATE_DIR="$HOME/.harness-state"
-mkdir -p "$STATE_DIR"
-echo "✅ State directory: $STATE_DIR"
+mkdir -p "$HARNESS_DIR" "$STATE_DIR"
 
-# ─── 5. Deploy harness to ~/.claude ───
+cat > "$ENV_FILE" <<EOF
+# JamesClaw Agent environment — generated by installer
+PERPLEXITY_API_KEY=$PPLX_KEY
+TAVILY_API_KEY=$TVLY_KEY
+OBSIDIAN_VAULT=$OBSIDIAN
+TELEGRAM_BOT_TOKEN=$TG_TOKEN
+TELEGRAM_CHAT_ID=$TG_CHAT
+OPENAI_API_KEY=$OPENAI_KEY
+EOF
+chmod 600 "$ENV_FILE"
+echo "✅ Wrote $ENV_FILE (permissions 600)"
+
+cat > "$PERSONA_FILE" <<EOF
+agent_name: "$AGENT_NAME"
+honorific: "$HONORIFIC"
+language: "$LANGUAGE"
+tone: "$TONE"
+style_notes: "$STYLE_NOTES"
+obsidian_vault: "$OBSIDIAN"
+EOF
+echo "✅ Wrote $PERSONA_FILE"
+
+# ─── 7. Deploy harness with persona substitution ───
 echo ""
 echo "🚀 Deploying harness to $CLAUDE_HOME..."
 mkdir -p "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/scripts" "$CLAUDE_HOME/agents" "$CLAUDE_HOME/commands"
 
-cp "$HARNESS_SRC/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"
+# Render CLAUDE.md with persona substitutions (sed-escaped to prevent injection)
+HON_ESC=$(sed_escape "$HONORIFIC")
+AGT_ESC=$(sed_escape "$AGENT_NAME")
+STY_ESC=$(sed_escape "$STYLE_NOTES")
+sed \
+  -e "s|대표님|$HON_ESC|g" \
+  -e "s|JamesClaw|$AGT_ESC|g" \
+  -e "s|기본값: 초기 설계 중시, 검증 필수, 불확실한 정보는 솔직히 명시|기본값: $STY_ESC|g" \
+  "$HARNESS_SRC/CLAUDE.md" > "$CLAUDE_HOME/CLAUDE.md"
+
 cp "$HARNESS_SRC/settings.json" "$CLAUDE_HOME/settings.json"
 cp -r "$HARNESS_SRC/rules/." "$CLAUDE_HOME/rules/"
 cp -r "$HARNESS_SRC/hooks/." "$CLAUDE_HOME/hooks/"
@@ -70,26 +187,49 @@ cp -r "$HARNESS_SRC/scripts/." "$CLAUDE_HOME/scripts/"
 
 chmod +x "$CLAUDE_HOME/hooks/"*.sh 2>/dev/null || true
 chmod +x "$CLAUDE_HOME/scripts/"*.sh 2>/dev/null || true
+echo "✅ Harness deployed (CLAUDE.md rendered with persona)"
 
-echo "✅ Harness deployed"
-
-# ─── 6. MCP servers (optional) ───
+# ─── 8. Install external tools ───
+# Note: npm install -g executes the package's postinstall script. Review package
+# provenance before enabling. Do NOT run this installer as root/Administrator.
+if [ "$(id -u 2>/dev/null || echo 0)" = "0" ] && [[ "$MOD_CODEX$MOD_COPILOT" == *"y"* ]]; then
+  echo "⚠ Running as root with npm install -g enabled — aborting for safety." >&2
+  exit 1
+fi
 echo ""
-echo "🧩 Recommended MCP servers (install manually as needed):"
-echo "   claude mcp add perplexity -s user -- npx -y server-perplexity-ask"
-echo "   claude mcp add tavily -s user -- node $CLAUDE_HOME/scripts/tavily-rotator.mjs"
-echo "   claude mcp add stitch -s user -- npx -y @_davideast/stitch-mcp proxy"
+echo "🔧 Installing selected external tools..."
+[[ "$MOD_CODEX" == "y" ]]   && npm install -g @openai/codex && echo "   ✓ codex"
+[[ "$MOD_COPILOT" == "y" ]] && npm install -g copilot-api   && echo "   ✓ copilot-api"
+if [[ "$MOD_OLLAMA" == "y" ]]; then
+  if ! command -v ollama >/dev/null; then
+    echo "   ⚠ Ollama not installed. Download: https://ollama.com/download"
+  else
+    echo "   ✓ ollama already installed"
+  fi
+fi
 
-# ─── 7. Final instructions ───
+# ─── 9. Install selected MCP servers ───
 echo ""
-echo "════════════════════════════════"
-echo "🎉 Installation complete!"
+echo "🧩 Registering MCP servers..."
+[[ "$MCP_PERPLEXITY" == "y" ]] && claude mcp add perplexity -s user -- npx -y server-perplexity-ask 2>/dev/null && echo "   ✓ perplexity"
+[[ "$MCP_TAVILY" == "y" ]]     && claude mcp add tavily -s user -- node "$CLAUDE_HOME/scripts/tavily-rotator.mjs" 2>/dev/null && echo "   ✓ tavily"
+[[ "$MCP_STITCH" == "y" ]]     && claude mcp add stitch -s user -- npx -y @_davideast/stitch-mcp proxy 2>/dev/null && echo "   ✓ stitch"
+
+# ─── 10. Final instructions ───
+echo ""
+echo "═══════════════════════════════════════════════"
+echo "  🎉 Installation complete!"
+echo "═══════════════════════════════════════════════"
 echo ""
 echo "Next steps:"
-echo "  1. Edit $ENV_FILE — fill in API keys"
-echo "  2. Add to your shell rc (~/.bashrc, ~/.zshrc, or ~/.bash_profile):"
-echo "       set -a; source $ENV_FILE; set +a"
-echo "  3. Restart shell, then run: claude"
-echo "  4. Verify: claude /audit (should show audit results)"
+echo "  1. Load env vars in your shell:"
+echo "       echo 'set -a; source $ENV_FILE; set +a' >> ~/.bashrc"
+echo "       (or ~/.zshrc / ~/.bash_profile)"
+echo "  2. Restart shell, then: claude"
+echo "  3. Verify harness: claude /audit"
 echo ""
-echo "Documentation: $HARNESS_SRC/README.md"
+echo "  Persona:   $PERSONA_FILE   (edit to change honorific/tone/language)"
+echo "  Env keys:  $ENV_FILE"
+echo "  Re-deploy: cd $HARNESS_SRC && bash install.sh"
+echo ""
+echo "Docs: $HARNESS_SRC/README.md"

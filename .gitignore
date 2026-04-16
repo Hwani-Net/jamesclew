@@ -14,7 +14,12 @@ node_modules/
 *-keys.json
 !*-keys.example.json
 .harness-state/
+.harness/
 .harness.env
+
+# User-specific persona (template provided)
+persona.yaml
+!persona.yaml.example
 
 # Personal data
 **/personal/
