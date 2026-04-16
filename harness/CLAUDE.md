@@ -40,6 +40,7 @@
   - 대표님 교정이 있었던 접근법 발견 후
   - 저장 형식: `harness/commands/{skill-name}.md` (YAML frontmatter + 절차 Markdown)
   - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
+- **위키 소스 자동 저장**: 세션 중 Perplexity/Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
 - **Claude Code 기능 참조**: 새 기능/도구 도입 전 반드시 (1) NotebookLM `notebook_query`로 공식 매뉴얼 조회 (2) `~/.claude/cache/changelog.md`에서 최신 릴리즈 확인. 추측으로 기능 존재 여부를 판단하지 않는다.
   - NLM CLI: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` (Claude Code Official Docs)
   - NLM 하네스: `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` (Agent Harness Blueprint)
@@ -119,6 +120,8 @@
 - **copilot-api와 역할 분리**: copilot-api(`localhost:4141`) = 단일 API 호출(검수, AI냄새). HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
 - **서브에이전트 vs Agent Teams**: 결과만 반환하면 서브에이전트, teammate 간 대화/태스크 조율이 필요하면 Agent Teams
 - **in-process 모드 기본**: tmux 불필요. Windows Terminal에서 바로 동작. `Shift+Down`으로 teammate 전환
+- **"외부 팀" 패턴**: 대표님이 "외부 팀으로" 또는 "외부 에이전트 팀" 지시 시, 분석/검수는 GPT-4.1(copilot-api curl, 5H 0)에 위임하고 도구 필요한 구현만 Sonnet teammate에 배정. per-agent base URL 미지원이므로 Agent Teams teammate 자체를 GPT로 라우팅하는 것은 현재 불가.
+- **비용 최적 팀 구성**: Lead(Opus 판단) + 검수(GPT-4.1 curl, 5H 0) + 구현(Sonnet teammate, Sonnet 풀) = Opus 최소 소비
 
 ### Advisor Loop (Opus ↔ 모델 반복 대화)
 1. **라우팅**: Opus가 작업 유형 판단 → 최적 모델(들) 선택

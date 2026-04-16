@@ -84,3 +84,23 @@ if [ -n "$OBSIDIAN_VAULT" ] && [ ! -d "$OBSIDIAN_DIR" ]; then
   echo '{"decision":"block","reason":"Obsidian vault not accessible. Run /저장 manually before compact."}'
   exit 2
 fi
+
+# --- Wiki Ingest Queue (session discoveries → wiki pipeline) ---
+WIKI_RAW="${OBSIDIAN_VAULT:-}/06-raw"
+WIKI_QUEUE="${OBSIDIAN_VAULT:-}/06-raw/.ingest-queue"
+if [ -n "$OBSIDIAN_VAULT" ] && [ -d "$WIKI_RAW" ]; then
+  # Copy session summary to raw for wiki ingest
+  if [ -n "$SESSION_FILE" ] && [ -f "$SESSION_FILE" ]; then
+    cp "$SESSION_FILE" "$WIKI_RAW/$(basename "$SESSION_FILE")" 2>/dev/null
+  fi
+  # Mark any new files in 06-raw/ for next ingest cycle
+  find "$WIKI_RAW" -name "*.md" -newer "$WIKI_QUEUE" -not -name ".ingest-queue" 2>/dev/null > "$WIKI_QUEUE.new" 2>/dev/null
+  if [ -s "$WIKI_QUEUE.new" ]; then
+    cat "$WIKI_QUEUE.new" >> "$WIKI_QUEUE" 2>/dev/null
+    rm -f "$WIKI_QUEUE.new"
+    echo "[wiki] $(wc -l < "$WIKI_QUEUE" 2>/dev/null) files queued for ingest" >&2
+  else
+    rm -f "$WIKI_QUEUE.new"
+  fi
+  touch "$WIKI_QUEUE"
+fi

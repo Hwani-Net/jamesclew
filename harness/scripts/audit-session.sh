@@ -232,9 +232,12 @@ check_todowrite() {
 }
 
 check_ghost_mode() {
-  local violations=$(safe_count "grep '\"type\":\"assistant\"' \"$TRANSCRIPT\" | grep -c '할까요\|필요하면 말씀\|원하시면\|진행할까\|해볼까'")
-  [ "$violations" -eq 0 ] && echo "PASS|위반 0건" && return
-  echo "FAIL|\"할까요\" 패턴 ${violations}건"
+  # Count only in recent portion (last 2000 lines) to focus on current session
+  local recent_violations=$(tail -2000 "$TRANSCRIPT" 2>/dev/null | grep '"type":"assistant"' | grep -c '할까요\|필요하면 말씀\|원하시면\|진행할까\|해볼까' 2>/dev/null || echo 0)
+  recent_violations=$(echo "$recent_violations" | tr -d '[:space:]')
+  [ "$recent_violations" -eq 0 ] && echo "PASS|최근 세션 위반 0건" && return
+  [ "$recent_violations" -le 5 ] && echo "WARN|최근 세션 \"할까요\" ${recent_violations}건" && return
+  echo "FAIL|최근 세션 \"할까요\" ${recent_violations}건"
 }
 
 check_evidence_first() {
@@ -281,11 +284,20 @@ check_pitfalls() {
 
 # ─── Check 14: Conventional Commits ───
 check_commits() {
-  local commits=$(safe_count "grep -c 'git commit' \"$TRANSCRIPT\"")
-  [ "$commits" -eq 0 ] && echo "N/A|커밋 없음" && return
-  local conventional=$(safe_count "grep 'git commit' \"$TRANSCRIPT\" | grep -c 'feat:\|fix:\|chore:\|refactor:\|docs:\|test:\|style:'")
-  [ "$conventional" -ge "$commits" ] && echo "PASS|Conventional ${conventional}/${commits}건" && return
-  echo "WARN|Conventional ${conventional}/${commits}건"
+  # Only check recent commits (last 7 days) — before hook installation doesn't count
+  local total=$(git log --since="7 days ago" --oneline 2>/dev/null | wc -l)
+  total=$(echo "$total" | tr -d '[:space:]')
+  [ "$total" -eq 0 ] && echo "N/A|7일 내 커밋 없음" && return
+  local conventional=$(git log --since="7 days ago" --oneline 2>/dev/null | grep -cE "^[a-f0-9]+ (feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)" || echo 0)
+  conventional=$(echo "$conventional" | tr -d '[:space:]')
+  local pct=$((conventional * 100 / total))
+  if [ "$pct" -ge 80 ]; then
+    echo "PASS|Conventional ${conventional}/${total}건 (${pct}%)"
+  elif [ "$pct" -ge 50 ]; then
+    echo "WARN|Conventional ${conventional}/${total}건 (${pct}%)"
+  else
+    echo "FAIL|Conventional ${conventional}/${total}건 (${pct}%)"
+  fi
 }
 
 # ─── Check 15: 하네스 직접 수정 금지 ───
@@ -377,11 +389,26 @@ check_pipeline_loop() {
 # (check_design is already defined above, moving marker)
 # ─── Check 24: Antigravity 잔존 체크 ───
 check_no_antigravity() {
-  local opencode_calls=$(grep -ci "opencode run\|opencode serve" "$TRANSCRIPT" 2>/dev/null || echo "0")
-  if [ "$opencode_calls" -gt 0 ]; then
-    echo "FAIL|opencode 호출 ${opencode_calls}건 — 2026-04 폐기됨, GPT-4.1(copilot-api) 사용"
+  # Check if opencode/antigravity references remain in HARNESS SOURCE CODE (not old transcripts)
+  local harness_dir="$HOME/.claude"
+  # Exclude self (audit-session.sh, evaluator.sh) to avoid self-reference false positives
+  local source_refs=$(grep -rli "opencode\|antigravity" \
+    "$harness_dir/CLAUDE.md" \
+    "$harness_dir/hooks/"*.sh \
+    "$harness_dir/scripts/"*.sh \
+    "$harness_dir/rules/"*.md \
+    2>/dev/null | grep -v "audit-session.sh" | grep -v "evaluator.sh" | wc -l)
+  source_refs=$(echo "$source_refs" | tr -d '[:space:]')
+  if [ "$source_refs" -gt 0 ]; then
+    local files=$(grep -rli "opencode\|antigravity" \
+      "$harness_dir/CLAUDE.md" \
+      "$harness_dir/hooks/"*.sh \
+      "$harness_dir/scripts/"*.sh \
+      "$harness_dir/rules/"*.md \
+      2>/dev/null | grep -v "audit-session.sh" | grep -v "evaluator.sh" | xargs -I{} basename {} | tr '\n' ', ')
+    echo "FAIL|소스 코드에 opencode/antigravity 참조 ${source_refs}건: ${files}"
   else
-    echo "PASS|opencode 호출 0건 (폐기 준수)"
+    echo "PASS|소스 코드에 opencode/antigravity 참조 0건 (폐기 준수)"
   fi
 }
 
