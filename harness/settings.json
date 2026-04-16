@@ -25,7 +25,10 @@
       "mcp__lazy-mcp__*",
       "mcp__windows-mcp__*",
       "mcp__plugin_telegram_telegram__*",
-      "Plugin:telegram:*"
+      "Plugin:telegram:*",
+      "Plugin:ralph-loop:*",
+      "Plugin:awesome-statusline:*",
+      "Skill(*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
