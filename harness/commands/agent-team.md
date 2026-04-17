@@ -1,9 +1,17 @@
 ---
-description: "영상식 6역할 Agent Teams 스캐폴드. v10 — v9 플래시카드 실측 반영. 빈 summary idle 감지 + 자동 wake 트리거 + qa 캐시 우회."
+description: "영상식 6역할 Agent Teams 스캐폴드. v11 — v10 dashboard-saas-mvp 실측 반영. 서브에이전트 팀 도구 격리 대응 + director 직접 TaskUpdate 모드."
 argument-hint: "<프로젝트 목표 한 문장> [--ralph]"
 ---
 
-# /agent-team — 6역할 Agent Teams 스캐폴드 (v10)
+# /agent-team — 6역할 Agent Teams 스캐폴드 (v11)
+
+## v11 변경 요약 (GAP-V10-N1/N2/N3 대응)
+
+| 규칙 | 변경 | 근거 GAP |
+|---|---|---|
+| **R13 현실화** | **서브에이전트에서 TaskList/TaskUpdate/SendMessage 미동작 확인 (v2.1.112)**. teammate 프롬프트에서 이 도구 호출 시도는 무의미. **director가 모든 TaskUpdate 직접 호출**하는 "director override 모드"를 기본으로 명시. | V10-N1 (P-048) |
+| **R8 스캐폴드 보강** | TeamCreate 전 `ls ~/.claude/teams/` 확인 — 좀비 팀 있으면 `rm -rf ~/.claude/teams/{name}` 후 진행. | V10-N2 (P-049) |
+| **R16 신규** | MCP 경로 검증 — 세션 시작 시 `claude mcp get gbrain` 확인. Command에 `gbrain.cmd` 있으면 즉시 `~/.bun/bin/gbrain.exe`로 교체. `npm install -g gbrain` 금지. | V10-N3 (P-050) |
 
 ## v10 변경 요약 (GAP-V9-N2/N3 대응)
 
@@ -334,6 +342,10 @@ v3 color-contrast 같은 접근성 맥락 프로젝트뿐 아니라 **모든 프
 ---
 
 ### R13 신규 [v9: 공식 Agent Teams TaskCreate/TaskList/TaskUpdate 중앙 큐 흡수]
+
+> **⚠️ v11 현실화**: v2.1.112 기준, 서브에이전트(`Agent()`)에서 TaskList/TaskUpdate/SendMessage **미동작 확인** (P-048).
+> teammate 프롬프트에서 이 도구들을 호출해도 "도구 없음" 실패. R13 STEP-1~3은 **director가 직접 대신 호출**.
+> "Director Override 모드": director가 각 단계 전환마다 TaskUpdate(status) 직접 호출 + 서브에이전트 완료 notification 폴링.
 
 **문제 (GAP-V5-N3)**: SendMessage 이중 전송 규칙(R4.5)만으로는 판정 SendMessage 누락이 반복 재발. 메시지는 휘발성이라 잊으면 복구 불가.
 
