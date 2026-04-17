@@ -549,7 +549,7 @@ mcp__gbrain__put_page(slug="...", content="...")
 | `audit-session.sh` | 세션 하네스 준수 33개 항목 감사 | `bash audit-session.sh --full` / `--compact` |
 | `blog-publish.sh` | 초안 → HTML 빌드 → Firebase 배포 | `bash blog-publish.sh MultiBlog/drafts/{slug}/` |
 | `codex-rotate.sh` | Codex 멀티계정 자동 로테이션 (최대 6개), Gemma4 폴백 | `bash codex-rotate.sh "프롬프트"` |
-| `evaluator.sh` | Playwright + 외부 모델 디자인 등급 평가 (Generator와 분리) | `bash evaluator.sh <URL>` |
+| `evaluator.sh` | expect MCP/node 스크린샷 + 외부 모델 디자인 등급 평가 (Generator와 분리) | `bash evaluator.sh <URL>` |
 | `fix-statusline.sh` | Windows에서 awesome-statusline 5H/7D N/A 수정 | `bash fix-statusline.sh` |
 | `log-api-cost.sh` | 외부 API 비용 수동 로깅 | `bash log-api-cost.sh perplexity sonar 0.80 "리서치 목적"` |
 | `ollama-accounts-setup.sh` | Ollama 계정 로테이션 디렉토리 초기화 | `bash ollama-accounts-setup.sh` |
@@ -721,7 +721,7 @@ mcp__gbrain__put_page(slug="...", content="...")
 ### 이미지 수집 우선순위
 
 1. og:image CDN URL → 800x800 직접 다운로드 (1순위)
-2. Playwright persistent context (2순위)
+2. expect MCP(mcp__expect__screenshot) persistent context (2순위)
 3. agent-browser CDP (쿠팡 봇 차단 우회, 3순위)
 
 **금지:** `loading="lazy"` 사용 금지 (P-001). 제조사 공식 이미지 사용 금지 (쿠팡 썸네일만).

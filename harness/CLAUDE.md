@@ -154,6 +154,11 @@
 - **HTTP hooks** (v2.1.63): hook에서 `"type": "http"`로 URL에 POST 가능. bash 프로세스 스폰 없이 직접 HTTP 전송. Slack/Discord webhook 연동에 적합. 단, 환경변수 보간 미지원 — URL/body에 시크릿 하드코딩 필요하므로 현재 bash hook 유지. 향후 보간 지원 시 전환 고려.
 - **defer 결정** (v2.1.89): PreToolUse hook에서 `"permissionDecision": "defer"` 반환 → 도구 실행 일시정지 + 사용자 확인 요청. `deny`(완전 차단)보다 유연. headless 자동화 시 위험 작업 게이트로 활용. `irreversible-alert.sh`에서 사용 중.
 
+## 브라우저 자동화 도구 우선순위
+1. **expect MCP (1순위)** — `mcp__expect__*` (open, screenshot, console_logs, network_requests, playwright, performance_metrics, accessibility_audit). allowlist 등록 완료, 승인 불필요
+2. **claude-in-chrome (2순위, 승인 필요)** — 실제 크롬 탭 조작이 필요한 경우만. 매 호출 승인 요구되므로 최소 사용
+3. **Playwright CLI 직접 호출 금지** — expect의 `playwright` 도구로 대체. CLI 필요 시 `mcp__expect__playwright`로 bypass
+
 ## Tool Priority (비용순)
 1. 외부 모델(Codex/GPT-4.1/Gemma4, 5H 0) > Subagent(sonnet, 5H 느림) > Built-in > Bash > MCP
 2. 검수는 반드시 외부 모델. Claude 자기 검수 금지. **전멸 폴백**: Codex+GPT-4.1+Gemma 전부 실패 시 대표님께 보고 후 Sonnet 서브에이전트 교차 검수로 대체 (임시). 교착 금지.

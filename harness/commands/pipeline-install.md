@@ -32,12 +32,12 @@ description: "11단계 품질 파이프라인 설치"
 | 3 | 광고 | AdSense/파트너스 슬롯 삽입 (선택) |
 | 4 | 저장 | 로컬 드래프트 저장 |
 | 5 | 품질루프 | 6패스(구조/SEO/AI냄새/팩트/이미지/차별화) × 2라운드+ saturation |
-| 6 | 이미지+링크 | og:image CDN → Playwright → fallback + 대표이미지 적합성 Vision 검증 + 전 외부링크 유효성 확인 |
+| 6 | 이미지+링크 | og:image CDN → expect MCP(mcp__expect__screenshot) → fallback + 대표이미지 적합성 Vision 검증 + 전 외부링크 유효성 확인 |
 | 7 | 교차검수 | 외부 3모델 (GPT-4.1 + Codex + Gemini) avg 7/10+ |
 | 8 | DB저장 | Firestore에 publish 상태 저장 |
 | 9 | 빌드 | CSS + SSG 정적 생성 |
 | 10 | 배포 | Firebase Hosting deploy |
-| 11 | 검증 | Playwright 스크린샷 + 디자인 5패스 × 2라운드 saturation. FAIL → 수정 → 재배포 루프 |
+| 11 | 검증 | expect MCP 스크린샷(mcp__expect__screenshot) + 디자인 5패스 × 2라운드 saturation. FAIL → 수정 → 재배포 루프 |
 
 **B. 앱 프로젝트** (Next.js, React, PWA 등):
 | Step | 이름 | 동작 |
@@ -47,12 +47,12 @@ description: "11단계 품질 파이프라인 설치"
 | 3 | 테스트 | 유닛 + E2E 테스트 통과 |
 | 4 | 커밋 | Conventional Commits 형식 |
 | 5 | 품질루프 | 5패스(기능/보안/성능/UX/페인포인트) × 2라운드 saturation |
-| 6 | 스크린샷 | Playwright 주요 화면 캡처 |
+| 6 | 스크린샷 | expect MCP(mcp__expect__screenshot) 주요 화면 캡처 |
 | 7 | 교차검수 | 외부 모델 코드 리뷰 (Codex + Gemini) |
 | 8 | 빌드 | `npm run build` 에러 0 |
 | 9 | 배포 | Firebase App Hosting / Hosting deploy |
 | 10 | 스모크테스트 | 라이브 URL HTTP 200 + 주요 기능 동작 확인 |
-| 11 | 검증 | Playwright 스크린샷 + 디자인 5패스(레이아웃/타이포/시각/인터랙션/렌더링) × 2라운드 saturation. FAIL 시 수정 → 재배포 → 재검증 루프 |
+| 11 | 검증 | expect MCP 스크린샷(mcp__expect__screenshot) + 디자인 5패스(레이아웃/타이포/시각/인터랙션/렌더링) × 2라운드 saturation. FAIL 시 수정 → 재배포 → 재검증 루프 |
 
 **C. API/MCP 서버 프로젝트**:
 | Step | 이름 | 동작 |

@@ -24,7 +24,9 @@ echo "🔍 Evaluator 시작: $URL"
 # ─────────────────────────────────────
 # Phase 1: Playwright로 사용자 상호작용 흉내
 # ─────────────────────────────────────
-echo "📸 Playwright 스크린샷 (데스크톱+모바일)..."
+echo "📸 스크린샷 캡처 (데스크톱+모바일)..."
+# NOTE: evaluator.sh는 서버 스크립트로 직접 node를 호출합니다.
+# 하네스 내부 자동 호출은 mcp__expect__screenshot 사용 — 아래 node 방식은 evaluator 전용.
 
 cat > "$SHOT_DIR/capture.mjs" <<'EOF'
 import { chromium } from 'playwright';

@@ -363,11 +363,11 @@ check_search_before_solve() {
 check_screenshot_verify() {
   local deploys=$(safe_count "grep '\"type\":\"assistant\"' \"$TRANSCRIPT\" | grep -c 'firebase deploy'")
   [ "$deploys" -eq 0 ] && echo "N/A|배포 없음" && return
-  local screenshots=$(safe_count "grep -c 'screenshot\|deploy-desktop\|deploy-mobile\|스크린샷' \"$TRANSCRIPT\"")
+  local screenshots=$(safe_count "grep -c 'mcp__expect__screenshot\|screenshot\|deploy-desktop\|deploy-mobile\|스크린샷' \"$TRANSCRIPT\"")
   local read_img=$(safe_count "grep '\"name\":\"Read\"' \"$TRANSCRIPT\" | grep -c '\.png\|\.jpg\|screenshot'")
   local total=$((screenshots + read_img))
-  [ "$total" -gt 0 ] && echo "PASS|스크린샷 검증 ${total}건" && return
-  echo "FAIL|배포 후 스크린샷 검증 없음"
+  [ "$total" -gt 0 ] && echo "PASS|스크린샷 검증 ${total}건 (expect MCP 또는 직접 Read)" && return
+  echo "FAIL|배포 후 스크린샷 검증 없음 (mcp__expect__screenshot 사용 권장)"
 }
 
 # ─── Check 23: Pipeline Loop (11단계 FAIL→수정→재실행 루프) ───

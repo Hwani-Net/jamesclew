@@ -40,7 +40,7 @@ argument-hint: "[공모전URL] [과제설명서PDF...]"
 - Python으로 정확한 글자수 검증
 
 ### 7. 첨부 구조도 생성
-- HTML+CSS+Playwright 방식 (Apple Keynote 발표 수준)
+- HTML+CSS + expect MCP(mcp__expect__screenshot) 방식 (Apple Keynote 발표 수준)
 - 또는 Stitch MCP (앱 UI용)
 - Vision으로 직접 품질 검증 후 보고 (P-024)
 

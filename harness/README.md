@@ -131,7 +131,7 @@ bash harness/deploy.sh
 | Polish | Typography/대비/간격 | 8/10+ |
 | Functionality | UX 인터랙션 | 8/10+ |
 
-`scripts/evaluator.sh <URL>` 한 번 실행 → Playwright + Codex 자동 등급 평가.
+`scripts/evaluator.sh <URL>` 한 번 실행 → expect MCP 스크린샷 + Codex 자동 등급 평가.
 
 ## 보안
 

@@ -3,7 +3,7 @@
 ## Tool Selection
 상세: CLAUDE.md Tool Priority 참조. 요약: Built-in > Bash commands > MCP servers (비용순)
 - GitHub: gh CLI (MCP 아님)
-- 브라우저: npx playwright CLI (MCP의 4x 저렴)
+- 브라우저: npx playwright CLI (MCP의 4x 저렴, 비용 비교 참조용 — 하네스 내부 브라우저 작업은 **expect MCP 우선**: `mcp__expect__open/screenshot/playwright` 등. allowlist 승인 불필요. claude-in-chrome은 실제 크롬 탭 조작 필요 시에만, 매 호출 승인 요구)
 - 웹 콘텐츠: curl r.jina.ai/URL
 - OCR: tesseract CLI
 - Perplexity: 4개 도구. 비용 인식하고 용도에 맞게 선택.

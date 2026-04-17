@@ -27,7 +27,7 @@ npx vite preview  # 또는 npx serve dist/
 
 **1-2. 로컬 자동 스캔**
 ```
-1. Playwright localhost 스크린샷 (데스크톱+모바일)
+1. expect MCP 스크린샷 (데스크톱+모바일): mcp__expect__open → mcp__expect__screenshot → mcp__expect__playwright({width:390,height:844}) → mcp__expect__screenshot
 2. 모든 링크 유효성 (href="#" 감지, 외부 링크 HTTP 체크)
 3. 모든 이미지 로드 확인
 4. 주요 기능 동작 (버튼, 폼, 네비게이션)
@@ -92,7 +92,7 @@ firebase deploy --only hosting
 **배포 후 즉시 Evaluator 스크립트 실행** (Generator-Evaluator 분리):
 ```bash
 bash $HOME/.claude/scripts/evaluator.sh https://PROJECT.web.app/
-# 자동으로: Playwright 캡처 → Codex 등급 평가 → PASS/REWORK/FAIL 판정
+# 자동으로: expect MCP/node 스크린샷 캡처 → Codex 등급 평가 → PASS/REWORK/FAIL 판정
 # 결과: ~/.harness-state/evaluator_result.json
 ```
 
@@ -101,7 +101,7 @@ bash $HOME/.claude/scripts/evaluator.sh https://PROJECT.web.app/
 **3-1. 라이브 자동 스캔**
 ```
 1. 라이브 URL HTTP 200 체크
-2. Playwright 라이브 스크린샷 (데스크톱+모바일)
+2. expect MCP 라이브 스크린샷 (데스크톱+모바일): mcp__expect__open → mcp__expect__screenshot → mcp__expect__playwright({width:390,height:844}) → mcp__expect__screenshot → mcp__expect__close
 3. 로컬 스크린샷과 라이브 스크린샷 비교
 4. 라이브에서만 발생하는 문제 확인 (CDN 캐시, CORS, Auth 등)
 ```

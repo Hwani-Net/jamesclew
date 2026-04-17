@@ -13,7 +13,7 @@
 
 ## Image & Link Verification (필수)
 블로그/앱의 이미지·링크 삽입 시 반드시:
-1. 캡처 우선순위: og:image CDN 800x800 (1순위) → Playwright persistent context (2순위) → agent-browser CDP (3순위)
+1. 캡처 우선순위: og:image CDN 800x800 (1순위) → expect MCP(mcp__expect__screenshot) (2순위) → agent-browser CDP (3순위)
 2. 제조사 공식 이미지 사용 금지 — 쿠팡 제품 페이지 썸네일만 사용
 3. 저장 후 Read 도구로 이미지 내용을 직접 확인 (HTTP 200만으로 검증 완료 판단 금지)
 4. 파일 확장자와 실제 포맷 일치 확인 (PNG를 .jpg로 저장하면 브라우저에서 깨짐)
@@ -74,7 +74,7 @@
 | 2 | 타이포그래피 | 계층 구조, 가독성, 폰트 일관성 |
 | 3 | 시각적 완성도 | 이미지 품질, 색상 일관성, 다크모드 |
 | 4 | 인터랙션 | hover 효과, 전환 애니메이션, 접근성 |
-| 5 | 렌더링 검증 | Playwright 풀페이지 스크린샷, 모바일/데스크톱 |
+| 5 | 렌더링 검증 | expect MCP 풀페이지 스크린샷(mcp__expect__screenshot), 모바일/데스크톱 |
 
 ## Test Manipulation Guard [hook 강제: test-manipulation-guard.sh]
 테스트 파일만 수정하고 소스를 안 고치는 패턴(#15 테스트 조작) 자동 감지.
