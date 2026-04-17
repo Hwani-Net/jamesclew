@@ -51,7 +51,7 @@ description: "7단계 품질 파이프라인 실행 (루프)"
     | tee ~/.harness-state/pipeline_review_codex.log &
 
   # GPT-4.1 리뷰
-  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$PROMPT\"}]}" \
     2>&1 | tee ~/.harness-state/pipeline_review_gpt41.log &
@@ -100,7 +100,7 @@ description: "7단계 품질 파이프라인 실행 (루프)"
   bash "$HOME/.claude/scripts/codex-rotate.sh" "$RUBRIC_PROMPT" 2>&1 \
     | tee ~/.harness-state/pipeline_rubric_codex.log &
 
-  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$RUBRIC_PROMPT\"}]}" \
     2>&1 | tee ~/.harness-state/pipeline_rubric_gpt41.log &
@@ -145,7 +145,7 @@ description: "7단계 품질 파이프라인 실행 (루프)"
   bash "$HOME/.claude/scripts/codex-rotate.sh" "$FINAL_PROMPT" 2>&1 \
     | tee ~/.harness-state/pipeline_final_codex.log &
 
-  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$FINAL_PROMPT\"}]}" \
     2>&1 | tee ~/.harness-state/pipeline_final_gpt41.log &
