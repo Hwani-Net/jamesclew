@@ -66,6 +66,7 @@
   - **저복잡도** (단일 파일, 유틸리티): 바로 코드 (판단 근거 명시)
 - 대화 중 빌드 전환: `/plan` → 코드.
 - 복잡도 판단은 Opus가 PRD 내용 기반으로 자동 결정.
+- **플랜 승인 게이트**: plan 산출물은 `/annotate-plan <plan-file>`로 주석 루프(최대 6회) 수렴 후 구현 진입. 수렴 완료 시 플랜 상단에 `<!-- ANNOTATE-APPROVED: YYYY-MM-DD -->` 헤더 자동 삽입되어야 함. 헤더 없는 플랜으로 구현 시작 시 enforce-build-transition.sh가 차단.
 
 ## Telegram 작업 알림
 - 작업 완료: `echo "결과 요약" > ~/.harness-state/last_result.txt` → Stop hook이 자동 전송.
@@ -223,6 +224,31 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - **GPT-4.1** (copilot-api): `ANTHROPIC_BASE_URL=http://localhost:4141`. 무료(multiplier 0). 오케스트레이터 부적합 — 단순 반복/벌크 작업만.
 - Sonnet 서브에이전트: Opus/opusplan 세션 내에서 `Agent(model: "sonnet")`으로 자동 사용.
 - **Advisor API** (참고): Messages API에서 `tools=[{"type":"advisor_20260301","model":"claude-opus-4-6"}]`로 Sonnet+Opus 자문 패턴 구현 가능. SWE-bench +2.7%, 비용 -11.9%.
+
+## v2.1.112 신규 기능 (2026-04-17)
+### 신규 슬래시 커맨드
+- **`/less-permission-prompts`**: 트랜스크립트 스캔 → read-only bash/MCP 커맨드의 프로젝트 allowlist 자동 제안. `D:/jamesclew/.claude/settings.json`에 8개 rule 적용 완료 (2026-04-17 기준: netstat, tasklist, mcp__expect__screenshot/console_logs/network_requests, mcp__claude-in-chrome__tabs_context_mcp/find, mcp__tavily__tavily_extract). 반복 실행 시 추가 rule 자동 누적.
+- **`/ultrareview`**: 클라우드 병렬 멀티에이전트 PR 리뷰. 인자 없으면 현재 브랜치 리뷰, `<PR#>` 인자 시 GitHub PR fetch 후 리뷰. `/ultraplan`의 리뷰 버전. ⚠️ **선택적 유료 — 체험권 3회 후 과금.** 기본 파이프라인에서는 무료 외부 모델(Codex + GPT-4.1)을 사용하며, `/ultrareview`는 예산 여유 시에만 대체 투입.
+
+### Effort Level (Opus 4.7 전용)
+- **`xhigh`** 신규 — `high`와 `max` 사이의 새 레벨. `/effort` 인자 없이 호출 시 slider 열림.
+- Auto mode는 Max 구독자에게 Opus 4.7 + xhigh 조합 자동 적용. `--enable-auto-mode` 플래그 **제거됨** (Max 구독 시 자동).
+- 다른 모델(Sonnet 등)에서는 `xhigh` → `high`로 자동 fallback.
+
+### 권한 완화 (v2.1.112)
+- **read-only bash glob 자동 허용 확대**: `ls *.ts` 같은 glob 패턴 + `cd <project-dir> && <cmd>` 형태는 승인 프롬프트 없이 즉시 실행. 기본 auto-allow 리스트 대폭 확장.
+- 하네스 `bash-tool-blocker.sh`는 여전히 독립 동작 — **P-026 유효** (bypassPermissions도 harness hook은 우회 불가).
+
+### Windows PowerShell Tool (점진 롤아웃)
+- `CLAUDE_CODE_USE_POWERSHELL_TOOL=1` 환경변수로 opt-in/out.
+- 대표님 환경(Windows)에서 PowerShell 스크립트 직접 실행 가능. 단, bash hook은 여전히 bash 경유.
+
+### UI 개선 (v2.1.111~v2.1.112)
+- Plan 파일명이 프롬프트 기반으로 자동 생성 (e.g., `fix-auth-race-snug-otter.md`)
+- `Ctrl+U` = 전체 input 클리어, `Ctrl+Y` = 복구, `Ctrl+L` = 전체 재그리기
+- Transcript 뷰: `[` (scrollback dump), `v` (editor 열기)
+- `/skills` 메뉴 토큰 수 정렬 (`t` 토글)
+- LSP diagnostics 순서 버그 fix (편집 직전 진단이 후에 나타나 모델 오판하던 문제)
 
 ## Prerequisites (다른 프로젝트에서도 동작하려면)
 - `~/.claude/` 에 hooks, rules, scripts, commands 배포됨 (`bash harness/deploy.sh`)

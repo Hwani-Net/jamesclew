@@ -1,15 +1,15 @@
 ---
-description: "11단계 품질 파이프라인 실행 (루프)"
+description: "7단계 품질 파이프라인 실행 (루프)"
 ---
 
-# /pipeline-run — 11단계 품질 파이프라인 실행 (루프)
+# /pipeline-run — 7단계 품질 파이프라인 실행 (루프)
 
 설치된 파이프라인을 실행하고, FAIL 시 자동으로 수정 → 재실행하는 루프를 돌립니다.
 
 ## 사전 조건
 - `/pipeline-install`이 완료된 프로젝트에서 실행
 - CLAUDE.md에 파이프라인 테이블이 존재해야 함
-- TodoWrite에 Step 0~11이 등록되어 있어야 함 (없으면 자동 등록)
+- TodoWrite에 Step 0~6이 등록되어 있어야 함 (없으면 자동 등록)
 
 ## 실행 절차
 
@@ -24,59 +24,156 @@ description: "11단계 품질 파이프라인 실행 (루프)"
 ### 2. Step 순차 실행
 각 Step을 순서대로 실행하며, 완료 시 TodoWrite를 `completed`로 업데이트.
 
+---
+
 **Step 0: 디자인 (UI 프로젝트만)**
-- DESIGN.md 확인/생성 → Stitch MCP 또는 벤치마킹
+- DESIGN.md 확인/생성 → `mcp__stitch__*` 또는 경쟁사 벤치마킹
+- UI가 아닌 프로젝트(API, CLI 등)는 스킵
 - 산출물: `DESIGN.md`
 - 완료: TodoWrite step0 → completed
 
-**Step 1~4: 구현 단계**
-- 프로젝트 유형에 따라 코드작성/린트/테스트/커밋
-- 각 Step 완료 시 TodoWrite 업데이트
+---
 
-**Step 5: 품질루프 (체크포인트)**
-- 5패스 실행. 수정 0건이면 1라운드로 완료, 수정 있으면 2라운드
-- 완료 시: `echo "패스별 결과" > ~/.harness-state/step5_quality_done`
-- FAIL 시: 수정 → Step 5 재실행 (self-correction 최대 2회)
+**Step 1: 구현**
+- 코드 작성 + 린트 + 테스트 + 커밋
+- 각 하위 작업 완료 시 TodoWrite 업데이트
+- 기준: `npm test` 또는 프로젝트별 테스트 suite 통과
 
-**Step 6: 스크린샷/이미지**
-- Playwright 주요 화면 캡처 또는 이미지 검증
+---
 
-**Step 7: 교차검수 (체크포인트) + Design Rubric 평가**
-- 외부 모델 실제 호출 필수 (codex exec / curl GPT-4.1)
-- UI 프로젝트: `$HOME/.claude/rules/design_rubric.md` 기반 4축 등급 평가 강제
+**Step 2: 품질 검수 (체크포인트)**
+- Codex + GPT-4.1 병렬 호출 (무료, 5H/7D = 0)
+  ```bash
+  PROMPT="다음 코드 변경사항을 rules/quality.md 코드 검토 5패스 기준으로 검토하라. PASS/REWORK/FAIL 판정과 구체적 수정 항목을 출력: $(git diff HEAD~1 --stat | head -20)"
+
+  # Codex 리뷰
+  bash "$HOME/.claude/scripts/codex-rotate.sh" "$PROMPT" 2>&1 \
+    | tee ~/.harness-state/pipeline_review_codex.log &
+
+  # GPT-4.1 리뷰
+  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_review_gpt41.log &
+
+  wait  # 두 호출 완료 대기
+  # 불일치 시 메인(Opus/GPT-4.1 메인)이 최종 판정
+  ```
+- **saturation 판정**: 두 모델 모두 수정 0건이면 완료. 어느 하나라도 FAIL이면 Step 1로 복귀
 - 완료 시:
   ```bash
-  RUBRIC=$(cat $HOME/.claude/rules/design_rubric.md)
-  codex exec "$RUBRIC\n\n위 rubric으로 현재 구현 평가. JSON 출력." \
-    2>&1 | tee ~/.harness-state/step7_review_done
+  echo '{"step":2,"tool":"codex+gpt41","verdict":"PASS","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' \
+    > ~/.harness-state/pipeline_review_done
   ```
-- 증거 파일 100byte 미만이면 deploy hook이 차단
-- 최저축 점수가 6점 미만이면 Step 7 FAIL → 구현 수정 후 재실행
+- 증거 파일 없으면 deploy hook이 차단
 
-**Step 8: 빌드**
-- `npm run build` 또는 해당 빌드 명령 실행
-- 에러 0 확인
+---
 
-**Step 9~10: 배포 + 스모크테스트**
-- `firebase deploy`
-- 라이브 URL HTTP 200 + **핵심 기능 1개 이상 실제 동작 확인**
+**Step 3: 시각 검수 (UI 프로젝트만, 체크포인트)**
+- UI가 아닌 프로젝트는 스킵
 
-**Step 11: 최종 검증 (루프 판정)**
-- Playwright 데스크톱+모바일 스크린샷 Read
-- 디자인 5패스(레이아웃/타이포/시각/인터랙션/렌더링). 수정 0건이면 1라운드 완료
-- **ALL PASS → 완료**
-- **FAIL 있음 → Step 1로 돌아가서 수정 → 재실행**
+  ```
+  # 1. 데스크톱 스크린샷
+  mcp__expect__open(url: "<로컬 또는 스테이징 URL>")
+  mcp__expect__screenshot()
+
+  # 2. 모바일 스크린샷
+  mcp__expect__playwright(script: "page.setViewportSize({width:390,height:844})")
+  mcp__expect__screenshot()
+
+  # 3. 콘솔 에러 확인
+  mcp__expect__console_logs(type: "error")
+
+  # 4. 네트워크 에러 확인
+  mcp__expect__network_requests()
+
+  # 5. 접근성 감사
+  mcp__expect__accessibility_audit()
+
+  mcp__expect__close()
+  ```
+
+- Design Rubric 평가: Codex + GPT-4.1 병렬 호출 (무료)
+  ```bash
+  RUBRIC_PROMPT="Design Rubric(~/.claude/rules/design_rubric.md) 4축(Consistency/Originality/Polish/Functionality) 기준으로 각 0-10 점수와 PASS/REWORK/FAIL 판정을 JSON으로 출력하라. 스크린샷 결과: $(cat ~/.harness-state/pipeline_screenshot.log 2>/dev/null | head -5)"
+
+  bash "$HOME/.claude/scripts/codex-rotate.sh" "$RUBRIC_PROMPT" 2>&1 \
+    | tee ~/.harness-state/pipeline_rubric_codex.log &
+
+  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$RUBRIC_PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_rubric_gpt41.log &
+
+  wait
+  ```
+  - 최저축 6점 미만 = FAIL → Step 1 복귀
+  - 최저축 8점 이상 전체 = PASS
+
+- 완료 시:
+  ```bash
+  echo '{"step":3,"rubric_min":8,"screenshot":"done","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' \
+    > ~/.harness-state/pipeline_visual_done
+  ```
+
+---
+
+**Step 4: 빌드**
+- 빌드 명령 실행 (에러 0 확인)
+  ```bash
+  npm run build 2>&1 | grep -iE 'error|warn|fail' | head -50
+  ```
+- exit 0 확인 후 TodoWrite step4 → completed
+
+---
+
+**Step 5: 배포 + 스모크테스트**
+- `firebase deploy` 실행
+- `verify-deploy.sh` hook이 자동으로:
+  - HTTP 200 확인
+  - `pipeline_review_done` 증거 파일 존재 확인 (없으면 배포 차단)
+  - `mcp__expect__*`로 심층 검증 지시 주입
+- 핵심 기능 1개 이상 실제 동작 확인 (버튼 클릭, API 응답 등)
+
+---
+
+**Step 6: 최종 판정 (루프 판정)**
+- Codex + GPT-4.1 병렬 최종 검수 (Step 2와 동일 방식, 라이브 배포 기준)
+  ```bash
+  FINAL_PROMPT="라이브 배포 후 최종 품질 판정. rules/quality.md 코드 검토 5패스 + 배포 스모크테스트 결과 기준. PASS 시 PIPELINE_COMPLETE 승인, FAIL 시 구체적 수정 항목 출력. 배포 URL 응답: $(cat ~/.harness-state/pipeline_deploy.log 2>/dev/null | tail -5)"
+
+  bash "$HOME/.claude/scripts/codex-rotate.sh" "$FINAL_PROMPT" 2>&1 \
+    | tee ~/.harness-state/pipeline_final_codex.log &
+
+  curl -s --max-time 30 http://localhost:414/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$FINAL_PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_final_gpt41.log &
+
+  wait
+  ```
+- UI 프로젝트: Step 3 스크린샷 재촬영 (라이브 URL 기준)
+  ```
+  mcp__expect__open(url: "<라이브 URL>")
+  mcp__expect__screenshot()
+  mcp__expect__playwright(script: "page.setViewportSize({width:390,height:844})")
+  mcp__expect__screenshot()
+  mcp__expect__close()
+  ```
+- **ALL PASS → 완료 보고 + `<promise>PIPELINE_COMPLETE</promise>`**
+- **FAIL → Step 1로 복귀 (FAIL 항목만 수정)**
+
+---
 
 ### 3. 루프 규칙
 ```
-┌─ Step 0: 디자인
-│  Step 1~4: 구현
-│  Step 5: 품질루프 ← 체크포인트 (증거 파일)
-│  Step 6: 스크린샷
-│  Step 7: 교차검수 ← 체크포인트 (증거 파일)
-│  Step 8: 빌드
-│  Step 9~10: 배포 + 스모크
-│  Step 11: 최종 검증
+┌─ Step 0: 디자인 (UI만)
+│  Step 1: 구현
+│  Step 2: 품질 검수 ← 체크포인트 (pipeline_review_done)
+│  Step 3: 시각 검수 ← 체크포인트 (pipeline_visual_done, UI만)
+│  Step 4: 빌드
+│  Step 5: 배포 + 스모크
+│  Step 6: 최종 판정
 │     ├─ ALL PASS → 완료 보고 + <promise>PIPELINE_COMPLETE</promise>
 │     └─ FAIL → Step 1로 복귀 (FAIL 항목만 수정)
 └──────────────────────┘
@@ -84,17 +181,28 @@ description: "11단계 품질 파이프라인 실행 (루프)"
 
 - **최대 루프 횟수**: 일반 20회, 경량(`--light`) 5회. 초과 시 대표님께 보고
 - **루프 카운터**: `~/.harness-state/pipeline_loop_count` 에 기록
-- **루프 시 Step 5/7 증거 파일 초기화**: 매 루프마다 새로 생성해야 함
+- **루프 시 체크포인트 증거 파일 초기화**: 매 루프마다 `pipeline_review_done`, `pipeline_visual_done` 재생성 필수
 - **saturation 판정**: 1라운드 수정 0건이면 즉시 완료. 수정 있으면 2라운드 후 재판정
 
 ### 4. 경량 모드
 인자로 `--light`를 전달하면 경량 파이프라인:
-- Step 1 → Step 5 (1라운드) → Step 8 → Step 9~10 → Step 11
+- Step 1 → Step 2 (1라운드) → Step 4 → Step 5 → Step 6
 - 파일 3개 이하 소규모 수정에 적합
+- Step 0(디자인), Step 3(시각 검수) 스킵
 
 ### 5. 완료 보고
 루프 완료 시:
 - 총 루프 횟수, 각 루프에서 수정된 항목 요약
-- 최종 감사 점수: `bash ~/.harness-state/../.claude/scripts/audit-session.sh --compact` 실행
+- 최종 감사 점수: `bash ~/.claude/scripts/audit-session.sh --compact` 실행
 - `echo "파이프라인 완료 — 루프 N회, 최종 감사 점수" > ~/.harness-state/last_result.txt`
 - 텔레그램 알림 자동 전송 (Stop hook)
+
+## 참고: /ultrareview (선택적 유료)
+Claude Code v2.1.111 신규. **체험권 3회 후 과금.** 예산 여유 시 Step 2/6 대신 1회 호출로 대체 가능 (더 심층적인 멀티에이전트 리뷰). 기본 파이프라인에서는 무료 외부 모델(Codex + GPT-4.1, `:414`)을 사용.
+
+## 증거 파일 참조표
+| 파일 | 생성 시점 | hook 확인 |
+|------|----------|----------|
+| `~/.harness-state/pipeline_review_done` | Step 2 완료 | verify-deploy.sh, audit-session.sh |
+| `~/.harness-state/pipeline_visual_done` | Step 3 완료 (UI만) | audit-session.sh |
+| `~/.harness-state/pipeline_loop_count` | 루프마다 갱신 | — |

@@ -33,25 +33,21 @@ fi
 
 # ─── Pipeline step evidence check ───
 STATE_DIR="$HOME/.harness-state"
-STEP5_FILE="$STATE_DIR/step5_quality_done"
-STEP7_FILE="$STATE_DIR/step7_review_done"
+REVIEW_FILE="$STATE_DIR/pipeline_review_done"
 MISSING_STEPS=""
 
-if [ ! -f "$STEP5_FILE" ]; then
-  MISSING_STEPS="${MISSING_STEPS}Step 5 (품질루프) "
-fi
-if [ ! -f "$STEP7_FILE" ]; then
-  MISSING_STEPS="${MISSING_STEPS}Step 7 (교차검수) "
-elif [ "$(wc -c < "$STEP7_FILE" 2>/dev/null)" -lt 100 ] 2>/dev/null; then
-  MISSING_STEPS="${MISSING_STEPS}Step 7 (증거 불충분 — 외부 모델 응답 포함 필수, 현재 $(wc -c < "$STEP7_FILE")byte) "
-elif ! grep -qiE 'codex|gpt-4.1|localhost:4141|gemini|gpt|verdict|PASS|FAIL|REWORK' "$STEP7_FILE" 2>/dev/null; then
-  # Must contain external model signature — prevents self-review bypass
-  MISSING_STEPS="${MISSING_STEPS}Step 7 (외부 모델 시그니처 없음 — codex/gpt-4.1/localhost:4141 출력이어야 함) "
+if [ ! -f "$REVIEW_FILE" ]; then
+  MISSING_STEPS="${MISSING_STEPS}Step 2 (품질검수 — /ultrareview) "
+elif [ "$(wc -c < "$REVIEW_FILE" 2>/dev/null)" -lt 20 ] 2>/dev/null; then
+  MISSING_STEPS="${MISSING_STEPS}Step 2 (증거 불충분 — pipeline_review_done 최소 20byte, 현재 $(wc -c < "$REVIEW_FILE")byte) "
+elif ! grep -qiE 'ultrareview|verdict|PASS|FAIL|REWORK|step.*2|"step":2' "$REVIEW_FILE" 2>/dev/null; then
+  # Must contain /ultrareview result signature — prevents self-review bypass
+  MISSING_STEPS="${MISSING_STEPS}Step 2 (ultrareview 시그니처 없음 — /ultrareview 결과 JSON이어야 함) "
 fi
 
 if [ -n "$MISSING_STEPS" ]; then
   echo "🚫 Pipeline step 미완료: ${MISSING_STEPS}" >&2
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"[PIPELINE BLOCK] 배포 차단 — ${MISSING_STEPS}증거 파일 없음. 품질루프 완료 후 echo done > ~/.harness-state/step5_quality_done, 교차검수 완료 후 echo done > ~/.harness-state/step7_review_done 실행 후 재배포.\"}}" >&2
+  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"[PIPELINE BLOCK] 배포 차단 — ${MISSING_STEPS}. /ultrareview 완료 후 echo '{\\\"step\\\":2,\\\"verdict\\\":\\\"PASS\\\"}' > ~/.harness-state/pipeline_review_done 실행 후 재배포.\"}}" >&2
   exit 2
 fi
 

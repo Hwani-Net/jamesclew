@@ -47,8 +47,32 @@ PIPE_DONE=0
 PLAN_DONE=0
 [ -f "$STATE_DIR/plan_done" ] && PLAN_DONE=1
 
-# If all three done, allow
-[ "$PRD_DONE" -eq 1 ] && [ "$PIPE_DONE" -eq 1 ] && [ "$PLAN_DONE" -eq 1 ] && exit 0
+# If all three done, check ANNOTATE-APPROVED gate
+if [ "$PRD_DONE" -eq 1 ] && [ "$PIPE_DONE" -eq 1 ] && [ "$PLAN_DONE" -eq 1 ]; then
+  # Check for plan files in project root
+  PLAN_FILE=""
+  for candidate in "PLAN.md" "plan.md" docs/plan-*.md; do
+    # Expand glob
+    if [ -f "$candidate" ]; then
+      PLAN_FILE="$candidate"
+      break
+    fi
+  done
+  # Also check docs/ glob explicitly
+  if [ -z "$PLAN_FILE" ]; then
+    PLAN_FILE=$(ls docs/plan-*.md 2>/dev/null | head -1)
+  fi
+
+  if [ -n "$PLAN_FILE" ]; then
+    # Plan file exists — check for ANNOTATE-APPROVED header
+    if ! grep -q "<!-- ANNOTATE-APPROVED" "$PLAN_FILE" 2>/dev/null; then
+      echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Plan not yet annotate-approved. Run /annotate-plan ${PLAN_FILE} first. Plan file found: ${PLAN_FILE}\"}}" >&2
+      exit 2
+    fi
+  fi
+  # No plan file found (low-complexity) or annotate-approved → allow
+  exit 0
+fi
 
 # Build blocking message
 MISSING=""

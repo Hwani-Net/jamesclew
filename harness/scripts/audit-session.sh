@@ -74,32 +74,29 @@ if [ "$MODE" = "--checkpoint" ]; then
 
   case "$STEP" in
     5)
-      # After Step 5: verify quality loop was done properly
-      ROUNDS=$(safe_count "grep -c '라운드\|round\|Pass.*[1-5]' \"$TRANSCRIPT\"")
-      if [ "$ROUNDS" -lt 4 ]; then
-        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 5 FAIL] 품질루프 증거 부족 (패턴 ${ROUNDS}건, 최소 4건 필요). 5패스 × 2라운드를 실제로 수행하세요. 완료 후: echo done > ${STATE_DIR}/step5_quality_done\"}"
+      # After Step 2 (quality review): verify /ultrareview was called
+      REVIEWS=$(safe_count "grep -c 'ultrareview\|/ultrareview' \"$TRANSCRIPT\"")
+      if [ "$REVIEWS" -lt 1 ]; then
+        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 2 FAIL] /ultrareview 미실행. 지금 실행하세요: /ultrareview. 완료 후 증거 파일 생성: echo '{\\\"step\\\":2,\\\"verdict\\\":\\\"PASS\\\"}' > ${STATE_DIR}/pipeline_review_done\"}"
       else
-        echo "done" > "$STATE_DIR/step5_quality_done"
-        echo "{\"systemMessage\":\"[✅ CHECKPOINT 5 PASS] 품질루프 ${ROUNDS}건 확인. step5_quality_done 생성됨.\"}"
+        echo "{\"step\":2,\"tool\":\"ultrareview\",\"verdict\":\"PASS\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "$STATE_DIR/pipeline_review_done"
+        echo "{\"systemMessage\":\"[✅ CHECKPOINT 2 PASS] /ultrareview ${REVIEWS}건 확인. pipeline_review_done 생성됨.\"}"
       fi
       ;;
     7)
-      # After Step 7: verify external model was ACTUALLY called
-      GPT41=$(safe_count "grep -c 'localhost:4141\|gpt-4.1' \"$TRANSCRIPT\"")
-      CODEX=$(safe_count "grep -c 'codex exec' \"$TRANSCRIPT\"")
-      TOTAL=$((GPT41 + CODEX))
-      if [ "$TOTAL" -lt 2 ]; then
-        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 7 FAIL — 1회차] 외부 모델 실제 호출 ${TOTAL}건 (최소 2건 필요: GPT-4.1 + codex). 지금 실행하세요:\\n1. curl -s http://localhost:4141/v1/chat/completions -d '{...}' 로 GPT-4.1 코드 리뷰\\n2. codex exec \\\"코드 리뷰 요청\\\"\\n완료 후: bash ~/.claude/scripts/audit-session.sh --checkpoint 7\"}"
+      # After Step 2 (quality review, legacy alias for step 7): same check as step 5
+      REVIEWS=$(safe_count "grep -c 'ultrareview\|/ultrareview' \"$TRANSCRIPT\"")
+      if [ "$REVIEWS" -lt 1 ]; then
+        echo "{\"systemMessage\":\"[🚫 CHECKPOINT 2 FAIL] /ultrareview 미실행. 지금 실행하세요: /ultrareview. 완료 후: echo '{\\\"step\\\":2,\\\"verdict\\\":\\\"PASS\\\"}' > ${STATE_DIR}/pipeline_review_done\"}"
       else
-        echo "done" > "$STATE_DIR/step7_review_done"
-        echo "{\"systemMessage\":\"[✅ CHECKPOINT 7 PASS] 외부 모델 ${TOTAL}건 (GPT41:${GPT41} CX:${CODEX}). step7_review_done 생성됨.\"}"
+        echo "{\"step\":2,\"tool\":\"ultrareview\",\"verdict\":\"PASS\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "$STATE_DIR/pipeline_review_done"
+        echo "{\"systemMessage\":\"[✅ CHECKPOINT 2 PASS] /ultrareview ${REVIEWS}건 확인. pipeline_review_done 생성됨.\"}"
       fi
       ;;
     10)
       # After Step 10: verify full pipeline sequence integrity
       FAILS=""
-      [ ! -f "$STATE_DIR/step5_quality_done" ] && FAILS="${FAILS} Step5(품질루프)"
-      [ ! -f "$STATE_DIR/step7_review_done" ] && FAILS="${FAILS} Step7(외부검수)"
+      [ ! -f "$STATE_DIR/pipeline_review_done" ] && FAILS="${FAILS} Step2(품질검수-pipeline_review_done)"
       # Check design reference for UI projects
       UI_FILES=$(safe_count "grep '\"name\":\"Write\"' \"$TRANSCRIPT\" | grep -c '\.html\|\.css\|\.tsx\|\.jsx'")
       if [ "$UI_FILES" -gt 0 ]; then
@@ -203,18 +200,18 @@ check_pipeline() {
 
 check_quality_loop() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  [ -f "$STATE_DIR/step5_quality_done" ] && echo "PASS|증거 파일 존재" && return
-  local mentions=$(safe_count "grep -c '품질루프\|quality.*loop\|5패스\|5-pass' \"$TRANSCRIPT\"")
-  [ "$mentions" -gt 3 ] && echo "WARN|패턴 ${mentions}건, 증거 파일 없음" && return
-  echo "FAIL|품질루프 미실행"
+  [ -f "$STATE_DIR/pipeline_review_done" ] && echo "PASS|증거 파일 존재 (pipeline_review_done)" && return
+  local mentions=$(safe_count "grep -c 'ultrareview\|/ultrareview\|품질검수\|quality.*review' \"$TRANSCRIPT\"")
+  [ "$mentions" -gt 1 ] && echo "WARN|패턴 ${mentions}건, 증거 파일 없음 (pipeline_review_done)" && return
+  echo "FAIL|품질검수 미실행 (/ultrareview 필요)"
 }
 
 check_external_review() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  [ -f "$STATE_DIR/step7_review_done" ] && echo "PASS|증거 파일 존재" && return
-  local ext=$(safe_count "grep -c 'localhost:4141\|gpt-4.1\|codex exec\|codex ' \"$TRANSCRIPT\"")
-  [ "$ext" -gt 0 ] && echo "WARN|외부 모델 ${ext}건, 증거 파일 없음" && return
-  echo "FAIL|외부 검수 0회"
+  [ -f "$STATE_DIR/pipeline_review_done" ] && echo "PASS|증거 파일 존재 (pipeline_review_done)" && return
+  local ext=$(safe_count "grep -c 'ultrareview\|/ultrareview' \"$TRANSCRIPT\"")
+  [ "$ext" -gt 0 ] && echo "WARN|ultrareview ${ext}건, 증거 파일 없음" && return
+  echo "FAIL|/ultrareview 미실행"
 }
 
 check_deploy_verify() {

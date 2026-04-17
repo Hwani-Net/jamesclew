@@ -157,6 +157,11 @@
           },
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/regression-autotest.sh",
+            "timeout": 65000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/enforce-cross-review.sh",
             "timeout": 3000
           },
@@ -308,6 +313,11 @@
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/stop-dispatcher.sh",
+            "timeout": 30000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/session-learning.sh",
             "timeout": 30000
           }
         ]
