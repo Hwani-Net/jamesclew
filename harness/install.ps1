@@ -163,7 +163,9 @@ Copy-Item "$HarnessSrc\hooks\*" "$ClaudeHome\hooks\" -Recurse -Force
 Copy-Item "$HarnessSrc\scripts\*" "$ClaudeHome\scripts\" -Recurse -Force
 if (Test-Path "$HarnessSrc\agents")   { Copy-Item "$HarnessSrc\agents\*" "$ClaudeHome\agents\" -Recurse -Force }
 if (Test-Path "$HarnessSrc\commands") { Copy-Item "$HarnessSrc\commands\*" "$ClaudeHome\commands\" -Recurse -Force }
-if (Test-Path "$HarnessSrc\PITFALLS.md") { Copy-Item "$HarnessSrc\PITFALLS.md" "$ClaudeHome\PITFALLS.md" -Force }
+# PITFALLS.md — DEPRECATED (2026-04-17): gbrain으로 완전 마이그레이션됨.
+# 조회: gbrain query "키워드" / 기록: gbrain import D:/jamesclew/harness/pitfalls/
+# if (Test-Path "$HarnessSrc\commands\PITFALLS.md") { Copy-Item "$HarnessSrc\commands\PITFALLS.md" "$ClaudeHome\commands\PITFALLS.md" -Force }
 Write-Host "✅ Harness deployed"
 
 # ─── External tools ───

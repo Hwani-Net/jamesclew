@@ -6,6 +6,18 @@
 # Consume stdin (required by hook protocol)
 INPUT=$(cat)
 
+# ─── v6 (GAP-V5-N1 해결): agent-team 세션 감지 시 skip ───
+# /agent-team 스킬 사용 중이면 reviewer teammate가 /ultrareview 역할 대체함.
+# stale config 배제: 최근 60분 이내 수정된 config.json만 active로 간주 (외부검수 피드백 반영).
+if [ -d "$HOME/.claude/teams" ]; then
+  # mtime이 현재 기준 60분(3600초) 이내인 config.json만 카운트
+  RECENT_TEAMS=$(find "$HOME/.claude/teams" -maxdepth 2 -name "config.json" -mmin -60 2>/dev/null | wc -l)
+  if [ "$RECENT_TEAMS" -gt 0 ]; then
+    echo "[verify-deploy] active agent-team session ($RECENT_TEAMS recent team) → reviewer teammate covers review, skip /ultrareview gate" >&2
+    exit 0
+  fi
+fi
+
 # Determine hosting URL from .firebaserc (most reliable)
 HOSTING_URL=""
 for RC in ".firebaserc" "pipelines/blog/.firebaserc"; do

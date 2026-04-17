@@ -22,7 +22,7 @@
 7. loading="lazy" 사용 금지 (PITFALLS P-001)
 8. 배포 후 agent-browser로 전체 페이지 이미지 로드 확인 (naturalWidth > 0)
 9. **대표 이미지 적합성 검증** — Vision으로 "이 이미지가 해당 항목의 대표 사진으로 적절한가?" 확인. 제품이면 정면 제품샷, 장소면 외관/간판이 보여야 함. 복도/주방/배경 사진은 FAIL.
-10. **링크 유효성 주기적 검증** — 배포 시 전체 외부 링크(쿠팡, 다나와 등) HTTP 응답 확인. 404/301/만료 감지 시 PITFALLS 기록 + 자동 수정.
+10. **링크 유효성 주기적 검증** — 배포 시 전체 외부 링크(쿠팡, 다나와 등) HTTP 응답 확인. 404/301/만료 감지 시 gbrain pitfall 기록 + 자동 수정.
 
 ## Multi-Pass Review Protocol (콘텐츠 품질 강제)
 결과물(블로그 글, 디자인, 코드)이 대표님께 보고되기 전 다단계 검토를 거침.
@@ -60,7 +60,7 @@
 | 2 | 보안 | OWASP Top 10, 시크릿 노출 |
 | 3 | 성능 | 불필요한 반복, 메모리 누수, 번들 크기 |
 | 4 | UX/접근성 | 전 버튼·링크 동작 확인, 네비게이션 흐름, 폼 입력·에러 처리, 접근성(a11y) |
-| 5 | 사용자 페인포인트 | "이 화면에서 사용자가 막히는 곳은?" 관점, 불편사항 PITFALLS 기록 |
+| 5 | 사용자 페인포인트 | "이 화면에서 사용자가 막히는 곳은?" 관점, 불편사항 gbrain pitfall 기록 |
 
 **Pass별 추가 감지 항목 (#10, #16, #20 방지):**
 - **에러 억제 감지 (#10)**: git diff에서 try-catch 추가 + 기존 에러 핸들링 삭제, console.error→console.log 변경, throw 제거 패턴 발견 시 FAIL. "에러를 숨기지 말고 제대로 처리하라"
@@ -95,12 +95,17 @@
 - Write/Edit 후 git diff에서 삭제량이 추가량의 2배 이상 + 10줄 초과 → 경고 주입
 - 수정 요청 시 Edit(부분 수정) 우선. Write(전체 덮어쓰기)는 최소화
 - 과거 버전 복원(git checkout, 백업 복사) 시 반드시 현재 diff와 비교 후 진행
-- 회귀 감지 시 PITFALLS에 기록
+- 회귀 감지 시 gbrain에 pitfall 기록 (아래 절차 참조)
 
 ## PITFALLS Auto-Record (피드백 → 실수 기록 자동화) [hook 강제: user-prompt.ts]
-대표님 지적 → 에이전트 동의 시 PITFALLS.md에 P-NNN 형식으로 즉시 기록.
+대표님 지적 → 에이전트 동의 시 gbrain에 pitfall-NNN-{slug} 형식으로 즉시 기록.
 - user-prompt.ts가 피드백 패턴 감지 시 PITFALLS 기록 지시를 자동 주입
 - 기록 필수 항목: 증상, 원인, 해결, 재발 방지
+- **기록 절차**:
+  1. `gbrain query "증상키워드"` 로 유사 항목 확인
+  2. 신규면: `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 파일 작성
+  3. `gbrain import D:/jamesclew/harness/pitfalls/` 실행
+  (주의: `gbrain put --content` 는 multi-line 깨짐 — 절대 사용 금지)
 - 기록하지 않으면 forgot_record 패턴으로 재감지 → 반복 지적
 
 ## Parallel Agent Safety (#14)

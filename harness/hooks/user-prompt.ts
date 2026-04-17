@@ -298,7 +298,7 @@ async function main() {
     // === SEARCH-BEFORE-SOLVE: gbrain enforcement ===
     if (isStuck) {
       parts.push(
-        `[🔍 SEARCH-FIRST] 이전에 유사한 문제를 해결한 적이 있을 수 있습니다. 코드 수정 전에 반드시:\n1. gbrain query "관련 키워드" 로 먼저 검색 (과거 세션 지식, 디버깅 패턴)\n2. PITFALLS.md 에서 유사 증상 확인\n3. 옵시디언 세션 노트 검색\n같은 접근법 반복 변형 금지 — 새 정보 없으면 대표님께 보고.`,
+        `[🔍 SEARCH-FIRST] 이전에 유사한 문제를 해결한 적이 있을 수 있습니다. 코드 수정 전에 반드시:\n1. gbrain query "관련 키워드" 로 먼저 검색 (과거 세션 지식, 디버깅 패턴, PITFALLS)\n2. gbrain query "pitfall 증상키워드" 로 PITFALLS 항목 검색 (P-001~P-030 gbrain에 저장됨)\n3. 옵시디언 세션 노트 검색\n같은 접근법 반복 변형 금지 — 새 정보 없으면 대표님께 보고.`,
       );
     }
 
@@ -313,8 +313,11 @@ async function main() {
     if (isFeedback) {
       parts.push(`[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요. 선언만 하지 말고 즉시 실행하세요. 안 된다고 단정하기 전에 웹 검색으로 확인하세요.
 [📝 PITFALLS AUTO-RECORD] 이 지적이 타당하다고 동의하면:
-1. 먼저 grep으로 PITFALLS.md에서 유사 항목 확인 (같은 증상/원인이면 기존 항목에 "재발: {날짜}" 추가)
-2. 신규면 P-NNN 형식으로 즉시 기록 (증상/원인/해결/재발방지)
+1. \`gbrain query "증상키워드"\` 로 유사 항목 확인 (같은 증상/원인이면 gbrain 페이지에 "재발: {날짜}" 추가)
+2. 신규면:
+   a. \`D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md\` 파일 생성 (frontmatter + 본문)
+   b. \`gbrain import D:/jamesclew/harness/pitfalls/\` 실행
+   (주의: gbrain put --content 는 multi-line 깨짐 — 절대 사용 금지)
 기록하지 않으면 forgot_record 패턴으로 재감지됩니다.`);
     }
 

@@ -27,22 +27,10 @@ echo "$INPUT" | bash "$HOME/.claude/hooks/change-tracker.sh" 2>/dev/null
 # 5. Test manipulation guard
 echo "$INPUT" | bash "$HOME/.claude/hooks/test-manipulation-guard.sh" 2>/dev/null
 
-# 6. PITFALLS.md auto-sync (4-way: ~/.claude/ → harness source + obsidian + gbrain)
-if [ -n "$FILE" ]; then
-  case "$FILE" in
-    */PITFALLS.md|*/.claude/PITFALLS.md)
-      PITFALLS_SRC="$HOME/.claude/PITFALLS.md"
-      if [ -f "$PITFALLS_SRC" ]; then
-        # harness source
-        HARNESS_ROOT=$(git -C "$(dirname "$FILE")" rev-parse --show-toplevel 2>/dev/null)
-        [ -n "$HARNESS_ROOT" ] && [ -d "$HARNESS_ROOT/harness" ] && cp "$PITFALLS_SRC" "$HARNESS_ROOT/harness/PITFALLS.md" 2>/dev/null
-        # obsidian
-        VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
-        [ -d "$VAULT/01-jamesclaw/harness" ] && cp "$PITFALLS_SRC" "$VAULT/01-jamesclaw/harness/PITFALLS.md" 2>/dev/null
-      fi
-      ;;
-  esac
-fi
+# 6. PITFALLS.md auto-sync — DEPRECATED (2026-04-17)
+# PITFALLS.md는 gbrain으로 완전 마이그레이션됨.
+# 신규 pitfall 추가 시: gbrain put pitfall-NNN-{slug} --content "..."
+# 기존 파일: harness/archive/PITFALLS-2026-04-17.md (읽기 전용)
 
 # 7. Harness file change → auto-sync docs to Obsidian + warning
 if [ -n "$FILE" ]; then

@@ -51,9 +51,9 @@ if [ -d "$SCRIPT_DIR/commands" ]; then
   echo "✅ commands/ ($(ls "$SCRIPT_DIR/commands/"*.md | wc -l)개)"
 fi
 
-# PITFALLS (전역 실수 기록)
-cp "$SCRIPT_DIR/PITFALLS.md" "$TARGET/PITFALLS.md"
-echo "✅ PITFALLS.md (전역)"
+# PITFALLS — DEPRECATED (2026-04-17): gbrain으로 마이그레이션됨
+# 신규 pitfall: gbrain put pitfall-NNN-{slug} --content "..."
+# 아카이브: harness/archive/PITFALLS-2026-04-17.md (읽기 전용)
 
 # ADR (설계 결정 기록)
 if [ -d "$SCRIPT_DIR/../docs/adr" ]; then

@@ -20,22 +20,19 @@ mkdir -p "$STATE_DIR"
 
 SLUG="session-$(date +%Y-%m-%d-%H%M)"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-PITFALLS_FILE="$HOME/.claude/PITFALLS.md"
 LAST_LEARNING_FILE="$STATE_DIR/last_learning_slug"
 FEEDBACK_LOG="$STATE_DIR/session_feedback.log"
 REGRESSION_LOG="$STATE_DIR/regression-failed.log"
 
-# ── 1. PITFALLS 신규 기록 추출 ────────────────────────────────────────────
+# ── 1. PITFALLS 신규 기록 추출 (gbrain 기반) ─────────────────────────────
+# PITFALLS.md는 harness/archive/로 이동됨 (2026-04-17 마이그레이션)
+# 신규 pitfall은 gbrain put pitfall-NNN-{slug} 로 직접 저장됨
+# 세션 요약은 gbrain query "pitfall" 으로 검색 가능
 NEW_PITFALLS=""
-if [ -f "$PITFALLS_FILE" ]; then
-  LAST_SLUG=$(cat "$LAST_LEARNING_FILE" 2>/dev/null || echo "")
-  if [ -n "$LAST_SLUG" ]; then
-    # 마지막 저장 이후 추가된 P-NNN 항목만 추출 (grep으로 블록 단위 추출)
-    NEW_PITFALLS=$(grep -A5 "^## P-" "$PITFALLS_FILE" 2>/dev/null | tail -50 || true)
-  else
-    # 첫 실행: 최근 3개 항목만
-    NEW_PITFALLS=$(grep -A5 "^## P-" "$PITFALLS_FILE" 2>/dev/null | tail -30 || true)
-  fi
+# NEW_PITFALLS에는 오늘 추가된 pitfall gbrain 슬러그 목록을 기록
+if command -v gbrain >/dev/null 2>&1; then
+  TODAY=$(date +%Y-%m-%d)
+  NEW_PITFALLS=$(gbrain list --limit 10 2>/dev/null | grep "pitfall-" | grep "$TODAY" || true)
 fi
 
 # ── 2. 회귀 테스트 실패 수집 ──────────────────────────────────────────────
@@ -81,7 +78,7 @@ LEARNING_EOF
 
 # gbrain CLI로 저장 (서버 실행 중인 경우)
 if command -v gbrain >/dev/null 2>&1; then
-  echo "$CONTENT" | gbrain put "$SLUG" 2>/dev/null && {
+  gbrain put "$SLUG" --content "$CONTENT" 2>/dev/null && {
     echo "[session-learning] gbrain 저장 완료: $SLUG"
     echo "$SLUG" > "$LAST_LEARNING_FILE"
   } || echo "[session-learning] gbrain put 실패 — 로컬 백업으로 저장"

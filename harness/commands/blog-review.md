@@ -142,8 +142,9 @@ curl -sI "{original_url}" | head -1
 ### Phase 5: PITFALLS 규칙 체크
 
 ```bash
-# PITFALLS.md에서 콘텐츠 관련 규칙 추출
-cat ~/.claude/PITFALLS.md
+# gbrain에서 콘텐츠 관련 PITFALLS 검색
+gbrain query "blog content image lazy loading"
+gbrain query "pitfall 콘텐츠"
 ```
 각 P-NNN 규칙에 대해 초안 위반 여부 자동 검사:
 - P-001: loading="lazy" 사용 여부

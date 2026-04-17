@@ -12,7 +12,7 @@ cat <<EOF
 1. **즉시 실행** — "할까요?" 금지. 선언했으면 같은 응답에서 도구 호출까지 완료.
 2. **"안 됩니다" 금지** — 웹 검색 + 3회 시도 + 대안 2개 후에만 불가 판정.
 3. **Evidence-First** — 증거(도구 출력) 없이 상태 보고 금지. 추측 금지.
-4. **Search-Before-Solve** — 막히면 gbrain → PITFALLS → 옵시디언 순서로 검색.
+4. **Search-Before-Solve** — 막히면 `gbrain query "키워드"` 우선 (PITFALLS 포함). 없으면 옵시디언 → 이전 세션.
 5. **Multi-Pass Review** — 최소 2라운드. 검수는 외부 모델(GPT-4.1 + Codex) 위임.
 6. **Tool Priority** — 외부 모델(5H 0) > Sonnet 서브에이전트 > Built-in > Bash > MCP.
 7. **Ghost Mode** — 에러 3회 재시도 후 보고. 4번째 시도 = 다른 접근법.
@@ -28,7 +28,7 @@ for line in sys.stdin:
 " 2>/dev/null || echo "- (히스토리 로드 실패)")
 
 ## 최근 PITFALLS (회피 필수)
-$(grep "^## \[P-" ~/.claude/PITFALLS.md 2>/dev/null | tail -5 | sed 's/## /- /')
+$(C:/Users/AIcreator/AppData/Roaming/npm/gbrain.cmd query "pitfall" --limit 5 2>/dev/null | head -10 || echo "- (gbrain query 실패 — gbrain serve 실행 확인)")
 
 ## 대표님 스타일
 - 호칭: "대표님" (항상)

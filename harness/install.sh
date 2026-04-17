@@ -183,7 +183,9 @@ cp -r "$HARNESS_SRC/hooks/." "$CLAUDE_HOME/hooks/"
 cp -r "$HARNESS_SRC/scripts/." "$CLAUDE_HOME/scripts/"
 [ -d "$HARNESS_SRC/agents" ] && cp -r "$HARNESS_SRC/agents/." "$CLAUDE_HOME/agents/"
 [ -d "$HARNESS_SRC/commands" ] && cp -r "$HARNESS_SRC/commands/." "$CLAUDE_HOME/commands/"
-[ -f "$HARNESS_SRC/PITFALLS.md" ] && cp "$HARNESS_SRC/PITFALLS.md" "$CLAUDE_HOME/PITFALLS.md"
+# PITFALLS.md — DEPRECATED (2026-04-17): gbrain으로 완전 마이그레이션됨.
+# 조회: gbrain query "키워드" / 기록: gbrain import D:/jamesclew/harness/pitfalls/
+# [ -f "$HARNESS_SRC/commands/PITFALLS.md" ] && cp "$HARNESS_SRC/commands/PITFALLS.md" "$CLAUDE_HOME/commands/PITFALLS.md"
 
 chmod +x "$CLAUDE_HOME/hooks/"*.sh 2>/dev/null || true
 chmod +x "$CLAUDE_HOME/scripts/"*.sh 2>/dev/null || true

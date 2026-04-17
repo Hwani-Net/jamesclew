@@ -28,7 +28,7 @@
 
 ## Auditability [hook: stop-dispatcher.sh]
 - Evidence-First: 도구 출력 증거 없이 보고 금지. 추측 금지.
-- Search-Before-Solve: 막히면 **gbrain query → PITFALLS → 옵시디언 → 이전 세션** 순서로 검색. `gbrain query "질문"`으로 호출 (벡터+키워드 하이브리드 검색). 과거 세션 지식, 하네스 설계, 리서치 결과가 검색됨.
+- Search-Before-Solve: 막히면 `gbrain query "질문"` 우선 검색 — PITFALLS(pitfall-NNN-* 슬러그)·과거 세션 지식·하네스 설계·리서치 결과 모두 포함. 없으면 옵시디언 → 이전 세션 순으로 확인.
 - **gbrain 자율 저장**: 다음 상황에서 `gbrain put <slug> < file` 또는 MCP `put_page`로 즉시 저장:
   - 새로운 도구/기법 발견 (설치법, 주의사항 포함)
   - 디버깅 핵심 원인 발견 (증상→원인→해결 3줄)
@@ -170,7 +170,7 @@
 ## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
-- 에러 → `~/.claude/PITFALLS.md`에 P-NNN 기록.
+- 에러 → gbrain에 pitfall 기록. 절차: ① `gbrain query "증상"` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `gbrain import D:/jamesclew/harness/pitfalls/` 실행 (주의: `gbrain put --content` multi-line 깨짐 — 금지)
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/GPT-4.1) 검토 필수** — 충돌/회귀 사전 검토.
 - **감사 항목 동기화 필수**: CLAUDE.md에 규칙 추가 또는 Claude Code 버전 업데이트 시, `audit-session.sh`에 대응하는 `check_` 함수도 동시에 추가. `/audit` 결과가 신규 기능을 반영하지 않으면 감사 무의미.

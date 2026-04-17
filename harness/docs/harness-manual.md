@@ -60,7 +60,7 @@ bash harness/deploy.sh
 bash harness/scripts/reset-and-install.sh
 ```
 
-`deploy.sh`가 배포하는 항목: `CLAUDE.md`, `settings.json`, `rules/`, `hooks/`, `scripts/`, `agents/`, `commands/`, `PITFALLS.md`
+`deploy.sh`가 배포하는 항목: `CLAUDE.md`, `settings.json`, `rules/`, `hooks/`, `scripts/`, `agents/`, `commands/` (PITFALLS는 gbrain으로 마이그레이션됨 — `gbrain import D:/jamesclew/harness/pitfalls/`)
 
 ---
 
@@ -129,7 +129,7 @@ bash harness/scripts/reset-and-install.sh
 D:/jamesclew/harness/
 ├── CLAUDE.md              # 글로벌 에이전트 규칙
 ├── settings.json          # Claude Code 설정 (hooks, MCP, 권한)
-├── PITFALLS.md            # 반복 실수 기록 (P-001 ~ P-012)
+├── pitfalls/              # 반복 실수 기록 (pitfall-NNN-*.md) — gbrain import로 검색 가능
 ├── deploy.sh              # ~/.claude/ 배포
 ├── install.sh             # 새 머신 1-command 설치
 │
@@ -536,7 +536,7 @@ gbrain put <slug> < file.md
 mcp__gbrain__put_page(slug="...", content="...")
 ```
 
-**Search-Before-Solve 순서:** 막히면 gbrain query → PITFALLS → Obsidian → 이전 세션 순서로 검색 후 해결 시도.
+**Search-Before-Solve 순서:** 막히면 `gbrain query "키워드"` 우선 (PITFALLS pitfall-NNN-* 포함) → Obsidian → 이전 세션 순서로 검색 후 해결 시도.
 
 ---
 
@@ -856,20 +856,16 @@ claude mcp remove stitch-design-audit
 
 ### PITFALLS 주요 항목
 
-| 코드 | 증상 | 해결법 |
-|------|------|--------|
-| P-001 | headless 브라우저에서 이미지 미로드 | `loading="lazy"` 전체 제거 |
-| P-002 | 쿠팡 이미지에 UI 오버레이 캡처됨 | og:image CDN URL로 800x800 직접 다운로드 |
-| P-003 | 쿠팡 제품 ID가 다른 모델을 가리킴 | Opus+Sonnet 교차 Vision 검증 |
-| P-004 | Firestore ↔ 로컬 JSON 불일치 | JSON 수정 후 `createPost()`로 Firestore 동기화 필수 |
-| P-005 | enforce-execution.sh 완료 보고 오탐 | 패턴을 미래형("~하겠습니다")만 감지하도록 변경 |
-| P-006 | agent-browser 기본 모드로 쿠팡 접근 불가 | `launchPersistentContext` + `--disable-blink-features=AutomationControlled` |
-| P-007 | compact 후 세션 저장하면 의미 없음 | compact 전(60-65%)에 `/저장` 먼저 실행 |
-| P-008 | Context % 확인 불가라고 오보고 | `user-prompt.ts`의 `context_pct` 파일 참조 |
-| P-009 | 5H/7D Usage 캐시 stale 미감지 | usage 보고 시 `resets_at` 현재 시각 비교 필수 |
-| P-010 | MCP 끊김 시 재연결 없이 우회 | ① remove+add 재연결 ② invoke 재시도 ③ curl 직접 (최후) |
-| P-011 | crossReview 텍스트 3000자 제한으로 글 잘림 | 5000자로 확대 |
-| P-012 | 외부 모델 로테이션 규칙만 존재, 구현 없음 | `evaluator.sh`에 5단계 자동 로테이션 (codex→copilot_gpt→openrouter_free→gemma4_local→codex_backoff) |
+> **2026-04-17 gbrain 마이그레이션 완료**: P-001~P-039 전체 gbrain 저장됨.
+> 조회: `gbrain query "증상키워드"` / 등록: `gbrain import D:/jamesclew/harness/pitfalls/`
+
+| 코드 | 증상 | gbrain 슬러그 |
+|------|------|---------------|
+| P-001 | headless 브라우저에서 이미지 미로드 | `pitfall-001-lazy-loading` |
+| P-002 | 쿠팡 이미지에 UI 오버레이 캡처됨 | `pitfall-002-coupang-image-overlay` |
+| P-007 | compact 후 세션 저장하면 의미 없음 | `pitfall-007-compact-save-timing` |
+| P-026 | bypassPermissions으로도 harness hook 우회 불가 | `pitfall-026-bypass-permissions-hook` |
+| 전체 | — | `gbrain query "pitfall"` |
 
 ### 에러 유형별 대응
 

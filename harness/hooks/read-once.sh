@@ -16,14 +16,20 @@ if [ -z "$FILE" ]; then
   exit 0
 fi
 
-# Check if already read this session
-if grep -qF "$FILE" "$READ_LOG" 2>/dev/null; then
-  MSG="[READ-ONCE] 이 파일은 이미 읽었습니다: $FILE — 서브에이전트 요약을 참조하거나 메모리에서 직접 사용하세요. 재읽기는 토큰을 낭비합니다."
-  MSG_ESC=$(echo "$MSG" | sed 's/"/\\"/g')
-  echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"$MSG_ESC\"}}"
-else
-  # Record first read
-  echo "$FILE" >> "$READ_LOG"
+# Log format: "<epoch>|<file>"
+NOW=$(date +%s)
+WINDOW=300  # 5분 이내 재읽기만 경고
+
+LAST_TS=$(grep -F "|$FILE" "$READ_LOG" 2>/dev/null | tail -1 | cut -d'|' -f1)
+if [ -n "$LAST_TS" ]; then
+  DIFF=$((NOW - LAST_TS))
+  if [ "$DIFF" -lt "$WINDOW" ]; then
+    MSG="[READ-ONCE] 최근 5분 내 동일 파일 재읽기: $FILE — 메모리 참조 권장."
+    MSG_ESC=$(echo "$MSG" | sed 's/"/\\"/g')
+    echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"$MSG_ESC\"}}"
+  fi
 fi
+
+echo "$NOW|$FILE" >> "$READ_LOG"
 
 exit 0

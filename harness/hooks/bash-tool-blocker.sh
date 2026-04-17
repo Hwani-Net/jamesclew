@@ -24,10 +24,11 @@ case "$FIRST" in
     fi
     ;;
   ls)
-    if ! echo "$CMD" | grep -qE '\||>|<'; then
-      BLOCK_MSG="❌ 'ls'는 Glob 도구를 사용하세요. 패턴 매칭과 정렬이 자동. 단, 'ls -la' 권한 확인은 예외 허용."
-      # Exception: ls -l for permissions
-      echo "$CMD" | grep -qE 'ls[[:space:]]+-l' && BLOCK_MSG=""
+    # ls는 대부분 케이스 허용. 순수 `ls` (인자 없음)만 차단.
+    # 허용: ls -l*, ls <path>, ls *.ext, ls <dir>/*, pipe/redirect
+    LS_ARGS=$(echo "$CMD" | sed -E 's/^[[:space:]]*ls[[:space:]]*//' | awk '{$1=$1; print}')
+    if [ -z "$LS_ARGS" ]; then
+      BLOCK_MSG="❌ 인자 없는 'ls'는 Glob('**/*')을 사용하세요. ls <path>, ls *.ext는 허용."
     fi
     ;;
   grep|rg)
