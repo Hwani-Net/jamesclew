@@ -35,9 +35,47 @@ except:
 " "$1" 2>/dev/null
 }
 
-# ─── Usage check with caching (5min TTL) ───
+# ─── Save last known usage to persistent cache (v2.1.116 fallback) ───
+save_last_usage() {
+  local FIVE="$1" SEVEN="$2"
+  local NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date +%Y-%m-%dT%H:%M:%SZ)
+  local LU_PATH="$STATE_DIR/last_usage.json"
+  # Use shell-native write to avoid Windows path issues in python3
+  python3 - "$FIVE" "$SEVEN" "$NOW" "$LU_PATH" 2>/dev/null <<'PYEOF'
+import json, sys
+data = {'five': sys.argv[1], 'seven': sys.argv[2], 'saved_at': sys.argv[3]}
+try:
+    open(sys.argv[4], 'w').write(json.dumps(data))
+except Exception as e:
+    import sys as s; s.stderr.write(str(e)+'\n')
+PYEOF
+}
+
+# ─── Load last known usage with age label (v2.1.116 fallback) ───
+load_last_usage() {
+  local LU="$STATE_DIR/last_usage.json"
+  [ -f "$LU" ] || { echo "?|?|"; return; }
+  python3 - "$LU" 2>/dev/null <<'PYEOF'
+import json, datetime, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    saved = d.get('saved_at','')
+    age = ''
+    if saved:
+        try:
+            t = datetime.datetime.fromisoformat(saved.replace('Z','+00:00'))
+            mins = int((datetime.datetime.now(datetime.timezone.utc) - t).total_seconds() / 60)
+            age = '~{}분전'.format(mins) if mins < 120 else '~{}시간전'.format(mins // 60)
+        except: pass
+    print('{}|{}|{}'.format(d.get('five','?'), d.get('seven','?'), age))
+except:
+    print('?|?|')
+PYEOF
+}
+
+# ─── Usage check with caching (5min TTL) + v2.1.116 fallback ───
 get_usage() {
-  # Read from statusline's JSON cache (no separate API call)
+  # PRIMARY: statusline's JSON cache written by Claude Code's rate-limit-resilient Settings Usage tab
   CACHE_FILE="/tmp/.claude_usage_cache"
 
   if [ -f "$CACHE_FILE" ]; then
@@ -46,18 +84,53 @@ get_usage() {
     if [ -n "$FIVE" ] && [ -n "$SEVEN" ]; then
       FIVE_INT=$(printf "%.0f" "$FIVE" 2>/dev/null || echo "?")
       SEVEN_INT=$(printf "%.0f" "$SEVEN" 2>/dev/null || echo "?")
+      # Persist for future fallback
+      save_last_usage "$FIVE_INT" "$SEVEN_INT"
+      # Also update next-reset.json from primary cache if available
+      FIVE_RESET=$(jq -r '.five_hour.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
+      SEVEN_RESET=$(jq -r '.seven_day.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
+      if [ -n "$FIVE_RESET" ] && [ -n "$SEVEN_RESET" ]; then
+        python3 -c "
+import json, sys
+existing = {}
+try: existing = json.load(open('$STATE_DIR/next-reset.json'))
+except: pass
+existing.setdefault('five_hour', {})['resets_at'] = sys.argv[1]
+existing.setdefault('seven_day', {})['resets_at'] = sys.argv[2]
+open('$STATE_DIR/next-reset.json', 'w').write(json.dumps(existing, indent=2))
+" "$FIVE_RESET" "$SEVEN_RESET" 2>/dev/null
+      fi
       echo "${FIVE_INT}|${SEVEN_INT}"
       return
     fi
   fi
+
+  # SECONDARY FALLBACK (v2.1.116): ~/.harness-state/last_usage.json — last successful read
+  FALLBACK=$(load_last_usage)
+  FALLBACK_FIVE="${FALLBACK%%|*}"
+  FALLBACK_REST="${FALLBACK#*|}"
+  FALLBACK_SEVEN="${FALLBACK_REST%%|*}"
+  FALLBACK_AGE="${FALLBACK_REST##*|}"
+  if [ -n "$FALLBACK_FIVE" ] && [ "$FALLBACK_FIVE" != "?" ]; then
+    # Return with age tag so fmt_usage can show staleness
+    echo "${FALLBACK_FIVE}|${FALLBACK_SEVEN}|stale:${FALLBACK_AGE}"
+    return
+  fi
+
   echo "?|?"
 }
 
-# ─── Parse usage result ───
+# ─── Parse usage result (supports optional stale:AGE 3rd field) ───
 parse_usage() {
   local USAGE="$1"
   FIVE="${USAGE%%|*}"
-  SEVEN="${USAGE##*|}"
+  local REST="${USAGE#*|}"
+  SEVEN="${REST%%|*}"
+  USAGE_STALE=""
+  # Extract stale tag if present (v2.1.116 fallback)
+  if [[ "$REST" == *"|stale:"* ]]; then
+    USAGE_STALE="${REST##*|stale:}"
+  fi
 }
 
 # ─── Usage threshold check (10% increments) ───
@@ -190,7 +263,7 @@ except Exception:
 " "$ISO" 2>/dev/null
 }
 
-# ─── Format usage string (with KST reset times) ───
+# ─── Format usage string (with KST reset times, v2.1.116 stale fallback) ───
 fmt_usage() {
   local USAGE="$1"
   parse_usage "$USAGE"
@@ -200,12 +273,17 @@ fmt_usage() {
     SEVEN_RESET=$(fmt_kst "$(jq -r '.seven_day.resets_at // empty' "$STATE_DIR/next-reset.json" 2>/dev/null)")
   fi
   if [ "$FIVE" = "?" ]; then
+    # LAST RESORT: no cache at all
     echo "📊 Usage: 확인 불가 (API rate limited)"
   else
     local LINE="📊 5H: ${FIVE}%"
     [ -n "$FIVE_RESET" ] && LINE="$LINE (리셋 ${FIVE_RESET})"
     LINE="$LINE | 7D: ${SEVEN}%"
     [ -n "$SEVEN_RESET" ] && LINE="$LINE (리셋 ${SEVEN_RESET})"
+    # v2.1.116 fallback: mark stale data so user knows it's cached
+    if [ -n "$USAGE_STALE" ]; then
+      LINE="$LINE [캐시 ${USAGE_STALE}]"
+    fi
     echo "$LINE"
   fi
 }

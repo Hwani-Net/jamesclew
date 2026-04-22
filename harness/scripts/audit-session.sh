@@ -14,8 +14,8 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 33개 (2026-04-15)
-# 마지막 업데이트: 2026-04-15 (check_precompact_block~check_model_sonnet_explicit 추가 — TODO 6개 구현)
+# 현재 체크 수: 35개 (2026-04-18)
+# 마지막 업데이트: 2026-04-18 (check_vision_dual_pass, check_sonnet_vision_delegation 추가 — Vision 라우팅 규칙 감사)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -51,9 +51,11 @@
 #  31 check_version_manual_sync — 버전 업데이트 시 harness-manual.md 동시 수정
 #  32 check_design_review_vision — design-review Vision 호출 (Opus Vision)
 #  33 check_model_sonnet_explicit — Agent() 호출 시 model: sonnet 명시 여부
+#  34 check_vision_dual_pass       — mcp__expect__screenshot 이중 패스 (snapshot→screenshot)
+#  35 check_sonnet_vision_delegation — 이미지 Read 시 Opus Vision 위임 여부
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# (없음 — 모든 TODO 구현 완료 2026-04-15)
+# (없음 — 모든 TODO 구현 완료 2026-04-18)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -564,6 +566,25 @@ check_model_sonnet_explicit() {
   fi
 }
 
+check_vision_dual_pass() {
+  [ -z "$TRANSCRIPT" ] && echo "N/A|트랜스크립트 없음" && return
+  local screenshot_calls=$(safe_count "grep -c 'mcp__expect__screenshot' \"$TRANSCRIPT\"")
+  [ "$screenshot_calls" -eq 0 ] && echo "N/A|screenshot 미사용" && return
+  local snapshot_calls=$(safe_count "grep -c '\"mode\":\"snapshot\"\\|\"mode\":\"annotated\"' \"$TRANSCRIPT\"")
+  [ "$snapshot_calls" -ge "$screenshot_calls" ] && echo "PASS|snapshot ${snapshot_calls}건, screenshot ${screenshot_calls}건" && return
+  [ "$snapshot_calls" -gt 0 ] && echo "WARN|screenshot ${screenshot_calls}건, snapshot ${snapshot_calls}건 (이중 패스 불완전)" && return
+  echo "FAIL|screenshot ${screenshot_calls}건, snapshot 0건 — ARIA 1차 패스 누락"
+}
+
+check_sonnet_vision_delegation() {
+  [ -z "$TRANSCRIPT" ] && echo "N/A|트랜스크립트 없음" && return
+  local img_reads=$(safe_count "grep '\"name\":\"Read\"' \"$TRANSCRIPT\" | grep -cE '\\.png|\\.jpg|\\.jpeg|\\.webp|screenshot'")
+  [ "$img_reads" -eq 0 ] && echo "N/A|이미지 Read 없음" && return
+  local delegation=$(safe_count "grep -cE 'SendMessage.*Vision|Opus.*Vision|Vision.*Opus|vision.*위임' \"$TRANSCRIPT\"")
+  [ "$delegation" -gt 0 ] && echo "PASS|이미지 Read ${img_reads}건, 위임 ${delegation}건" && return
+  echo "WARN|이미지 Read ${img_reads}건, Opus 위임 0건 — Sonnet Vision 직접 분석 가능성"
+}
+
 # ─── Run all checks below ───
 check_design() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
@@ -616,11 +637,13 @@ R30=$(check_5h_emergency)
 R31=$(check_version_manual_sync)
 R32=$(check_design_review_vision)
 R33=$(check_model_sonnet_explicit)
+R34=$(check_vision_dual_pass)
+R35=$(check_sonnet_vision_delegation)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35")
 
-TOTAL_CHECKS=33
+TOTAL_CHECKS=35
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0

@@ -3,6 +3,8 @@
 자율 실행 에이전트 "JamesClaw"의 하네스 (rules + hooks + commands + scripts).
 Anthropic Harness Ablation 연구(2026-04) 기반 Planner-Generator-Evaluator 3-에이전트 구조.
 
+> **상세 사용설명서**: [docs/index.md](./docs/index.md) — 설치, 규칙, 훅, 스킬, 라우팅, PITFALL 레퍼런스를 Diátaxis 4분면으로 정리한 풀 문서입니다.
+
 ## 핵심 철학
 
 - **Build to Delete**: 모델이 강해지면 하네스 요소 제거 (ablation 기반)

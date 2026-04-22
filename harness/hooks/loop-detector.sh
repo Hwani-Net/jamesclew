@@ -27,6 +27,20 @@ if [ "$TOOL" = "Bash" ]; then
   case "$TOOL_INPUT" in
     *"deploy.sh"*|*"git status"*|*"git add"*|*"git diff"*|*"claude mcp list"*) exit 0 ;;
   esac
+  # v2.1.116: gh rate-limit detection → inject back-off warning
+  TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_response // .tool_output // empty' 2>/dev/null | head -c 500)
+  if echo "$TOOL_INPUT" | grep -qE '^(gh|timeout[^|]*gh) '; then
+    if echo "$TOOL_OUTPUT" | grep -qiE 'rate limit|API rate|429|secondary rate'; then
+      GH_BACKOFF_FILE="$STATE_DIR/gh_backoff_ts"
+      LAST_BACKOFF=$(cat "$GH_BACKOFF_FILE" 2>/dev/null || echo 0)
+      NOW=$(date +%s)
+      if [ $((NOW - LAST_BACKOFF)) -gt 60 ]; then
+        echo "$NOW" > "$GH_BACKOFF_FILE"
+        echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"⏳ GH RATE-LIMIT: gh 명령이 GitHub API rate limit에 걸렸습니다. 지수 백오프 필수 (5→15→45초). 같은 명령 즉시 재시도 금지.\"}}"
+        exit 0
+      fi
+    fi
+  fi
 else
   TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // {} | tostring' 2>/dev/null | head -c 200)
 fi

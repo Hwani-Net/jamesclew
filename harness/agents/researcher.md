@@ -11,6 +11,15 @@ tools:
   - mcp__tavily__tavily_search
   - mcp__perplexity__perplexity_search
 model: sonnet
+hooks:
+  PreToolUse:
+    - matcher: "mcp__tavily__.*"
+      command: "bash $HOME/.claude/hooks/tavily-guardrail.sh"
+    - matcher: "mcp__perplexity__.*|mcp__tavily__.*"
+      command: "bash $HOME/.claude/hooks/cost-tracker.sh warn-expensive"
+  PostToolUse:
+    - matcher: "mcp__perplexity__.*|mcp__tavily__.*"
+      command: "bash $HOME/.claude/hooks/wiki-raw-save.sh"
 ---
 
 You are a research specialist for the JamesClaw agent system.
