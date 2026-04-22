@@ -91,9 +91,116 @@ DESIGN REFERENCE — MotionSites Premium Hero Style:
 
 ---
 
+## 실제 추출된 무료 프롬프트 (2026-04-18, 39개 중 핵심 4개)
+
+### [1] AI Automation Hero — AI/SaaS 대표 패턴 (AgentLens 직접 참조)
+
+```
+Create a full-screen hero section with the following exact specifications:
+
+Layout & Structure:
+- Full viewport height (h-screen), full width, relative positioning with overflow-hidden
+- Background color: #070612 (dark purple-black)
+- Content aligned to the left side, vertically centered
+- Max-width container (max-w-7xl) with horizontal padding (px-6 lg:px-12)
+
+Badge (top element):
+- Pill-shaped badge with rounded-full, border border-white/20, backdrop-blur-sm
+- Contains a Sparkles icon (lucide-react, w-3 h-3, text-white/80)
+- Text: "New AI Automation Ally" in text-sm font-medium text-white/80
+- Animated with blur-in effect (0.6s duration, no delay)
+
+Main Heading:
+- Three lines: "Unlock the Power of AI" / "for Your" / "Business." (serif italic)
+- Font sizes: text-4xl md:text-5xl lg:text-6xl, font-medium, leading-tight lg:leading-[1.2]
+- Each word animates with staggered split-text (0.08s delay, y:40->0, opacity:0->1)
+
+Subtitle:
+- text-white/80, text-lg, max-w-xl, leading-relaxed
+
+CTA Buttons:
+- Primary: bg-foreground (white), text-background (dark), rounded-full px-5 py-3 + ArrowRight icon
+- Secondary: bg-white/20 backdrop-blur-sm, rounded-full px-8 py-3, white text
+
+Z-index layering: Video z-0, Bottom gradient z-10, Content z-20
+```
+
+**AgentLens 적용**: Badge 텍스트 → "✦ New: Real-time failure pattern detection", 배경 → `#050508`, Primary CTA → Amber `#F59E0B`
+
+---
+
+### [2] Nexora Automation — SaaS with Floating Dashboard Mockup
+
+```
+Fonts: Instrument Serif (display, italic) + Inter (body)
+Background: #050508 (pure dark), fullscreen video loop
+Badge: "Now with GPT-5 support ✨" — rounded-full, border-border, bg-background, px-4 py-1.5
+Headline: "The Future of Smarter Automation" — text-[5rem], leading-[0.95], the word "Smarter" in Instrument Serif italic
+
+Dashboard Preview (frosted glass wrapper):
+  background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.5);
+  boxShadow: 0 25px 80px -12px rgba(0,0,0,0.08);
+  mt-8, max-w-5xl, rounded-2xl, overflow-hidden, p-4
+  Contains: Top bar (logo+search+CTA), Sidebar (nav items), Main content (KPI cards+chart+table)
+
+Animations: Framer Motion fade-up from y:16, staggered 0.1s per element
+```
+
+**AgentLens 적용**: Dashboard mockup → AgentLens Overview Dashboard (Heatmap + KPI cards), 배경 → `#050508` + 세로줄 텍스처
+
+---
+
+### [3] Synapse Dark Hero — Pure Black with Glass Nav
+
+```
+Background: solid black #000000
+Navbar: Fixed, blurred glass effect (backdrop-blur)
+Logo: "Synapse" font-medium tracking-tight white
+Hero Badges: Row of 3 glass-effect badges "Integrated with" + Icon
+Headline: "Where Innovation Meets Execution" (~80px, tight tracking, fade-in)
+Buttons:
+  - "Get Started for Free" (solid black bg, white border)
+  - "Let's Get Connected" (transparent glass style)
+Logo Marquee: grayscale 40% opacity logos at bottom
+```
+
+---
+
+### [4] Neuralyn — Analytics SaaS Dark Theme
+
+```
+Background: 0 0% 0% (pure black)
+Fonts: Inter (400-700, body/UI) + Instrument Serif (400 italic, accent word)
+Tag pill: liquid-glass styled, "New" badge (white bg, black text) + "Say Hello to Corewave v3.2"
+Title: text-5xl md:text-7xl, tracking-[-2px], font-medium, leading-tight
+  "Your Insights." / "One Clear Overview." — "Overview" in Instrument Serif italic
+Navbar: px-8 md:px-28, "Sign In" = solid white bg (bg-foreground), black text, rounded-lg
+```
+
+---
+
+## Stitch 프롬프트 삽입 템플릿 (업데이트됨)
+
+새 화면 생성 시 다음 블록을 프롬프트 상단에 포함:
+
+```
+DESIGN REFERENCE — MotionSites Premium Hero Style (from extracted free prompts):
+- Background: #050508 (dark) with repeating-linear-gradient vertical line texture (40px pitch, rgba(255,255,255,0.03))
+- Typography: text-5xl→text-7xl, font-medium, Instrument Serif italic for accent word, Inter for body
+- Pill badge: border-white/20, backdrop-blur-sm, Sparkles icon, "✦ New: Real-time failure pattern detection"
+- Content layout: LEFT-aligned, vertically centered, max-w-7xl container
+- CTA pair: Amber filled (#F59E0B, rounded-full, dark text) + glass ghost (bg-white/10, border-white/20)
+- Dashboard mockup: frosted glass wrapper (rgba(255,255,255,0.05), border rgba(255,255,255,0.1)), floating below hero
+- Bottom aurora: amber/orange glow wave at bottom edge (0 0 120px 40px rgba(245,158,11,0.15))
+- NO purple gradients, NO blur circles, NO indigo/teal accent colors
+- Logo marquee: grayscale 0.4 opacity, "Trusted by teams at..." text above
+```
+
+---
+
 ## 레퍼런스 이미지 경로
 로컬 캐시: `C:/Users/AIcreator/AppData/Local/Temp/motionsites/`
 - `finlytic-ai.png` — purple globe + dashboard mockup
-- `ai-automation.png` — black vertical lines, minimal
-- `nexora.png` — nature bg + app mockup
+- `ai-automation.png` — black vertical lines, minimal (AI Automation Hero 원본)
+- `nexora.png` — nature bg + app mockup (Nexora Automation 원본)
 - `grow-ai.png` — deep black + blue aurora wave

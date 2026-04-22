@@ -72,6 +72,27 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 **Step 3: 시각 검수 (UI 프로젝트만, 체크포인트)**
 - UI가 아닌 프로젝트는 스킵
 
+- **3-0. drift-guard 토큰 검사 (P-054 재발 방지, 2026-04-21 도입)**
+  ```bash
+  if [ -f .drift-guard.json ]; then
+    npx drift-guard check 2>&1 | tee ~/.harness-state/pipeline_drift_guard.log
+    DG_EXIT=${PIPESTATUS[0]}
+    if [ "$DG_EXIT" -ne 0 ]; then
+      # drift 감지 → Step 1 복귀 강제
+      echo '{"step":3,"drift_guard":"FAIL","exit":'$DG_EXIT'}' \
+        > ~/.harness-state/pipeline_visual_done.rejected
+      # 대응: (a) 의도된 변경이면 `npx drift-guard init --from <new-design.html>` 재생성
+      #       (b) 의도외 drift면 Step 1 코드 수정
+      exit 1
+    fi
+  else
+    echo "[drift-guard] snapshot 없음 — UI 프로젝트면 'npx drift-guard init --from design.html' 선행 권장"
+  fi
+  ```
+  - drift-guard는 **CSS 토큰 / DOM 구조** 단위 검출 (색상·폰트·spacing·nesting)
+  - Vision Rubric(아래)은 시각적 인상 검출 → 두 레이어 병행
+  - snapshot 부재 시 스킵(경고만), 존재하면 **실패 = Step 1 강제 복귀**
+
   ```
   # 1. 데스크톱 스크린샷
   mcp__expect__open(url: "<로컬 또는 스테이징 URL>")

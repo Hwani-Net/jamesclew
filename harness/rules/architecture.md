@@ -58,6 +58,10 @@ WordPress 사용하지 않음 — Firebase + SSG로 대체.
 | 이미지-제품 매칭 | Opus + Sonnet 서브에이전트 | Vision 정확도 최고 |
 | 이미지 자동 검증 (코드 내) | OpenAI gpt-4o-mini + Codex -i | API 호출 가능 |
 | 콘텐츠 autoFix | 라운드별 로테이션 | 같은 모델 반복 방지 |
+| **Vision (스크린샷 분석)** | **Opus 4.6 직접 Read** | Sonnet Vision 정확도 -20~30% |
+| **Stitch ↔ 라이브 비교** | Opus Vision (`/design-review`) | pixel-level 체크 |
+| **Computer Use 엘리먼트 식별** | ARIA snapshot 1차 → Opus Vision 2차 | 좌표 추정 오류 예방 |
+| **claude-in-chrome 인식률 ↑** | `read_page` → `get_screenshot` → Opus | 텍스트 우선, 애매하면 Vision |
 
 ## 에러 유형별 참고 지식 (강제 아님, 판단 재료)
 3회 재시도 원칙은 유지. 아래는 재시도 시 참고할 패턴.

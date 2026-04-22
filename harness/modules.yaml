@@ -71,6 +71,15 @@ modules:
     verify: "gbrain --version"
     cost: "free (local PGLite)"
 
+  drift_guard:
+    name: "drift-guard (Design Dictatorship)"
+    description: "Lock CSS tokens/DOM structure to prevent AI coding agents' design drift (Hwani-Net own package)"
+    install: "npm install -g @stayicon/drift-guard"
+    verify: "npx drift-guard --version"
+    cost: "free (zero-dependency CLI, 0 tokens — vs MCP 10k-50k)"
+    notes: "Triggers: /pipeline-run Step 3 + verify-deploy.sh 전 check, mcp__stitch 후 init 유도. Stitch export는 npx drift-guard init --from design.html"
+    pitfall_ref: "P-054 stitch-design-to-code-gap"
+
   # ─── Harness Add-ons ───
   obsidian_sync:
     name: "Obsidian Vault Sync"

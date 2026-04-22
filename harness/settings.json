@@ -75,6 +75,26 @@
         ]
       },
       {
+        "matcher": "mcp__expect__screenshot",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/vision-routing-guard.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__claude-in-chrome__get_screenshot|mcp__claude-in-chrome__computer|mcp__claude-in-chrome__find|mcp__claude-in-chrome__read_page|mcp__claude-in-chrome__tabs_context_mcp",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/chrome-read-page-guard.sh",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -188,6 +208,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/read-once.sh",
             "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/sonnet-vision-delegate-guard.sh",
+            "timeout": 3000
           }
         ]
       },
@@ -227,6 +252,16 @@
           {
             "type": "command",
             "command": "bash $HOME/.claude/hooks/wiki-raw-save.sh",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__stitch__fetch_screen_code|mcp__stitch__generate_screen_from_text|mcp__stitch__edit_screens|mcp__stitch__apply_design_system",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/stitch-drift-guard.sh",
             "timeout": 5000
           }
         ]

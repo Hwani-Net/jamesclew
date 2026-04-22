@@ -63,6 +63,26 @@ if [ -n "$MISSING_STEPS" ]; then
   exit 2
 fi
 
+# ─── drift-guard 체크 (P-054 재발 방지, v2.1.116 시점 도입) ───
+# 조건: 프로젝트에 .drift-guard.json snapshot이 있으면 check 필수
+# UI 프로젝트가 아니면(snapshot 없음) 자동 스킵
+DRIFT_SNAPSHOT=""
+for D in "." "./pipelines/blog"; do
+  if [ -f "$D/.drift-guard.json" ]; then DRIFT_SNAPSHOT="$D/.drift-guard.json"; break; fi
+done
+if [ -n "$DRIFT_SNAPSHOT" ]; then
+  DRIFT_LOG="$STATE_DIR/drift_guard_last.log"
+  (cd "$(dirname "$DRIFT_SNAPSHOT")" && npx --no-install drift-guard check 2>&1) > "$DRIFT_LOG"
+  DRIFT_EXIT=$?
+  if [ "$DRIFT_EXIT" -ne 0 ]; then
+    DRIFT_SUMMARY=$(tail -30 "$DRIFT_LOG" 2>/dev/null | tr '\n' ' ' | head -c 400)
+    echo "🚫 drift-guard FAIL: exit=$DRIFT_EXIT" >&2
+    echo "{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"[DRIFT BLOCK] 배포 차단 — drift-guard check 실패. P-054(stitch-design-to-code-gap) 재발 가능성. 상세: $DRIFT_SUMMARY. 수정 후 재배포 or 의도된 변경이면 'npx drift-guard init --from <new-design.html>'로 snapshot 갱신.\"}}" >&2
+    exit 2
+  fi
+  echo "[verify-deploy] drift-guard check PASS" >&2
+fi
+
 # ─── Sanity check: quick curl before handing off to expect MCP ───
 # Hook can block (exit 2) on hard failure; expect MCP handles deep verification
 QUICK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$HOSTING_URL/" 2>/dev/null)
