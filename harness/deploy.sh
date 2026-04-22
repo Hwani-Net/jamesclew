@@ -62,14 +62,18 @@ if [ -d "$SCRIPT_DIR/../docs/adr" ]; then
   echo "✅ docs/adr/"
 fi
 
-# Mirror commands + rules to Obsidian for reference
+# Mirror commands + rules + docs to Obsidian for reference
 VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
 if [ -d "$VAULT/01-jamesclaw/harness" ]; then
   mkdir -p "$VAULT/01-jamesclaw/harness/commands"
   mkdir -p "$VAULT/01-jamesclaw/harness/rules"
+  mkdir -p "$VAULT/01-jamesclaw/harness/docs"
   cp -u "$SCRIPT_DIR/commands/"*.md "$VAULT/01-jamesclaw/harness/commands/" 2>/dev/null
   cp -u "$SCRIPT_DIR/rules/"*.md "$VAULT/01-jamesclaw/harness/rules/" 2>/dev/null
-  echo "✅ commands/ + rules/ mirrored to Obsidian"
+  if [ -d "$SCRIPT_DIR/docs" ]; then
+    cp -ru "$SCRIPT_DIR/docs/"* "$VAULT/01-jamesclaw/harness/docs/" 2>/dev/null
+  fi
+  echo "✅ commands/ + rules/ + docs/ mirrored to Obsidian"
 fi
 
 echo ""

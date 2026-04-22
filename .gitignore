@@ -29,3 +29,16 @@ persona.yaml
 .DS_Store
 Thumbs.db
 .claude/settings.local.json
+
+# Harness backups (local, not versioned)
+harness-backup-*/
+
+# External projects / experiments (out of scope for main repo)
+VideoStudio/
+Wan2GP/
+experiments/
+ralph-test/
+
+# Nested repos (tracked separately)
+harness/tools/HydraTeams/
+harness/tools/ralph-claude-code/
