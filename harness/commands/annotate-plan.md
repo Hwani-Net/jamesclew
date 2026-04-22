@@ -7,7 +7,7 @@ allowed-tools: ["Read", "Edit", "Grep", "Bash"]
 # /annotate-plan — Research-Plan-**Annotate**-Implement 품질 게이트
 
 ## When to use
-`/plan`, `/deep-plan`, `/ultraplan` 산출물이 생성된 직후 **구현 시작 전** 필수 실행. 대표님이 플랜 문서에 라인별 이견·추가 요구·뉘앙스를 `<!-- 👉 ... -->` 형태로 주석 달면 에이전트가 이를 수집하여 플랜에 반영, 주석 제거 후 재제출. 정합성 수렴(주석 0개)까지 최대 6회 반복.
+`/plan` 또는 `/ultraplan` 산출물이 생성된 직후 **구현 시작 전** 필수 실행. 대표님이 플랜 문서에 라인별 이견·추가 요구·뉘앙스를 `<!-- 👉 ... -->` 형태로 주석 달면 에이전트가 이를 수집하여 플랜에 반영, 주석 제거 후 재제출. 정합성 수렴(주석 0개)까지 최대 6회 반복.
 
 ## Why this exists
 현재 JamesClaw 하네스는 자동 검수(pipeline-run, 외부 LLM 3종, ultrareview)는 강력하나 **인간 판단 주입 게이트**가 약함. 플랜 오차가 구현 단계에서야 드러나 재작업 비용 증가. Annotate 루프는 플랜 승인 **전** 인간 판단을 세밀히 주입하는 공식 경로.
@@ -68,8 +68,8 @@ allowed-tools: ["Read", "Edit", "Grep", "Bash"]
 ```
 
 ## Related
-- `/plan` — 중복잡도 플랜 작성
-- `/deep-plan` — 고복잡도 플랜 (Research → Interview → External LLM Review → TDD)
-- `/ultraplan` — 고복잡도 병렬 플랜 (3탐색+1비평)
-- `/pipeline-run` — 구현 후 11단계 품질 검증
+- `/plan` — 중복잡도 / 오프라인 플랜 (Claude 내장 Plan 모드, 로컬)
+- `/ultraplan` — 고복잡도 병렬 플랜 (클라우드 VM, 3탐색+1비평)
+- `/pipeline-run` — 구현 후 7단계 품질 검증
+- ⚠️ `/deep-plan` — **deprecated (2026-04-21)**. 실체 없음 확인. 대체: `/pipeline-install` + `/annotate-plan` + `/qa` 조합
 - Reference: [Boris Tane - Research/Plan/Annotate/Implement](https://boristane.com/blog/how-i-use-claude-code/)

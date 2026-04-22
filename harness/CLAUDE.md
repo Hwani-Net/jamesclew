@@ -41,9 +41,12 @@
   - 저장 형식: `harness/commands/{skill-name}.md` (YAML frontmatter + 절차 Markdown)
   - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
 - **위키 소스 자동 저장**: 세션 중 Perplexity/Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
-- **Claude Code 기능 참조**: 새 기능/도구 도입 전 반드시 (1) NotebookLM `notebook_query`로 공식 매뉴얼 조회 (2) `~/.claude/cache/changelog.md`에서 최신 릴리즈 확인. 추측으로 기능 존재 여부를 판단하지 않는다.
-  - NLM CLI: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` (Claude Code Official Docs)
-  - NLM 하네스: `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` (Agent Harness Blueprint)
+- **Claude Code 기능 참조 (우선순위 1→3, 2026-04-21 로컬 신뢰 소스 도입)**: 새 기능/도구 도입 전 **및 프로젝트 시작 시** 반드시 조회:
+  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.117 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
+  2. **Raw changelog**: `~/.claude/cache/changelog.md` (Claude Code가 업데이트마다 자동 갱신)
+  3. **NLM (보조, stale 가능)**: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` — v2.1.101 시점에 멈춘 상태. 로컬 매뉴얼과 불일치 시 **로컬 우선**
+  - 하네스 설계 조회: `~/.claude/docs/index.md` (로컬) 또는 NLM `"fc9fcf38-0a88-4e76-b5ec-6e381693a7ae"` (Harness Blueprint)
+  - 추측으로 기능 존재 여부를 판단하지 않는다.
 
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 **우선순위 공식**으로 정렬 실행
@@ -59,11 +62,17 @@
 
 ## Build Transition Rule [hook: enforce-build-transition.sh]
 - 빌드 요청 감지 시 바로 코딩 금지.
+- **0단계 (프로젝트 시작/전환 시 필수 사전 조회, 2026-04-21 신설)**:
+  1. 로컬 Claude Code 매뉴얼 Glance: `~/.claude/docs/claude-code-manual.md` (v2.1.116 기반). 최신 기능·제약·버전별 변경 확인
+  2. 하네스 개요: `~/.claude/docs/index.md` — 사용 가능한 hook/skill/command 파악
+  3. 도메인 PITFALL 검색: `gbrain query "<도메인 키워드>"` — 과거 실수 사전 회피
+  4. 확신 없으면 NLM 보조 조회 (v2.1.101 기준, 최신 불일치 시 로컬 우선)
 - 새 프로젝트: `/prd` → `/pipeline-install` → **복잡도별 plan 선택** → 코드.
-  - **고복잡도** (다수 서비스, DB, 인증 등): `/ultraplan` (클라우드 VM, 3탐색+1비평 에이전트 병렬, 브라우저 플랜 편집. GitHub 리포 필수)
-  - **고복잡도 (GitHub 없음)**: `/deep-plan @PRD.md` (Research→Interview→External LLM Review→TDD Plan)
-  - **중복잡도** (단일 앱, 여러 페이지): `/plan` (Claude 내장 Plan 모드)
+  - **고복잡도** (다수 서비스, DB, 인증 등): `/ultraplan` (클라우드 VM, 3탐색+1비평 에이전트 병렬, 브라우저 플랜 편집). v2.1.101+ 자동 클라우드 환경 생성
+    - 오프라인 / Claude Code on the web 접근 불가 시 fallback: `/plan`
+  - **중복잡도** (단일 앱, 여러 페이지): `/plan` (Claude 내장 Plan 모드, 로컬, 무료)
   - **저복잡도** (단일 파일, 유틸리티): 바로 코드 (판단 근거 명시)
+- ⚠️ **`/deep-plan` deprecated (2026-04-21)**: 실체 없음(하네스·내장 모두 미구현). Research/Interview/External LLM Review/TDD는 `/pipeline-install` + `/annotate-plan` + `/qa` 조합으로 대체 가능.
 - 대화 중 빌드 전환: `/plan` → 코드.
 - 복잡도 판단은 Opus가 PRD 내용 기반으로 자동 결정.
 - **플랜 승인 게이트**: plan 산출물은 `/annotate-plan <plan-file>`로 주석 루프(최대 6회) 수렴 후 구현 진입. 수렴 완료 시 플랜 상단에 `<!-- ANNOTATE-APPROVED: YYYY-MM-DD -->` 헤더 자동 삽입되어야 함. 헤더 없는 플랜으로 구현 시작 시 enforce-build-transition.sh가 차단.
@@ -97,6 +106,29 @@
 | 배포/빌드 | Sonnet(general-purpose) | — |
 | 설계 평가 | Codex + GPT-4.1 | 다수결 |
 | 벌크/반복 작업 | Gemma 4 로컬 | — |
+| **Vision 분석 (스크린샷/이미지)** | **Opus 4.6 (직접 Read)** | — (Sonnet Vision 금지) |
+
+### Vision 라우팅 규칙 (중요)
+Sonnet/GPT-4.1/opusplan 실행 중 이미지 분석이 필요하면 **반드시 Opus로 라우팅**. Sonnet Vision은 디테일 누락률이 20~30%로 Opus 대비 현저히 낮음.
+
+**적용 케이스**:
+- `/design-review` — Stitch 스크린샷 ↔ 라이브 pixel 비교 (이미 Opus 고정)
+- `/qa` — UI 버그 스크린샷 분석
+- 블로그 이미지-제품 매칭 (이미 Opus 고정)
+- Computer Use / claude-in-chrome 엘리먼트 식별 — 기존엔 스크린샷만으로 클릭 좌표 추정 → **Opus Vision 이중 패스로 인식률 ↑**
+
+**Sonnet teammate에서 Vision이 필요하면**:
+Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인 세션에 SendMessage("Vision 분석 요청: path=/tmp/screenshot.png") → Opus가 Read로 직접 이미지 분석 → 결과를 Sonnet에 반환.
+
+또는 Opus 메인 세션에서 `Read(image_path)`로 직접 처리.
+
+### Computer Use / Browser 자동화 Vision 이중 패스 (인식률 ↑)
+`claude-in-chrome`·`desktop-control`·`expect MCP`의 스크린샷 기반 클릭은 좌표 추정 오류 빈발. 2단계 전략:
+
+1. **1차 (저비용)**: ARIA snapshot (`mode: "snapshot"`) 또는 `annotated` 모드로 ref ID 확보 — 텍스트 기반 정확 매칭
+2. **2차 (1차 실패 시)**: `mode: "screenshot"` → Opus `Read(path)`로 Vision 분석 → 엘리먼트 좌표·상태 명시적 식별 → 재클릭
+
+`claude-in-chrome`도 동일: `read_page`(텍스트) → `get_screenshot` → Opus Vision 순.
 
 ### 용어 정의 (혼동 방지)
 | 용어 | 도구 | 설명 | 선택 기준 |
@@ -167,9 +199,10 @@
 5. 온디맨드 MCP: `npm search` → `claude mcp add` → 즉시 사용.
 6. 상세: rules/architecture.md
 
-## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh]
+## Quality Gates [hook: verify-deploy.sh, post-edit-dispatcher.sh, stitch-drift-guard.sh]
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
+- **drift-guard 통합 (2026-04-21, Hwani-Net/drift-guard)**: UI 프로젝트는 `npx drift-guard init --from design.html` → `npx drift-guard rules` → `npx drift-guard check`. `verify-deploy.sh`가 `.drift-guard.json` 감지 시 배포 전 check 실패면 **exit 2 차단**. `/pipeline-run` Step 3-0에서도 실행. Stitch 호출 후 `stitch-drift-guard.sh` hook이 init/check 유도. Vision(`/design-review`)과 토큰(drift-guard)은 별도 레이어로 병행. P-054 재발 방지.
 - 에러 → gbrain에 pitfall 기록. 절차: ① `gbrain query "증상"` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `gbrain import D:/jamesclew/harness/pitfalls/` 실행 (주의: `gbrain put --content` multi-line 깨짐 — 금지)
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/GPT-4.1) 검토 필수** — 충돌/회귀 사전 검토.
@@ -254,6 +287,109 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - Transcript 뷰: `[` (scrollback dump), `v` (editor 열기)
 - `/skills` 메뉴 토큰 수 정렬 (`t` 토글)
 - LSP diagnostics 순서 버그 fix (편집 직전 진단이 후에 나타나 모델 오판하던 문제)
+
+## v2.1.117 신규 기능 (2026-04-22)
+
+### Opus 4.7 컨텍스트 계산 버그 수정 (중대)
+- **기존 버그**: Claude Code가 Opus 4.7 세션의 컨텍스트를 200K 기준으로 계산 → `/context` 수치 과대 표시, autocompact 조기 발동.
+- **수정**: 네이티브 1M 컨텍스트 올바르게 인식.
+- **하네스 영향**: "Opus 세션 45% compact" 규칙의 실효 공간이 실제로 더 여유 있음. `telegram-notify.sh heartbeat` 수치 재검증 필요.
+
+### 기본 effort 상승
+- Pro/Max 구독자의 Opus 4.6 + Sonnet 4.6 기본 effort: `medium` → `high`.
+- 하네스 정책(effortLevel 고정 금지)과 정합. settings.json 변경 불필요.
+
+### Agent frontmatter `mcpServers` main-thread 지원
+- v2.1.116의 `hooks:` 확장에 이어, `mcpServers`도 `--agent` 플래그 main-thread 실행 시 로드됨.
+- `harness/agents/*.md`에 agent별 MCP 스코프 지정 가능 (예: researcher만 tavily 허용).
+
+### `/model` 선택 영구 지속
+- 재시작해도 유지. 프로젝트 pin과 다를 경우 startup header에 표시.
+- opusplan 고정 운용 시 재입장마다 재설정 불필요.
+
+### 기타 유용
+- **`/resume` 대용량 세션 summarize 옵션**: 40MB+ 세션 재읽기 전 선택적 요약.
+- **MCP 병렬 연결 기본화**: 로컬 + claude.ai MCP 동시 구성 시 startup 가속.
+- **`cleanupPeriodDays` 커버리지 확장**: `~/.claude/tasks/`, `shell-snapshots/`, `backups/` 포함.
+- **Windows `where.exe` 캐싱**: 서브프로세스 launch 속도 ↑.
+- **OpenTelemetry**: `user_prompt` 이벤트에 `command_name`/`command_source`, 비용/토큰 이벤트에 `effort` attribute 추가. 커스텀·MCP 커맨드명은 `OTEL_LOG_TOOL_DETAILS=1` 없으면 redact.
+- **Forked subagents 실험 기능**: `CLAUDE_CODE_FORK_SUBAGENT=1` 외부 빌드에서 활성 가능.
+
+### 수정된 버그 (영향도 중)
+- `WebFetch` 대용량 HTML hang → pre-truncation.
+- 서브에이전트 다른 모델 운용 시 file read에 malware 오판정 발생 문제 수정.
+- Bedrock application-inference-profile + Opus 4.7 thinking disabled → 400 수정.
+- Plain-CLI OAuth 토큰 만료 시 "/login" 요구 → reactive refresh로 수정.
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- Windows/npm 빌드: Glob/Grep 도구 그대로. (macOS/Linux 네이티브만 embedded bfs/ugrep으로 교체 — 대표님 환경 무관)
+- 기존 hook 동작 모두 유지. `bash-tool-blocker.sh`, `irreversible-alert.sh` 독립 동작.
+- 신규 활용 가능성: agent별 MCP 스코프 지정으로 Tool Budget 최적화 여지.
+
+---
+
+## v2.1.116 신규 기능 (2026-04-21)
+
+### 성능
+- **`/resume` 최대 67% 가속**: 40MB+ 세션, dead-fork 처리 개선.
+- **MCP 시작 가속**: stdio 서버 다수 시 빠름. `resources/templates/list`는 `@`-mention 전까지 지연 로드.
+
+### 하네스 영향 포인트
+- **Agent frontmatter `hooks:` main-thread 동작 (v2.1.116)**: `--agent` 플래그로 main-thread 에이전트 실행 시 `agents/*.md`의 `hooks:` 필드가 작동. 기존엔 subagent에서만 발동. `harness/agents/*.md`에 hooks 추가 가능해짐.
+- **Settings Usage 탭 즉시 표시 + rate-limit 내성**: 5H/7D 수치를 endpoint 429 시에도 보여줌. `telegram-notify.sh heartbeat`와 중복 검증 레이어로 작동 — 정확도 상향.
+- **Bash gh rate-limit 힌트**: `gh` 명령이 GitHub API rate limit 히트 시 Claude에게 back-off 힌트 표시. `loop-detector.sh`와 보완 — 반복 재시도 방지.
+- **sandbox auto-allow rm/rmdir 위험 경로 차단**: `rm -rf /`, `rm -rf $HOME` 등은 sandbox allow rule이 있어도 차단. `irreversible-alert.sh`와 중복 없음 (두 레이어 유지).
+
+### UI/UX
+- **Thinking 스피너 inline**: "still thinking", "thinking more", "almost done thinking" 진행 표시.
+- **`/doctor` 실행 중 가능**: 현재 turn 끝날 때까지 대기 불필요.
+- **`/config` 검색 값 매칭**: "vim" 입력 시 Editor mode 설정 발견.
+- **풀스크린 스크롤 부드러움 (VS Code/Cursor/Windsurf)**: `/terminal-setup`이 에디터 스크롤 감도 조정.
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- CLAUDE.md/hooks/commands 변경 없음.
+- `bash-tool-blocker.sh` + `irreversible-alert.sh` 독립 동작 (P-026).
+- Agent frontmatter `hooks:` 신규 활용 가능성 — 장기적으로 `agents/*.md`에 agent별 custom hook 고려.
+
+---
+
+## v2.1.113~v2.1.114 신규 기능 (2026-04-18)
+
+### 네이티브 바이너리 전환 (v2.1.113)
+- CLI가 번들 JavaScript 대신 **플랫폼별 네이티브 바이너리**를 spawn. 시작 속도 개선.
+- 사용자 체감: 기존과 동일하게 `claude` 실행. 차이는 내부 최적화.
+
+### Agent Teams 안정화 (v2.1.113~114)
+- **Subagent stall 자동 실패 (v2.1.113)**: 서브에이전트가 10분간 stream 없이 stall하면 clear error로 실패. 기존엔 silent hang. → R14 watchdog의 Agent re-spawn 로직과 중복 없이 상호 보완.
+- **Agent Teams permission dialog crash fix (v2.1.114)**: teammate가 도구 권한 요청 시 crash 해결.
+
+### 보안 강화 (v2.1.113)
+- **Bash deny rules 확장 매칭**: `env`, `sudo`, `watch`, `ionice`, `setsid` 같은 exec wrapper로 감싸도 deny rule 적용.
+- **`Bash(find:*)` 자동 승인 제외**: `find -exec`, `-delete`는 이제 자동 승인 안 됨.
+- **macOS `/private/{etc,var,tmp,home}` 위험 경로**: `rm:*` allow rule이 있어도 dangerous removal target으로 분류.
+- **`dangerouslyDisableSandbox` 권한 프롬프트 강제**: sandbox 비활성 시 반드시 승인.
+- **신규 설정 `sandbox.network.deniedDomains`**: 특정 도메인만 차단 가능.
+
+### 권한 완화 (v2.1.113)
+- `cd <current-directory> && git …` no-op cd는 permission prompt 없이 즉시 실행.
+- Multi-line Bash 명령의 첫 줄이 주석이어도 transcript에 전체 명령 표시.
+
+### MCP/도구 안정화 (v2.1.113)
+- **MCP concurrent-call timeout fix**: 한 도구 호출 메시지가 다른 호출 watchdog를 silent disarm하던 버그 해결.
+- **`ToolSearch` ranking fix**: MCP 도구명 paste 시 실제 도구가 상위 노출.
+
+### UI/기타 (v2.1.113)
+- `/loop` Esc → pending wakeup 취소.
+- `/extra-usage` Remote Control 동작.
+- `/ultrareview` 병렬 launch 가속 + diffstat.
+- Fullscreen: Shift+↑/↓ 스크롤.
+- `Ctrl+A`/`Ctrl+E` multi-line logical line 이동.
+- Windows `Ctrl+Backspace` 단어 삭제.
+
+### 영향 분석 — 하네스 규칙 영향 없음
+- R14 watchdog (5분 wake, 10분 re-spawn)는 v2.1.113 native 10분 fail과 중복 아님. 두 레이어 모두 유지.
+- bash-tool-blocker.sh 독립 동작 (P-026 유효).
+- `/less-permission-prompts` allowlist는 v2.1.113 `cd && git` no-prompt과 상호 보완.
 
 ## Prerequisites (다른 프로젝트에서도 동작하려면)
 - `~/.claude/` 에 hooks, rules, scripts, commands 배포됨 (`bash harness/deploy.sh`)
