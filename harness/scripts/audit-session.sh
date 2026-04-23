@@ -163,10 +163,26 @@ SESSION_ID=$(basename "$TRANSCRIPT" .jsonl)
 PROJECT_DIR=$(grep -m1 '"cwd"' "$TRANSCRIPT" 2>/dev/null | grep -o '"cwd":"[^"]*"' | head -1 | sed 's/"cwd":"//;s/"//' || echo "unknown")
 TOOL_TOTAL=$(safe_count "grep -o '\"type\":\"tool_use\"' \"$TRANSCRIPT\" | wc -l")
 
-# ─── Build session detection ───
+# ─── Build session detection (evidence-based scoring, P-062 follow-up) ───
+# Single keyword match is insufficient — maintenance/refactor/doc sessions
+# routinely contain "구현/개발/만들". Use weighted evidence scoring instead.
+# Only trust <command-name> tags (actual slash command execution),
+# not bare "/prd" text (which appears in docs/mentions)
 BUILD_KEYWORDS=$(safe_count "grep '\"type\":\"user\"' \"$TRANSCRIPT\" | grep -c '만들\|구현\|개발\|페이지로\|앱으로'")
+# Full tag match only — open+close tags must both appear to filter out
+# doc snippets that quote "<command-name>/prd" as example text.
+PRD_INVOKED=$(safe_count "grep -c '<command-name>/prd</command-name>' \"$TRANSCRIPT\"")
+PIPELINE_INSTALLED=$(safe_count "grep -c '<command-name>/pipeline-install</command-name>' \"$TRANSCRIPT\"")
+PLAN_INVOKED=$(safe_count "grep -cE '<command-name>/(plan|ultraplan)</command-name>' \"$TRANSCRIPT\"")
+
+BUILD_SCORE=0
+[ "$PRD_INVOKED" -gt 0 ] && BUILD_SCORE=$((BUILD_SCORE + 2))
+[ "$PIPELINE_INSTALLED" -gt 0 ] && BUILD_SCORE=$((BUILD_SCORE + 2))
+[ "$PLAN_INVOKED" -gt 0 ] && BUILD_SCORE=$((BUILD_SCORE + 1))
+[ "$BUILD_KEYWORDS" -ge 5 ] && BUILD_SCORE=$((BUILD_SCORE + 1))
+
 IS_BUILD=0
-[ "$BUILD_KEYWORDS" -gt 0 ] && IS_BUILD=1
+[ "$BUILD_SCORE" -ge 2 ] && IS_BUILD=1
 
 # ─── Tool count helper ───
 count_tool() {
@@ -426,13 +442,16 @@ check_gbrain_usage() {
 check_rule_impl_gap() {
   local hooks_dir="$HOME/.claude/hooks"
   local scripts_dir="$HOME/.claude/scripts"
+  local commands_dir="$HOME/.claude/commands"
   local rules_dir="$HOME/.claude/rules"
   local claude_md="$HOME/.claude/CLAUDE.md"
+  local harness_root="$HOME/.claude"
 
   # Extract literal filenames (*.sh, *.ts, *.js) from rule files
   # Uses grep -oE to capture only the filename token; excludes lines that are comments (#)
-  # Exclude known non-hook/non-script filenames (general references, config files, build artifacts)
-  local EXCLUDE_PATTERN="^(deploy\.sh|index\.js|settings\.js|api_cost_log\.js|package\.json|tsconfig\.js|firebase\.js|server\.js|app\.js|main\.js|config\.js|setup\.js|build\.js)$"
+  # Exclude: (a) build artifacts, (b) config files, (c) npm CLI tools used via npx,
+  #         (d) root-level harness scripts (install.sh, deploy.sh)
+  local EXCLUDE_PATTERN="^(deploy\.sh|install\.sh|index\.js|settings\.js|api_cost_log\.js|package\.json|tsconfig\.js|firebase\.js|server\.js|app\.js|main\.js|config\.js|setup\.js|build\.js|drift-guard\.(sh|ts|js))$"
   local referenced_files
   referenced_files=$(
     {
@@ -452,7 +471,9 @@ check_rule_impl_gap() {
   local found=0
   while IFS= read -r fname; do
     [ -z "$fname" ] && continue
-    if [ -f "$hooks_dir/$fname" ] || [ -f "$scripts_dir/$fname" ]; then
+    # Check hooks, scripts, commands, and harness root (install.sh, deploy.sh live there)
+    if [ -f "$hooks_dir/$fname" ] || [ -f "$scripts_dir/$fname" ] || \
+       [ -f "$commands_dir/$fname" ] || [ -f "$harness_root/$fname" ]; then
       found=$((found + 1))
     else
       missing+=("$fname")
@@ -568,7 +589,11 @@ check_model_sonnet_explicit() {
 
 check_vision_dual_pass() {
   [ -z "$TRANSCRIPT" ] && echo "N/A|트랜스크립트 없음" && return
-  local screenshot_calls=$(safe_count "grep -c 'mcp__expect__screenshot' \"$TRANSCRIPT\"")
+  # Skip for non-build sessions — doc/harness-maintenance edits often
+  # quote "mcp__expect__screenshot" as a literal string without invoking it
+  [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
+  # Count only actual tool invocations (tool_use JSON), not text mentions
+  local screenshot_calls=$(safe_count "grep -cE '\"type\":\"tool_use\"[^}]*\"name\":\"mcp__expect__screenshot\"' \"$TRANSCRIPT\"")
   [ "$screenshot_calls" -eq 0 ] && echo "N/A|screenshot 미사용" && return
   local snapshot_calls=$(safe_count "grep -c '\"mode\":\"snapshot\"\\|\"mode\":\"annotated\"' \"$TRANSCRIPT\"")
   [ "$snapshot_calls" -ge "$screenshot_calls" ] && echo "PASS|snapshot ${snapshot_calls}건, screenshot ${screenshot_calls}건" && return
