@@ -288,6 +288,62 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - `/skills` 메뉴 토큰 수 정렬 (`t` 토글)
 - LSP diagnostics 순서 버그 fix (편집 직전 진단이 후에 나타나 모델 오판하던 문제)
 
+## v2.1.118 신규 기능 (2026-04-23)
+
+### Hook에서 MCP 도구 직접 호출 (하네스 큰 영향)
+- 신규 hook type: `"mcp_tool"`. bash subprocess 없이 MCP 도구 직접 호출.
+- **활용 후보**:
+  - `telegram-notify.sh` → `mcp__plugin_telegram_telegram__reply` 직접 호출로 전환 시 bash spawn 오버헤드 제거
+  - pitfall 자동 저장 hook → `mcp__gbrain__put_page` 직접 호출
+- bash hook과 공존. 단, 환경변수 보간 지원 여부 확인 필요 (v2.1.63 HTTP hook와 동일 제약 가능성).
+
+### `/cost` + `/stats` → `/usage` 통합
+- 통합 명령: `/usage`. 구 `/cost`, `/stats`는 typing shortcut으로 유지 → 관련 탭 열림.
+- 문서·주석에서 `/cost` / `/stats` 언급 점검 대상.
+
+### Auto mode 규칙 병합 (`"$defaults"`)
+- `autoMode.allow`, `autoMode.soft_deny`, `autoMode.environment`에 `"$defaults"` 포함 시 built-in 규칙 덮어쓰지 않고 병합.
+- "Don't ask again" 옵션 추가 (auto mode opt-in 프롬프트).
+
+### `/model` picker + `ANTHROPIC_BASE_URL` 게이트웨이
+- `ANTHROPIC_DEFAULT_*_MODEL_NAME` / `_DESCRIPTION` override 지원.
+- copilot-api(`:4141`) / HydraTeams(`:3456`) 세션에서 모델 라벨 커스터마이징 가능.
+
+### 신규 플러그인 / 테마
+- **`claude plugin tag`**: 플러그인용 release git tag 생성 + 버전 검증.
+- **Named custom themes**: `/theme`에서 생성·전환. JSON 편집 `~/.claude/themes/`. 플러그인이 `themes/` 디렉토리로 배포 가능.
+
+### Vim / UI
+- Vim visual mode: `v` (character), `V` (line) + operators + 시각 피드백.
+- `/color`: Remote Control 연결 시 accent color를 claude.ai/code와 동기화.
+
+### 업데이트 차단 강화
+- **`DISABLE_UPDATES` env var**: 모든 업데이트 경로 완전 차단 (수동 `claude update` 포함). 기존 `DISABLE_AUTOUPDATER`보다 강력.
+
+### `--continue` / `--resume` 범위 확장
+- `/add-dir`로 추가된 디렉토리 세션도 찾음.
+
+### WSL managed settings 상속
+- `wslInheritsWindowsSettings` 정책 키로 WSL이 Windows-side managed settings 상속.
+
+### 주요 버그 수정 (영향도 중)
+- MCP OAuth 다중 수정: 토큰 만료 감지, 만료 없는 토큰 처리, step-up scope 403, refresh race, macOS keychain race, revoked token.
+- `/login` + `CLAUDE_CODE_OAUTH_TOKEN` env 충돌 → env 토큰 클리어 후 disk credentials 사용.
+- `--dangerously-skip-permissions` 실행 시 plan acceptance 대화상자에 "auto mode" 대신 "bypass permissions" 표시.
+- Agent-type hooks가 Stop/SubagentStop 외 이벤트에서 "Messages are required for agent hooks" 에러 수정.
+- `prompt` hooks가 agent-hook verifier 서브에이전트 도구 호출에 재발동하던 문제 수정.
+- `/fork`: 부모 대화 전체를 디스크에 쓰는 대신 pointer + hydrate-on-read로 전환.
+- Remote Control 세션이 `~/.claude/settings.json`의 `model` 설정을 덮어쓰던 문제 수정.
+- 서브에이전트 `SendMessage` resume 시 explicit `cwd` 복원 안 되던 버그 수정.
+- 파일 워처 invalid path / fd 고갈 unhandled error 수정.
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- 기존 bash hook 모두 동작 유지. `mcp_tool` type 채택은 선택 사항.
+- `/cost` 관련 `commands/cost.md` 영향 없음 (커스텀 커맨드, typing shortcut과 독립).
+- `bash-tool-blocker.sh`, `irreversible-alert.sh` 독립 동작 유지.
+
+---
+
 ## v2.1.117 신규 기능 (2026-04-22)
 
 ### Opus 4.7 컨텍스트 계산 버그 수정 (중대)
