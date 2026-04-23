@@ -140,6 +140,16 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/periodic-audit.sh",
+            "timeout": 20000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {

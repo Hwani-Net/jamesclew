@@ -15,7 +15,9 @@ const TURN_COUNTER_FILE = `${STATE_DIR}/turn_counter`;
 // Short reminder (low token cost, injected every 10 turns)
 const RULE_REMINDER = `[RULE REMINDER] 선언-미실행 금지. 불확실하면 ⚠️. 추측 금지.`;
 
-// Full rule reminder (injected at context 20%/40%/60%/80%)
+// Full rule reminder (injected at context 50% only — 20%/40%/60%/80%
+// was too noisy on Opus 4.7 1M + opusplan. Tool-count based mid-session
+// audit now runs every 100 tool calls via periodic-audit.sh)
 const FULL_RULE_REMINDER = `[⚠️ HARNESS RULE CHECK — 컨텍스트 마일스톤]
 1. 즉시실행. 선언-미실행 금지. "할까요?" 금지.
 2. "안 됩니다" 금지 — 웹 검색 + 3회 시도 + 대안 2개 후에만 불가 판정.
@@ -244,12 +246,14 @@ async function main() {
           );
         } catch {}
       }
-      // Check if we crossed a 20% milestone
+      // Check if we crossed a 50% milestone (was 20% — too noisy on
+      // Opus 4.7 1M + opusplan). Mid-session audit now runs every 100
+      // tool calls via periodic-audit.sh; only 50% compact trigger remains here.
       const fs = require("fs");
       const lastMilestone =
         parseInt(fs.readFileSync(CONTEXT_MILESTONE_FILE, "utf8").trim()) || 0;
-      const currentBucket = Math.floor(contextPct / 20) * 20;
-      if (currentBucket > lastMilestone && currentBucket >= 20) {
+      const currentBucket = Math.floor(contextPct / 50) * 50;
+      if (currentBucket > lastMilestone && currentBucket >= 50) {
         contextMilestone = true;
         fs.writeFileSync(CONTEXT_MILESTONE_FILE, String(currentBucket));
       }
