@@ -45,6 +45,22 @@ HAS_PRD_QUESTION=$(echo "$LAST_RESPONSE" | grep -cE '구체화 질문|확인 질
 HAS_PRD_QUESTION=${HAS_PRD_QUESTION:-0}
 [ "${HAS_PRD_QUESTION:-0}" -gt 0 ] && exit 0
 
+# === Exception: Conditional future — "~실 때/~시면/~요청 시 ...하겠습니다" ===
+# Declaration inside a conditional clause = future intent, not immediate action
+HAS_CONDITIONAL=$(echo "$LAST_RESPONSE" | grep -cE '있으실 때|있을 때|주시면|지시.*시|요청.*시|필요.*시|명시.*후|명시.*하시면|하시면[^가-힣]*(진행|반영|적용|수정|배포|추가)' 2>/dev/null)
+HAS_CONDITIONAL=${HAS_CONDITIONAL:-0}
+[ "${HAS_CONDITIONAL:-0}" -gt 0 ] && exit 0
+
+# === Exception: Negative declaration — "안 하겠/하지 않겠/미실행" ===
+HAS_NEGATIVE=$(echo "$LAST_RESPONSE" | grep -cE '안 하겠|하지 않겠|않겠습니다|미실행|실행하지 않|진행하지 않' 2>/dev/null)
+HAS_NEGATIVE=${HAS_NEGATIVE:-0}
+[ "${HAS_NEGATIVE:-0}" -gt 0 ] && exit 0
+
+# === Exception: Session close context — "마무리/완료/종료" with summary ===
+HAS_CLOSE_CONTEXT=$(echo "$LAST_RESPONSE" | grep -cE '마무리|세션 종료|커밋 완료|작업 완료|배포 완료|전부 완료|이번 세션.*성과|최종 상태' 2>/dev/null)
+HAS_CLOSE_CONTEXT=${HAS_CLOSE_CONTEXT:-0}
+[ "${HAS_CLOSE_CONTEXT:-0}" -gt 0 ] && exit 0
+
 # === Pattern 1: Declare but don't execute ===
 # Only match future-tense declarations (not past-tense reports)
 # "~합니다" ending = present/report, "~하겠" = future intent without action
@@ -59,10 +75,16 @@ fi
 
 # === Pattern 2: Asking permission instead of executing ===
 # Block regardless of tool calls — "할까요" is always a violation
+# Exception: risk confirmation context — push/delete/destructive operations
+HAS_RISK_CONTEXT=$(echo "$LAST_RESPONSE" | grep -cE 'push|force|reset|rebase|drop|delete|삭제|복구|롤백|배포' 2>/dev/null)
+HAS_RISK_CONTEXT=${HAS_RISK_CONTEXT:-0}
+
 HAS_PERMISSION=$(echo "$LAST_RESPONSE" | grep -cE '할까요|할까 요|진행할까|원하시면|괜찮으시|어떻게 할까|어떻게할까|필요하면 말씀|원하시는지|해볼까|적용할까' 2>/dev/null)
 HAS_PERMISSION=${HAS_PERMISSION:-0}
 
-if [ "${HAS_PERMISSION:-0}" -gt 0 ] 2>/dev/null; then
+# Block only if permission-asking is NOT in a risk confirmation context
+# (CLAUDE.md "Executing actions with care" allows/requires confirmation for destructive ops)
+if [ "${HAS_PERMISSION:-0}" -gt 0 ] 2>/dev/null && [ "${HAS_RISK_CONTEXT:-0}" -eq 0 ] 2>/dev/null; then
   echo "$((BLOCK_COUNT + 1))" > "$BLOCK_COUNTER_FILE"
   echo "{\"decision\":\"block\",\"reason\":\"Ghost Mode 위반: 할까요/필요하면 말씀/원하시면 금지. 작업이 명확하면 즉시 실행하세요.\"}"
   exit 0
