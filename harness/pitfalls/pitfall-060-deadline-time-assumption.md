@@ -1,5 +1,4 @@
 ---
-slug: pitfall-060-deadline-time-assumption
 title: 공고·마감 시간을 추측으로 "자정"으로 안내하는 실수
 tags: [deadline, time, verification, evidence-first]
 severity: critical

@@ -56,8 +56,13 @@ if [ -z "$NEW_PITFALLS" ] && [ -z "$REGRESSION_SUMMARY" ] && [ -z "$FEEDBACK_SUM
   exit 0
 fi
 
-# ── 5. gbrain put으로 저장 ───────────────────────────────────────────────
-CONTENT=$(cat << LEARNING_EOF
+# ── 5. 파일 백업 + gbrain put ───────────────────────────────────────────
+# pitfall-064: Windows Git Bash 에서는 `gbrain put < file` 이 `/dev/stdin` 미지원으로 실패.
+# 실증 결과 `gbrain put --content "$VAR"` 방식이 multi-line (줄바꿈·백틱·따옴표) 모두 무결하게 저장됨.
+# 따라서 Windows 기본은 --content 방식을 사용. Unix 계열에서도 동일 동작.
+BACKUP_FILE="$STATE_DIR/learning-${SLUG}.md"
+
+cat > "$BACKUP_FILE" << LEARNING_EOF
 # Session Learning — ${TIMESTAMP}
 
 ## PITFALLS 신규 기록
@@ -74,22 +79,20 @@ ${FEEDBACK_SUMMARY:-"(없음)"}
 gbrain query "session 학습 $(date +%Y-%m-%d)"
 \`\`\`
 LEARNING_EOF
-)
 
-# gbrain CLI로 저장 (서버 실행 중인 경우)
-if command -v gbrain >/dev/null 2>&1; then
-  gbrain put "$SLUG" --content "$CONTENT" 2>/dev/null && {
-    echo "[session-learning] gbrain 저장 완료: $SLUG"
-    echo "$SLUG" > "$LAST_LEARNING_FILE"
-  } || echo "[session-learning] gbrain put 실패 — 로컬 백업으로 저장"
-else
-  echo "[session-learning] gbrain CLI 없음 — 로컬 백업으로 저장"
-fi
-
-# 로컬 백업 (gbrain 실패 또는 미설치 시)
-BACKUP_FILE="$STATE_DIR/learning-${SLUG}.md"
-echo "$CONTENT" > "$BACKUP_FILE"
 echo "[session-learning] 로컬 백업 저장: $BACKUP_FILE"
+
+# gbrain CLI 로 저장 (--content 방식, Windows 호환)
+if command -v gbrain >/dev/null 2>&1; then
+  CONTENT=$(cat "$BACKUP_FILE")
+  if gbrain put "$SLUG" --content "$CONTENT" 2>/dev/null >/dev/null; then
+    echo "[session-learning] gbrain 저장 완료: $SLUG"
+  else
+    echo "[session-learning] gbrain put 실패 — 로컬 백업만 유지"
+  fi
+else
+  echo "[session-learning] gbrain CLI 없음 — 로컬 백업만 유지"
+fi
 
 # 마지막 슬러그 기록
 echo "$SLUG" > "$LAST_LEARNING_FILE"

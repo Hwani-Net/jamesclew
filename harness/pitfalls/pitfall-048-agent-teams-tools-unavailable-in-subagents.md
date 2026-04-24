@@ -1,5 +1,4 @@
 ---
-slug: pitfall-048-agent-teams-tools-unavailable-in-subagents
 title: Agent Teams 도구(TaskList/TaskUpdate/SendMessage)가 서브에이전트에서 미동작
 date: 2026-04-18
 severity: P0

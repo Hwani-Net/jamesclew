@@ -1,5 +1,4 @@
 ---
-slug: pitfall-049-zombie-teams-block-teamcreate
 title: 이전 세션 좀비 팀이 TeamCreate를 차단
 date: 2026-04-18
 severity: P1

@@ -1,5 +1,4 @@
 ---
-slug: pitfall-050-gbrain-npm-fake-package-cmd-broken
 title: gbrain.cmd가 npm 동명 가짜 패키지 설치로 깨짐
 date: 2026-04-18
 severity: P1

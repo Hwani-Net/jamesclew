@@ -1,5 +1,4 @@
 ---
-slug: pitfall-059-deploy-rate-awareness
 title: Agent Teams 진화 루프 설계 시 배포 리밋 미고려
 type: pitfall
 date: 2026-04-20
