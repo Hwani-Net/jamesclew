@@ -181,6 +181,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/timeline-logger.sh",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/post-edit-dispatcher.sh",
             "timeout": 5000
           },
@@ -263,6 +268,16 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/wiki-raw-save.sh",
             "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Write|mcp__perplexity__.*|mcp__tavily__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/progressive-summarize.sh",
+            "timeout": 25000
           }
         ]
       },
@@ -470,6 +485,11 @@
             "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/wiki-sync-scheduler.sh",
+            "timeout": 60000
           }
         ]
       }
