@@ -105,7 +105,7 @@
   1. `gbrain query "증상키워드"` 로 유사 항목 확인
   2. 신규면: `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 파일 작성
   3. `gbrain import D:/jamesclew/harness/pitfalls/` 실행
-  (주의: `gbrain put --content` 는 multi-line 깨짐 — 절대 사용 금지)
+  (참고: `gbrain put --content "$VAR"` 는 Windows/Unix 공통 안전. `gbrain put < file` 은 Windows Git Bash 에서 `/dev/stdin` 미지원으로 실패 — pitfall-064 참조)
 - 기록하지 않으면 forgot_record 패턴으로 재감지 → 반복 지적
 
 ## Parallel Agent Safety (#14)
@@ -123,6 +123,13 @@
 
 ## Commits
 Conventional Commits (영어). 논리적 단위 1커밋.
+
+## Second Brain Tiers (BASB Progressive Summarization)
+세컨브레인 3계층 — 상세: `rules/secondbrain-tiers.md`
+- Raw: 05-wiki/sources, 05-wiki/entities, 06-raw
+- Distilled: 05-wiki/distilled, 05-wiki/concepts, 05-wiki/analyses
+- Synthesized: 05-wiki/synthesized
+- 05-wiki 파일 frontmatter 에 `tier:` 필드 필수. tier-tagger.py 로 일괄 주입.
 
 ## Design Doc Sync (필수)
 하네스(hooks, rules, settings.json)를 추가/수정하면 반드시 설계 문서도 동시에 업데이트:

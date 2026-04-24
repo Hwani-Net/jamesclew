@@ -203,7 +203,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
 - **drift-guard 통합 (2026-04-21, Hwani-Net/drift-guard)**: UI 프로젝트는 `npx drift-guard init --from design.html` → `npx drift-guard rules` → `npx drift-guard check`. `verify-deploy.sh`가 `.drift-guard.json` 감지 시 배포 전 check 실패면 **exit 2 차단**. `/pipeline-run` Step 3-0에서도 실행. Stitch 호출 후 `stitch-drift-guard.sh` hook이 init/check 유도. Vision(`/design-review`)과 토큰(drift-guard)은 별도 레이어로 병행. P-054 재발 방지.
-- 에러 → gbrain에 pitfall 기록. 절차: ① `gbrain query "증상"` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `gbrain import D:/jamesclew/harness/pitfalls/` 실행 (주의: `gbrain put --content` multi-line 깨짐 — 금지)
+- 에러 → gbrain에 pitfall 기록. 절차: ① `gbrain query "증상"` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `gbrain import D:/jamesclew/harness/pitfalls/` 실행 (참고: `gbrain put --content "$VAR"` Windows/Unix 공통 안전. stdin redirect는 Windows Git Bash `/dev/stdin` 미지원 — pitfall-064)
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex/GPT-4.1) 검토 필수** — 충돌/회귀 사전 검토.
 - **감사 항목 동기화 필수**: CLAUDE.md에 규칙 추가 또는 Claude Code 버전 업데이트 시, `audit-session.sh`에 대응하는 `check_` 함수도 동시에 추가. `/audit` 결과가 신규 기능을 반영하지 않으면 감사 무의미.
