@@ -13,8 +13,32 @@ echo "   대상: $TARGET"
 
 # 핵심 설정 파일
 cp "$SCRIPT_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
+
+# settings.json — 사용자 /model 영구 설정 보존 (화이트리스트 외 legacy 값은 자동 청소)
+USER_MODEL=""
+if [ -f "$TARGET/settings.json" ]; then
+  CURRENT_MODEL=$(jq -r '.model // empty' "$TARGET/settings.json" 2>/dev/null)
+  case "$CURRENT_MODEL" in
+    opus|sonnet|haiku|default) USER_MODEL="$CURRENT_MODEL" ;;
+    "") : ;;
+    *) echo "⚠️  legacy model '$CURRENT_MODEL' 자동 청소 (picker 옵션 아님)" ;;
+  esac
+fi
 cp "$SCRIPT_DIR/settings.json" "$TARGET/settings.json"
-echo "✅ CLAUDE.md + settings.json"
+if [ -n "$USER_MODEL" ]; then
+  jq --arg m "$USER_MODEL" '.model = $m' "$TARGET/settings.json" > "$TARGET/settings.json.tmp" \
+    && mv "$TARGET/settings.json.tmp" "$TARGET/settings.json"
+  echo "✅ CLAUDE.md + settings.json (사용자 model 보존: $USER_MODEL)"
+else
+  echo "✅ CLAUDE.md + settings.json"
+fi
+
+# Awesome statusline — model 우선순위 패치 보존 (플러그인 업데이트 시 유실 방지)
+if [ -f "$SCRIPT_DIR/awesome-statusline.sh" ]; then
+  cp "$SCRIPT_DIR/awesome-statusline.sh" "$TARGET/awesome-statusline.sh"
+  chmod +x "$TARGET/awesome-statusline.sh"
+  echo "✅ awesome-statusline.sh (model 우선순위 패치 영구 적용)"
+fi
 
 # Rules
 mkdir -p "$TARGET/rules"
