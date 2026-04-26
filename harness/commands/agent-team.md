@@ -860,6 +860,100 @@ dev 승인 SendMessage 작성 전:
 
 ---
 
+---
+
+## v12 패치 (2026-04-25, GAP-V11-N1 / GAP-V12-N1 / GAP-V12-N3 대응)
+
+| 패치 ID | 룰 | 근거 GAP | 내용 |
+|---------|-----|---------|------|
+| R0' | inbox 가드 | GAP-V12 | trigger inbox count==0이면 임무 시작 금지. PreCheck 단계 필수 |
+| R0'' | 절대경로 강제 | GAP-V11-N1 | 모든 Read/Write는 `D:/jamesclew/...` 절대경로 + 포워드슬래시 사용. 상대경로/백슬래시 금지 (absolute path only) |
+| R1' | 단일 응답 병렬 | GAP-V12-N1 | PRD/review Write 직후 같은 턴 단일 응답에서 SendMessage + counter+1 병렬 호출 필수. 분리 turn 금지 |
+| R4.5-v12 | 이견 분기 강제 | GAP-V12-N1 | P0/이견 발생 시 `SendMessage(상대 planner)` + `counter+1 Write` + `SendMessage(team-lead)` 3건을 단일 응답 병렬 호출. 분리 turn은 GAP-V12-N1 재현 |
+| R10-v12 | reviewer 카운트 강화 | GAP-V12-N3 | reviewer R10 감사 절차에서 `python3 -c "import json; json.load(open(..., encoding='utf-8')); ..."` 또는 직접 파일 Read로 카운트 확인. grep만으로 판단 금지 |
+
+### R0' — inbox 가드 (v12 신규)
+
+모든 teammate 기상 시 inbox 메시지 수 검증 필수:
+
+```bash
+INBOX=~/.claude/teams/{team-name}/inboxes/{your-name}.json
+COUNT=$(python3 -c "
+import json
+msgs = json.load(open('$INBOX', encoding='utf-8'))
+tl = [m for m in msgs if m.get('from') == 'team-lead']
+print(len(tl))
+" 2>/dev/null || echo 0)
+
+# inbox count==0이면 임무 시작 금지
+[ "$COUNT" = "0" ] && echo "NOT_FOUND — trigger inbox count==0, idle" && exit 0
+echo "FOUND $COUNT — 임무 착수"
+```
+
+**규칙**: trigger inbox count==0이면 임무 시작 금지. SendMessage(team-lead, "ready+idle") 후 대기.
+
+### R0'' — 절대경로 강제 (v12 신규)
+
+모든 Read/Write/Bash 파일 조작에서:
+
+- **필수**: `D:/jamesclew/experiments/{proj}/...` 형식의 absolute path + 포워드슬래시
+- **금지**: 상대경로 (`./docs/PRD.md`), 백슬래시 (`D:\jamesclew\...`), `~` 틸드 확장 경로 (teammate 환경에서 미보장)
+- **근거 GAP-V11-N1**: 상대경로/백슬래시 혼용으로 Read/Write 실패 재현
+
+### R1' — Write+SendMessage 단일 응답 병렬 (v12 신규)
+
+PRD/review 파일 Write 직후 **같은 턴 단일 응답** 내에서:
+
+```
+[같은 턴, 병렬 호출]
+1. Write(docs/PRD.md, ...)          ← 파일 저장
+2. counter+1 Write(docs/planner_pingpong_count.txt, next)  ← counter+1 동시
+3. SendMessage(to="상대방", ...)    ← 알림 동시
+```
+
+**금지**: Write → idle → 다음 턴 SendMessage (분리 turn은 GAP-V12-N1 재현)
+**효과 (v11 실측)**: 병렬 호출로 턴 분리 없이 원자적 완료 보장.
+
+### R4.5-v12 — 이견 분기 강제 (v12 신규, R4.5 확장)
+
+P0/이견 발생 시 **3건 단일 응답 병렬** 필수:
+
+```
+[같은 턴, 병렬 — GAP-V12-N1 방지]
+1. SendMessage(to="상대 planner", summary="이견", message="{쟁점 상세}")
+2. counter+1 Write(docs/planner_pingpong_count.txt, next)
+3. SendMessage(to="team-lead", summary="이견 발생", message="{양측 입장 요약}")
+```
+
+**금지**: 이견 발생 → 별도 turn에서 SendMessage (분리 turn = GAP-V12-N1 재현)
+**합의 시 동일**: 합의 SendMessage + counter+1 + team-lead 보고도 단일 응답 병렬.
+
+### R10-v12 — reviewer 카운트 강화 (v12 신규, R10-v5 확장)
+
+reviewer R10 감사 절차에서 **grep 단독 판단 금지**:
+
+```bash
+# 금지: grep만으로 카운트 (false positive 발생 — GAP-V12-N3)
+# grep -c '"from":\s*"team-lead"' "$DEV_INBOX"  ← 금지
+
+# 필수: python3 json.load로 정확한 카운트
+DEV_INBOX=~/.claude/teams/{team-name}/inboxes/dev.json
+TL_COUNT=$(python3 -c "
+import json
+msgs = json.load(open('$DEV_INBOX', encoding='utf-8'))
+tl = [m for m in msgs if m.get('from') == 'team-lead']
+print(len(tl))
+" 2>/dev/null || echo 0)
+
+echo "team-lead 메시지 수: $TL_COUNT"
+# TL_COUNT==0이면 P1 이슈로 기록
+```
+
+**근거 GAP-V12-N3**: reviewer가 grep만으로 counter 판단 → 멀티라인 JSON 파싱 오류로 false positive 발생.
+**대안**: 직접 파일 Read(DEV_INBOX) + python3 json.load 파싱 (두 방법 모두 허용).
+
+---
+
 ## 실측 검증 이력
 
 | 버전 | 날짜 | 대상 | 총 소요 | Critical 재발 | 주요 발견 |

@@ -4,6 +4,14 @@
 # 사용법: bash harness/deploy.sh
 
 set -euo pipefail
+
+# --dry-run flag: diff preview only, no actual deployment
+if [[ "${1:-}" == "--dry-run" ]]; then
+  echo "[DRY-RUN] diff preview:"
+  diff -rq harness/ "$HOME/.claude/" 2>/dev/null | head -30 || true
+  exit 0
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="$HOME/.claude"
 

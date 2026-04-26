@@ -12,16 +12,12 @@
 
 input=$(cat)
 
-# Parse JSON input — Claude Code가 전달하는 활성 모델 표시명을 최우선
+# Parse JSON input — Claude Code가 전달하는 활성 모델 표시명만 신뢰
+# (settings.json fixed value override 금지 — /model 일시 변경 반영 안 되어 PITFALL-070 발생)
 MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 
-# 메타 모드 오버라이드 — settings.json 의 model 이 명시적 "opusplan" 일 때만 적용
-# (input.display_name 이 명확한 값이면 그것을 신뢰. teammateDefaultModel 은 stale 가능성 — 폴백 금지)
-SETTINGS_MODEL=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
-if [[ "$SETTINGS_MODEL" == "opusplan" ]]; then
-    MODEL="Opus Plan Mode"
-elif [[ "$MODEL" == "Unknown" || -z "$MODEL" ]]; then
-    # input 이 모델 정보를 못 줄 때만 ~/.claude.json fallback
+# input이 모델 정보를 못 줄 때만 ~/.claude.json fallback (drift 위험 인지하고 사용)
+if [[ "$MODEL" == "Unknown" || -z "$MODEL" ]]; then
     CLAUDE_JSON_MODEL=$(jq -r '.teammateDefaultModel // empty' "$HOME/.claude.json" 2>/dev/null)
     case "$CLAUDE_JSON_MODEL" in
         opusplan) MODEL="Opus Plan Mode" ;;

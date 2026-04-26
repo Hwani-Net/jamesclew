@@ -313,6 +313,16 @@
         ]
       },
       {
+        "matcher": "TaskCreate|TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/task-queue-sort.sh",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
         "matcher": "WebFetch|WebSearch",
         "hooks": [
           {
@@ -340,6 +350,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/capture-reset-times.sh",
             "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/pitfall-auto-record.sh",
+            "timeout": 20000
           }
         ]
       }
@@ -388,6 +403,21 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/session-learning.sh",
             "timeout": 30000
+          },
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/emergency-mode-check.sh",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/inbox-classifier.sh",
+            "timeout": 15000
+          },
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/self-evolve-trigger.sh",
+            "timeout": 45000
           }
         ]
       }
@@ -475,6 +505,16 @@
             "type": "command",
             "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh start; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"[INIT] JamesClaw Agent. 즉시실행(할까요금지), Built-in>Bash>MCP, 토큰효율최우선, 에러3회재시도후보고.\\\"}}\"'",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "bash D:/jamesclew/harness/hooks/emergency-banner.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/codex-expiry-check.sh",
+            "timeout": 6000
           },
           {
             "type": "command",
