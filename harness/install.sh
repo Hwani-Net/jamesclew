@@ -210,6 +210,30 @@ if [[ "$MOD_OLLAMA" == "y" ]]; then
   fi
 fi
 
+# ─── 8b. Bootstrap Obsidian Vault ───
+if [[ -n "$OBSIDIAN" ]]; then
+  echo ""
+  echo "🗂 Bootstrapping Obsidian Vault at $OBSIDIAN..."
+  if bash "$HARNESS_SRC/scripts/bootstrap-vault.sh" "$OBSIDIAN"; then
+    echo "✅ Vault directories seeded"
+  else
+    echo "⚠ Vault bootstrap failed (non-fatal)" >&2
+  fi
+fi
+
+# ─── 8c. gbrain knowledge base setup ───
+echo ""
+MOD_GBRAIN=$(prompt_yesno "Set up gbrain knowledge base (requires gbrain CLI)" "y")
+if [[ "$MOD_GBRAIN" == "y" ]]; then
+  echo "🧠 Bootstrapping gbrain..."
+  if HARNESS_SRC="$HARNESS_SRC" bash "$HARNESS_SRC/scripts/bootstrap-gbrain.sh"; then
+    echo "✅ gbrain bootstrap complete"
+  else
+    echo "⚠ gbrain bootstrap failed — install gbrain with: bun install -g gbrain" >&2
+    echo "  Re-run after install: bash harness/scripts/bootstrap-gbrain.sh" >&2
+  fi
+fi
+
 # ─── 9. Install selected MCP servers ───
 echo ""
 echo "🧩 Registering MCP servers..."

@@ -12,25 +12,18 @@
 
 input=$(cat)
 
-# 선택된 모드: settings.json (v2.1.117+ /model picker가 영구 저장)
-SETTINGS_MODE=$(jq -r '.model // empty' "$HOME/.claude/settings.json" 2>/dev/null)
+# stdin JSON의 활성 모델만 신뢰 (settings.json 읽지 않음 — PITFALL-070 원칙)
+# opusplan 모드에서 Sonnet 표시는 "현재 실행 단계, plan 단계 아님"의 정확한 신호
+MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 
-if [[ "$SETTINGS_MODE" == "opusplan" ]]; then
-    # opusplan 전용: display_name은 라우팅 서브모델(Sonnet/Opus)을 가리키므로
-    # 모드 이름을 표시 (PITFALL-070의 stale 문제는 v2.1.117+ 영구저장으로 해결됨)
-    MODEL="Opus Plan Mode"
-else
-    # 그 외: 실제 활성 모델 display_name 신뢰 (PITFALL-070 원칙)
-    MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
-    if [[ "$MODEL" == "Unknown" || -z "$MODEL" ]]; then
-        CLAUDE_JSON_MODEL=$(jq -r '.teammateDefaultModel // empty' "$HOME/.claude.json" 2>/dev/null)
-        case "$CLAUDE_JSON_MODEL" in
-            opus)   MODEL="Claude Opus" ;;
-            sonnet) MODEL="Claude Sonnet" ;;
-            haiku)  MODEL="Claude Haiku" ;;
-            *)      MODEL="Unknown" ;;
-        esac
-    fi
+if [[ "$MODEL" == "Unknown" || -z "$MODEL" ]]; then
+    CLAUDE_JSON_MODEL=$(jq -r '.teammateDefaultModel // empty' "$HOME/.claude.json" 2>/dev/null)
+    case "$CLAUDE_JSON_MODEL" in
+        opus)   MODEL="Claude Opus" ;;
+        sonnet) MODEL="Claude Sonnet" ;;
+        haiku)  MODEL="Claude Haiku" ;;
+        *)      MODEL="Unknown" ;;
+    esac
 fi
 CURRENT_DIR=$(echo "$input" | jq -r '.workspace.current_dir // "."')
 CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')

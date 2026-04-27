@@ -51,18 +51,53 @@ git clone <YOUR_REPO_URL> jamesclew; cd jamesclew; powershell -ExecutionPolicy B
 2. **모듈 선택** — Telegram 알림, Obsidian 연동, Codex/copilot-api/Ollama
 3. **MCP 서버 선택** — Perplexity, Tavily, Stitch, Desktop Control
 4. **API 키 입력** — 선택한 모듈에 필요한 키만 (hidden input)
+5. **Obsidian Vault 자동 셋업** — OBSIDIAN_VAULT 경로 입력 시 폴더 구조 자동 생성
+6. **gbrain 지식 베이스 셋업** — y/n 선택, pitfalls/rules 자동 임포트
 
 설치 완료 시:
 - `~/.harness.env` — API 키 (퍼미션 600)
 - `~/.harness/persona.yaml` — 페르소나 설정
 - `~/.claude/` — 렌더링된 CLAUDE.md(호칭·에이전트명 치환) + hooks/rules/scripts
+- `$OBSIDIAN_VAULT/` — BASB 7계층 폴더 구조 자동 생성 (README 시드 포함)
 - MCP 서버는 `claude mcp add`로 자동 등록
+
+#### Obsidian Vault 자동 생성 폴더 구조
+```
+{OBSIDIAN_VAULT}/
+├── 00-inbox/          # BASB Capture (gitkeep)
+├── 01-jamesclaw/      # 하네스 설계, sessions, research, reviews, docs
+├── 02-projects/       # 프로젝트별 문서
+├── 03-knowledge/      # 영구 지식 베이스
+├── 04-personal/       # 개인 메모
+├── 05-wiki/           # BASB 3-tier
+│   ├── sources/       # Raw tier
+│   ├── entities/      # Raw tier
+│   ├── distilled/     # Distilled tier
+│   ├── concepts/      # Distilled tier
+│   ├── analyses/      # Distilled tier
+│   └── synthesized/   # Synthesized tier
+└── 06-raw/            # Raw 자료 (gitkeep)
+```
+
+이미 폴더가 존재하면 건너뜀 (idempotent). 기존 데이터 삭제 없음.
+
+#### gbrain 지식 베이스
+gbrain이 설치된 경우 `harness/pitfalls/` + `harness/rules/`를 자동 임포트합니다.
+
+```bash
+# gbrain CLI 없으면 먼저 설치
+bun install -g gbrain
+
+# 수동 재실행
+bash harness/scripts/bootstrap-gbrain.sh
+```
 
 ### 사전 요구사항
 - Node.js 20+
 - Git
 - [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) (`claude` 명령어)
 - (선택) `codex`, `copilot-api`, `ollama` — 인스톨러가 원하면 자동 설치
+- (선택) `gbrain` — `bun install -g gbrain` (지식 베이스 셋업 시 필요)
 
 ### 재배포 / 업데이트
 소스 업데이트 후 같은 명령 재실행:
