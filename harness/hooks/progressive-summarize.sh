@@ -187,6 +187,20 @@ with open(target, 'w', encoding='utf-8') as f:
     f.write(new_content)
 
 log(f"success model={model_used} chars={len(summary_line)} file={os.path.basename(target)}")
+
+# Log API cost (observation-only — Copilot Pro is flat-rate, Ollama is $0)
+try:
+    import subprocess
+    service = 'copilot-api' if model_used == 'gpt-4.1' else 'ollama'
+    cost_script = os.path.expanduser('~/.claude/scripts/log-api-cost.sh')
+    if os.path.isfile(cost_script):
+        subprocess.run(
+            ['bash', cost_script, service, model_used, '0',
+             f'progressive-summarize {os.path.basename(target)}'],
+            capture_output=True, timeout=5
+        )
+except Exception as e:
+    log(f"cost log failed (non-fatal): {e}")
 PYEOF
 
 exit 0
