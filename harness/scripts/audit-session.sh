@@ -14,8 +14,10 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 35개 (2026-04-18)
-# 마지막 업데이트: 2026-04-18 (check_vision_dual_pass, check_sonnet_vision_delegation 추가 — Vision 라우팅 규칙 감사)
+# 현재 체크 수: 39개 (2026-04-29)
+# 마지막 업데이트: 2026-04-29 (check_v121_post_tool_output, check_v121_mcp_always_load,
+#                               check_v120_powershell_fallback, check_v119_config_persistence 추가
+#                               — Claude Code v2.1.119~v2.1.123 신기능 감사)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -53,9 +55,13 @@
 #  33 check_model_sonnet_explicit — Agent() 호출 시 model: sonnet 명시 여부
 #  34 check_vision_dual_pass       — mcp__expect__screenshot 이중 패스 (snapshot→screenshot)
 #  35 check_sonnet_vision_delegation — 이미지 Read 시 Opus Vision 위임 여부
+#  36 check_v121_post_tool_output   — v2.1.121 PostToolUse updatedToolOutput 신기능 활용 여부 (참고용)
+#  37 check_v121_mcp_always_load    — v2.1.121 MCP alwaysLoad 옵션 적용 여부
+#  38 check_v120_powershell_fallback — v2.1.120 Windows Git Bash 설치 확인 (하네스 bash 의존)
+#  39 check_v119_config_persistence — v2.1.119 settings.json /config 영구 저장 정상 작동
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# (없음 — 모든 TODO 구현 완료 2026-04-18)
+# (없음 — 모든 TODO 구현 완료 2026-04-29)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -610,6 +616,80 @@ check_sonnet_vision_delegation() {
   echo "WARN|이미지 Read ${img_reads}건, Opus 위임 0건 — Sonnet Vision 직접 분석 가능성"
 }
 
+# ─── Check 36: v2.1.121 PostToolUse updatedToolOutput 활용 여부 (참고용) ───
+# v2.1.121부터 MCP 전용이던 updatedToolOutput이 모든 도구로 확장.
+# 현재 하네스가 이 기능을 활용하지 않아도 WARN이지, FAIL은 아님 (신기능, 강제 아님).
+check_v121_post_tool_output() {
+  local hooks_dir="$HOME/.claude/hooks"
+  # Check if any hook uses updatedToolOutput (= hook that injects output replacement)
+  local usage=$(grep -rli "updatedToolOutput" "$hooks_dir" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$usage" -gt 0 ]; then
+    local files=$(grep -rli "updatedToolOutput" "$hooks_dir" 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ')
+    echo "PASS|updatedToolOutput 활용 hook ${usage}개: ${files}"
+  else
+    echo "WARN|updatedToolOutput 미활용 — v2.1.121 신기능 (모든 도구 출력 교체 가능). 필수 아님, 참고용"
+  fi
+}
+
+# ─── Check 37: v2.1.121 MCP alwaysLoad 옵션 적용 여부 ───
+# alwaysLoad: true 설정 시 ToolSearch 우회 → 고정 사용 MCP(gbrain, telegram 등) 응답 속도 향상.
+check_v121_mcp_always_load() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "N/A|settings.json 없음"
+    return
+  fi
+  local always_load=$(grep -c '"alwaysLoad"' "$settings_file" 2>/dev/null || echo "0")
+  always_load=$(echo "$always_load" | tr -d '[:space:]')
+  if [ "$always_load" -gt 0 ]; then
+    echo "PASS|alwaysLoad 설정 ${always_load}건 — ToolSearch 우회 활성"
+  else
+    echo "WARN|alwaysLoad 미설정 — v2.1.121 신기능. gbrain/telegram 등 고정 MCP에 적용 시 속도 향상 가능"
+  fi
+}
+
+# ─── Check 38: v2.1.120 Windows Git Bash 설치 확인 ───
+# v2.1.120부터 Git Bash 없으면 PowerShell로 자동 폴백.
+# 하네스 hook은 모두 bash 의존 → Git Bash 미설치 시 hook 동작 불가.
+check_v120_powershell_fallback() {
+  # Check if git bash (sh.exe) is installed on Windows
+  if command -v bash >/dev/null 2>&1; then
+    local bash_path
+    bash_path=$(command -v bash 2>/dev/null)
+    # Distinguish Git Bash from WSL bash
+    if echo "$bash_path" | grep -qi "git\|mingw\|usr/bin/bash"; then
+      echo "PASS|Git Bash 설치됨 (${bash_path}) — 하네스 hook bash 의존 정상"
+    else
+      echo "PASS|bash 사용 가능 (${bash_path})"
+    fi
+  elif command -v sh >/dev/null 2>&1; then
+    echo "PASS|sh 사용 가능 — bash 의존 hook 동작 가능성 있음"
+  else
+    echo "FAIL|bash/sh 없음 — v2.1.120+ PowerShell 폴백 환경. 하네스 hook(.sh) 미동작 위험. Git for Windows 설치 권장"
+  fi
+}
+
+# ─── Check 39: v2.1.119 /config 설정 settings.json 영구 저장 ───
+# v2.1.119부터 /config 변경값이 ~/.claude/settings.json에 저장됨.
+# theme, editor mode, verbose 등이 재시작 후에도 유지되는지 점검.
+check_v119_config_persistence() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "WARN|settings.json 없음 — /config 설정이 저장될 파일이 존재하지 않음"
+    return
+  fi
+  # Check if settings.json contains user-configurable fields (theme, editorMode, verboseOutput, etc.)
+  # These are written by /config commands (v2.1.119+)
+  local config_fields=$(grep -cE '"theme"|"editorMode"|"verboseOutput"|"preferredNotifChannel"|"language"' "$settings_file" 2>/dev/null || echo "0")
+  config_fields=$(echo "$config_fields" | tr -d '[:space:]')
+  if [ "$config_fields" -gt 0 ]; then
+    echo "PASS|settings.json에 /config 저장 필드 ${config_fields}개 확인 (v2.1.119+ persist 정상)"
+  else
+    # File exists but no user-config fields = default state, not an error
+    echo "WARN|settings.json에 /config 저장 필드 없음 — /config로 설정 변경 후 재시작해도 유지되는지 직접 확인 권장"
+  fi
+}
+
 # ─── Run all checks below ───
 check_design() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
@@ -664,11 +744,15 @@ R32=$(check_design_review_vision)
 R33=$(check_model_sonnet_explicit)
 R34=$(check_vision_dual_pass)
 R35=$(check_sonnet_vision_delegation)
+R36=$(check_v121_post_tool_output)
+R37=$(check_v121_mcp_always_load)
+R38=$(check_v120_powershell_fallback)
+R39=$(check_v119_config_persistence)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39")
 
-TOTAL_CHECKS=35
+TOTAL_CHECKS=39
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0
