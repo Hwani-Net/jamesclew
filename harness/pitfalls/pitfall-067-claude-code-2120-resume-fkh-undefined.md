@@ -12,8 +12,9 @@ versions:
   - "2.1.120"
 broken_in: "2.1.120 (2026-04-24 자동 업데이트)"
 last_working: "2.1.119"
+fixed_in: "2.1.121 (2026-04-27)"
 upstream_issue: "https://github.com/anthropics/claude-code/issues/53086"
-upstream_state: "OPEN (2026-04-25 기준)"
+upstream_state: "RESOLVED (2.1.121 changelog: 'Fixed --resume crashing on startup in external builds')"
 duplicates: ["#53041", "#53064", "#53079"]
 ---
 
