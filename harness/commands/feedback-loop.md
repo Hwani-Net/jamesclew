@@ -170,9 +170,9 @@ Search Console 수동 입력:
 
 ## 수집 주기 안내
 
-- **배포 후 24시간**: `bash $HOME/.claude/scripts/feedback-loop-run.sh 1d`
-- **배포 후 7일**: `bash $HOME/.claude/scripts/feedback-loop-run.sh 7d`
-- Remote Trigger 등록: `/schedule "feedback-loop 7d" --cron "0 9 * * 1"` (매주 월 9시)
+- **배포 후 24시간**: ⚠ TODO `feedback-loop-run.sh` 미구현 (P-111 audit 2026-05-04 발견) — 수동 대안: Firebase Console > Analytics + 사용자 피드백 수집 후 `gbrain put feedback-{date}` 직접 저장
+- **배포 후 7일**: ⚠ TODO 동일 — 수동 처리 또는 Firebase Console 분석. 신규 작성 후보: scripts/feedback-loop-run.sh (Firebase Analytics API + 24h/7d 집계 + gbrain 저장)
+- Remote Trigger 등록: `/schedule "feedback-loop 7d" --cron "0 9 * * 1"` (매주 월 9시) — 위 스크립트 작성 후 활성화
 
 ## 환경변수 요구사항
 

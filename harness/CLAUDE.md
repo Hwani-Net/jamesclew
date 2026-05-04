@@ -67,6 +67,11 @@
   2. 하네스 개요: `~/.claude/docs/index.md` — 사용 가능한 hook/skill/command 파악
   3. 도메인 PITFALL 검색: `gbrain query "<도메인 키워드>"` — 과거 실수 사전 회피
   4. 확신 없으면 NLM 보조 조회 (v2.1.101 기준, 최신 불일치 시 로컬 우선)
+  5. **GCP 신규 프로젝트 시작 시 (필수, 2026-04-30 P-083 신설)**:
+     a. 결제 > 예산 및 알림 즉시 설정 — ₩30,000 (50% 알림) + ₩100,000 (90% 알림) 2단계
+     b. Generative Media API(Veo/Imagen/Lyria) 호출 전: Pricing Calculator로 비용 산출 + 1회 호출 ₩10,000 초과 시 대표님 사전 승인 필수 (Veo 720p+오디오 1분 ≈ ₩48,000)
+     c. KRW 계정 ₩100,000 임계값 자동 결제 메커니즘 인지 (Postpay threshold billing — 누적 도달 시 자동 카드 청구 시도)
+     d. Antigravity 등 무료 대체 경로 우선 검토 (Veo 3.1 Antigravity 구독으로 무료 호출 가능)
 - 새 프로젝트: `/prd` → `/pipeline-install` → **복잡도별 plan 선택** → 코드.
   - **고복잡도** (다수 서비스, DB, 인증 등): `/ultraplan` (클라우드 VM, 3탐색+1비평 에이전트 병렬, 브라우저 플랜 편집). v2.1.101+ 자동 클라우드 환경 생성
     - 오프라인 / Claude Code on the web 접근 불가 시 fallback: `/plan`

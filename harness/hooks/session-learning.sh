@@ -24,15 +24,25 @@ LAST_LEARNING_FILE="$STATE_DIR/last_learning_slug"
 FEEDBACK_LOG="$STATE_DIR/session_feedback.log"
 REGRESSION_LOG="$STATE_DIR/regression-failed.log"
 
-# ── 1. PITFALLS 신규 기록 추출 (gbrain 기반) ─────────────────────────────
-# PITFALLS.md는 harness/archive/로 이동됨 (2026-04-17 마이그레이션)
-# 신규 pitfall은 gbrain put pitfall-NNN-{slug} 로 직접 저장됨
-# 세션 요약은 gbrain query "pitfall" 으로 검색 가능
+# ── 1. PITFALLS 신규 기록 추출 (incremental, last-processed-slug 기반) ───
+# 2026-05-04 fix: 기존 ISO 날짜 grep("2026-05-04")이 gbrain list 출력 형식("Mon May 04")
+# 과 불일치하여 매번 매칭 실패 → 어떤 pitfall도 자동 적재 안 됨. 이를 last-slug 기반
+# incremental 추출로 교체. GPT-4.1 검수 통과.
 NEW_PITFALLS=""
-# NEW_PITFALLS에는 오늘 추가된 pitfall gbrain 슬러그 목록을 기록
+LAST_PITFALL_FILE="$STATE_DIR/last_processed_pitfall_slug"
+PITFALL_LIST_LIMIT=50
 if command -v gbrain >/dev/null 2>&1; then
-  TODAY=$(date +%Y-%m-%d)
-  NEW_PITFALLS=$(gbrain list --limit 10 2>/dev/null | grep "pitfall-" | grep "$TODAY" || true)
+  ALL_PITFALLS=$(gbrain list --limit "$PITFALL_LIST_LIMIT" 2>/dev/null | awk -F'\t' '$1 ~ /^pitfall-/ { print $1 }' || true)
+  if [ -z "$ALL_PITFALLS" ]; then
+    echo "[session-learning] gbrain list 출력 0건 — 포맷 변경 가능성 점검 필요" >&2
+  else
+    LAST_PROCESSED=$(cat "$LAST_PITFALL_FILE" 2>/dev/null || echo "")
+    if [ -n "$LAST_PROCESSED" ] && echo "$ALL_PITFALLS" | grep -q "^${LAST_PROCESSED}$"; then
+      NEW_PITFALLS=$(echo "$ALL_PITFALLS" | awk -v stop="$LAST_PROCESSED" '$0 == stop { exit } { print }')
+    else
+      NEW_PITFALLS=$(echo "$ALL_PITFALLS" | head -5)
+    fi
+  fi
 fi
 
 # ── 2. 회귀 테스트 실패 수집 ──────────────────────────────────────────────
@@ -96,3 +106,9 @@ fi
 
 # 마지막 슬러그 기록
 echo "$SLUG" > "$LAST_LEARNING_FILE"
+
+# 마지막 처리한 pitfall 슬러그 기록 (incremental 추출 anchor)
+if [ -n "$NEW_PITFALLS" ]; then
+  TOP_PITFALL=$(echo "$NEW_PITFALLS" | head -1)
+  [ -n "$TOP_PITFALL" ] && echo "$TOP_PITFALL" > "$LAST_PITFALL_FILE"
+fi

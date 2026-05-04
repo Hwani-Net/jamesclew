@@ -86,6 +86,8 @@ get_usage() {
       SEVEN_INT=$(printf "%.0f" "$SEVEN" 2>/dev/null || echo "?")
       # Persist for future fallback
       save_last_usage "$FIVE_INT" "$SEVEN_INT"
+      # 2026-05-04 (audit): emergency-mode-check.sh / self-evolve-trigger.sh가 의존하는 5h_usage.txt 공급
+      echo "$FIVE_INT" > "$STATE_DIR/5h_usage.txt"
       # Also update next-reset.json from primary cache if available
       FIVE_RESET=$(jq -r '.five_hour.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
       SEVEN_RESET=$(jq -r '.seven_day.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
@@ -221,6 +223,10 @@ get_context() {
   if [ -z "$CTX" ]; then
     echo "?"
   else
+    # 2026-05-04 P-111 audit fix: self-evolve-trigger.sh가 의존하는 context_usage.txt 공급
+    # CTX는 token 수 → 1M(1000000) 기준 % 변환
+    local CTX_PCT=$((CTX * 100 / 1000000))
+    echo "$CTX_PCT" > "$STATE_DIR/context_usage.txt"
     echo "$CTX"
   fi
 }

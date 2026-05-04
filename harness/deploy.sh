@@ -64,7 +64,7 @@ echo "✅ hooks/ ($(ls "$SCRIPT_DIR/hooks/"*.sh "$SCRIPT_DIR/hooks/"*.ts 2>/dev/
 
 # Scripts
 mkdir -p "$TARGET/scripts"
-cp "$SCRIPT_DIR/scripts/"* "$TARGET/scripts/"
+cp -r "$SCRIPT_DIR/scripts/"* "$TARGET/scripts/"
 echo "✅ scripts/ ($(ls "$SCRIPT_DIR/scripts/" | wc -l)개)"
 
 # Tavily rotator
