@@ -369,14 +369,10 @@ async function main() {
       const prdDone = fs.existsSync(`${STATE_DIR}/prd_done`);
       const pipelineDone = fs.existsSync(`${STATE_DIR}/pipeline_done`);
 
-      // Mark build detected for enforce-build-transition.sh
-      try {
-        const fs2 = require("fs");
-        fs2.writeFileSync(
-          `${STATE_DIR}/build_detected`,
-          new Date().toISOString(),
-        );
-      } catch {}
+      // 2026-05-04 P-113 fix: build_detected 생성 코드 제거.
+      // enforce-build-transition.sh는 ~/.harness-state/build-{PROJECT_HASH}/build_detected 경로를 읽으나
+      // 여기서는 ~/.harness-state/build_detected (해시 없음)에 썼음 → path 불일치로 dead code였음.
+      // 정확한 path 생성은 build-detector.sh (UserPromptSubmit hook 별도 entry)가 담당.
 
       if (!prdDone || !pipelineDone) {
         let buildMsg = `[🚨 BUILD REQUEST DETECTED] 빌드 요청 감지. Build Transition Rule 강제:`;
