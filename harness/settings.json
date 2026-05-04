@@ -438,6 +438,15 @@
             "timeout": 15000
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/dialectic-pattern-extractor.sh",
+            "timeout": 45000
+          }
+        ]
       }
     ],
     "StopFailure": [

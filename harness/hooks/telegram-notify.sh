@@ -208,11 +208,18 @@ debounce_check() {
 
 # ─── Get context window usage from transcript ───
 get_context() {
-  # Find the latest session transcript
-  local TRANSCRIPT=$(find "$HOME/.claude/projects" -name "*.jsonl" -not -path "*/subagents/*" -newer "$STATE_DIR/session_start" 2>/dev/null | head -1)
+  # 2026-05-04 P-114 fix: PWD 기반 정확한 프로젝트 transcript 식별
+  # 기존 fallback(ls -t */jsonl)은 모든 프로젝트의 최신 가져와 stale·wrong-project 위험
+  # Claude Code는 PWD를 ~/.claude/projects/{lowercase, : → --, / → --, 첫 - 제거} 로 매핑
+  local CWD_KEY=$(echo "$PWD" | tr '[:upper:]' '[:lower:]' | sed 's|:|--|g; s|/|--|g; s|^-*||')
+  local PROJECT_TRANSCRIPT_DIR="$HOME/.claude/projects/$CWD_KEY"
+  local TRANSCRIPT=""
+  if [ -d "$PROJECT_TRANSCRIPT_DIR" ]; then
+    TRANSCRIPT=$(ls -t "$PROJECT_TRANSCRIPT_DIR"/*.jsonl 2>/dev/null | head -1)
+  fi
+  # Secondary: session_start 마커 후 newer (현재 세션 보장)
   if [ -z "$TRANSCRIPT" ]; then
-    # Fallback: find most recent transcript
-    TRANSCRIPT=$(ls -t "$HOME/.claude/projects"/*/????????-????-????-????-????????????.jsonl 2>/dev/null | head -1)
+    TRANSCRIPT=$(find "$HOME/.claude/projects" -name "*.jsonl" -not -path "*/subagents/*" -newer "$STATE_DIR/session_start" 2>/dev/null | head -1)
   fi
   if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
     echo "?"
