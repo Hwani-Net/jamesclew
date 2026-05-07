@@ -331,6 +331,15 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/tool-duration-monitor.sh"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -566,6 +575,17 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/harness-self-audit.sh",
             "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/tool-duration-monitor.sh"
           }
         ]
       }

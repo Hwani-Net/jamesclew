@@ -293,6 +293,50 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - `/skills` 메뉴 토큰 수 정렬 (`t` 토글)
 - LSP diagnostics 순서 버그 fix (편집 직전 진단이 후에 나타나 모델 오판하던 문제)
 
+## v2.1.119~v2.1.132 신규 기능 (2026-04-24 ~ 2026-05-07, 14 마이너 통합)
+
+### 🔴 하네스 직접 영향
+- **2.1.132 — statusline `context_window` fix**: 누적 세션 토큰 → 현재 컨텍스트 사용량으로 수정. `telegram-notify.sh heartbeat` 정확도 회복 (이전엔 부정확 표시 가능). P-114(freshness)와 별개 layer
+- **2.1.132 — `CLAUDE_CODE_SESSION_ID` env**: Bash subprocess에 hook의 `session_id`와 동일한 값 자동 export. Bash hook에서 세션 추적 가능
+- **2.1.128 — 1-hour prompt cache TTL silent 5분 downgrade fix**: `ENABLE_PROMPT_CACHING_1H=1` 사용 중 → 이전엔 효과가 5분으로 잘림. **이번 버전부터 정상 1시간**
+- **2.1.128 — 1M-context + 작은 autocompact window false "Prompt is too long" 차단 fix**: P-115/P-116 영역의 native fix. 우리 wrapper(`claude-opus.cmd` + `.claude/settings.local.json`)는 여전히 유효
+- **2.1.128 — `workspace`는 reserved MCP server name**: 동일 이름 서버는 skip + warning. 우리 MCP에 `workspace` 없음 (확인 완료)
+- **2.1.122 — malformed `hooks` settings.json 단일 entry 파일 무효화 안 함**: hook 작성 안전성 ↑. 잘못된 hook 추가해도 다른 hook 죽지 않음
+- **2.1.121 — MCP `alwaysLoad` option**: 서버 단위로 ToolSearch deferral skip + 항상 활성. 자주 쓰는 MCP에 적용. 현재 적용: `tavily`, `expect`, `perplexity` (2026-05-07)
+- **2.1.121 — PostToolUse hooks `updatedToolOutput` 모든 도구 지원** (이전 MCP 전용): 도구 출력 redact/transform hook 패턴 가능
+- **2.1.120 — `claude ultrareview [target]` CLI 서브커맨드**: non-interactive 모드. CI/scripts/Remote agent에서 호출 가능. `--json` 원시 출력. `harness/scripts/ultrareview-headless.sh` 래퍼 신설(2026-05-07)
+- **2.1.120 — Windows: Git for Windows 불필요**: 부재 시 PowerShell이 shell tool. 대표님 환경(Git Bash 사용)은 영향 없음
+- **2.1.119 — Hooks `PostToolUse`/`PostToolUseFailure` 입력 `duration_ms`**: 도구 실행 시간(권한 프롬프트 + PreToolUse hook 제외). `tool-duration-monitor.sh` 신설(2026-05-07)
+- **2.1.119 — Status line stdin JSON `effort.level`/`thinking.enabled`**: statusline 정보 풍부화 가능
+- **2.1.119 — `${ENV_VAR}` MCP HTTP/SSE/WebSocket headers substitution fix**: 이전엔 미substitution
+- **2.1.119 — Agent `isolation: "worktree"` stale 재사용 fix**: 이전 세션의 좀비 worktree에 새 에이전트 spawn되던 버그 해소
+- **2.1.128 — `EnterWorktree` local HEAD에서 새 브랜치 생성** (이전: `origin/<default-branch>`): unpushed commits 보존
+
+### 🟡 보안 / 위험성 변화
+- **2.1.126 — `--dangerously-skip-permissions`가 `.claude/`/`.git/`/`.vscode/`/shell config 등 이전 보호 경로 우회**: 위험성 ↑. catastrophic rm은 여전히 차단. `irreversible-alert.sh` 독립 동작으로 안전망 잔존
+- **2.1.126 — `allowManagedDomainsOnly`/`allowManagedReadPathsOnly` 무시 버그 fix**
+- **2.1.121 — `--dangerously-skip-permissions` `.claude/skills/`/`agents/`/`commands/` 우회 추가**
+
+### 🟢 신규 ENV / Settings
+- **2.1.132**: `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` (fullscreen → native scrollback 유지)
+- **2.1.129**: `CLAUDE_CODE_FORCE_SYNC_OUTPUT=1`, `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` (Homebrew/WinGet 백그라운드 업그레이드), `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` (copilot-api/HydraTeams `/v1/models` 자동 picker)
+- **2.1.122**: `ANTHROPIC_BEDROCK_SERVICE_TIER`
+- **2.1.119**: `prUrlTemplate`, `CLAUDE_CODE_HIDE_CWD`
+
+### UI / UX
+- **2.1.129**: `--plugin-url <url>` (.zip 플러그인 URL fetch). Plugin manifests `themes`/`monitors`은 `experimental` 선언 권장. `skillOverrides` 작동
+- **2.1.128**: `/mcp` tool count 표시. `--plugin-dir` .zip 수용. `/context` ASCII 그리드 토큰 낭비(~1.6k) fix
+- **2.1.122**: `/resume` PR URL 검색 (GitHub/GitLab/Bitbucket). OTel `claude_code.at_mention`
+- **2.1.121**: `/skills` type-to-filter 검색. `claude plugin prune`
+- **2.1.119**: `/config` 설정 영구화. `--from-pr` GitLab/Bitbucket/GHE 지원. `--print` mode agent `tools:` 존중
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- 기존 hook 모두 동작 유지. 신규 활용: `duration_ms`(P-119), `alwaysLoad`(P-121), `ultrareview` CLI(P-120)
+- `bash-tool-blocker.sh` + `irreversible-alert.sh` 독립 동작 유지 (P-026)
+- P-115/P-116 우회는 native fix(2.1.128) 후에도 유효 — 자동화 정책 보존
+
+---
+
 ## v2.1.118 신규 기능 (2026-04-23)
 
 ### Hook에서 MCP 도구 직접 호출 (하네스 큰 영향)
