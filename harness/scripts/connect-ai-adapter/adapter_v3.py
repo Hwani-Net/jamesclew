@@ -37,7 +37,7 @@ ANTHROPIC_CLI_EXCLUSIVE = [
 
 
 def call_claude_cli(model_id, messages, timeout=180):
-    """`claude -p` subprocess로 Anthropic Pro/Max OAuth 풀 호출.
+    ""`claude -p` subprocess로 Anthropic Pro/Max OAuth 풀 호출.
     Returns: (content_text, eval_count_estimate)
     """
     cli_model = CLAUDE_CLI_MODEL_MAP.get(model_id, model_id.replace(".", "-"))
@@ -63,7 +63,7 @@ def call_claude_cli(model_id, messages, timeout=180):
             err = (result.stderr or "")[:500]
             raise RuntimeError(f"claude CLI exit={result.returncode}: {err}")
         out = result.stdout or ""
-        # eval token 추정 (대략 4자/토큰)
+        # eval token 추정 (대력 4자/토큰)
         return out.strip(), max(1, len(out) // 4)
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"claude CLI timeout after {timeout}s")
@@ -94,7 +94,7 @@ def fetch_whitelist():
 
 
 def get_whitelist():
-    """캐시된 화이트리스트 반환 (TTL 만료 시 재fetch)"""
+    """캐시된 화이트리스트 반환 (TTL 만료 시 재 fetch)"""
     global _whitelist, _whitelist_fetched_at
     now = time.time()
     with _whitelist_lock:
