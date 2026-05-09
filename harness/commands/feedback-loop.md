@@ -116,7 +116,7 @@ cat > "$OUTPUT_FILE" << FEEDBACK_EOF
 |------|-----|--------|------|
 | 평균 세션 시간 | {AVG_DURATION}초 | ≥ 30초 | {PASS/FAIL} |
 | 이탈률 | {BOUNCE_RATE}% | ≤ 80% | {PASS/FAIL} |
-| 총 세션 | {SESSIONS} | — | — |
+| 쒅 세션 | {SESSIONS} | — | — |
 
 ## Search Console
 | 쿼리 | 클릭 | 노출 | CTR | 순위 |
@@ -149,7 +149,7 @@ echo "[feedback-loop] 저장 완료: $OUTPUT_FILE"
 # TodoWrite(title="체류 시간 개선", priority="high", context="평균 ${AVG}초 < 30초 임계치")
 ```
 
-## 수동 입력 섹션 (API 미연결 시)
+## 수동 입력 셉션 (API 미연결 시)
 
 GA4/Search Console API 인증이 없는 경우:
 
@@ -157,12 +157,12 @@ GA4/Search Console API 인증이 없는 경우:
 GA4 수동 입력:
 - 평균 세션 시간: ___초
 - 이탈률: ___%
-- 총 세션: ___
+- 쒅 세션: ___
 - 상위 페이지: ___
 
 Search Console 수동 입력:
-- 총 클릭: ___
-- 총 노출: ___
+- 쒅 클릭: ___
+- 쒅 노출: ___
 - 상위 쿼리: ___
 ```
 
