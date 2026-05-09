@@ -40,7 +40,6 @@ save_last_usage() {
   local FIVE="$1" SEVEN="$2"
   local NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date +%Y-%m-%dT%H:%M:%SZ)
   local LU_PATH="$STATE_DIR/last_usage.json"
-  # Use shell-native write to avoid Windows path issues in python3
   python3 - "$FIVE" "$SEVEN" "$NOW" "$LU_PATH" 2>/dev/null <<'PYEOF'
 import json, sys
 data = {'five': sys.argv[1], 'seven': sys.argv[2], 'saved_at': sys.argv[3]}
@@ -75,7 +74,6 @@ PYEOF
 
 # ─── Usage check with caching (5min TTL) + v2.1.116 fallback ───
 get_usage() {
-  # PRIMARY: statusline's JSON cache written by Claude Code's rate-limit-resilient Settings Usage tab
   CACHE_FILE="/tmp/.claude_usage_cache"
 
   if [ -f "$CACHE_FILE" ]; then
@@ -84,11 +82,8 @@ get_usage() {
     if [ -n "$FIVE" ] && [ -n "$SEVEN" ]; then
       FIVE_INT=$(printf "%.0f" "$FIVE" 2>/dev/null || echo "?")
       SEVEN_INT=$(printf "%.0f" "$SEVEN" 2>/dev/null || echo "?")
-      # Persist for future fallback
       save_last_usage "$FIVE_INT" "$SEVEN_INT"
-      # 2026-05-04 (audit): emergency-mode-check.sh / self-evolve-trigger.sh가 의존하는 5h_usage.txt 공급
       echo "$FIVE_INT" > "$STATE_DIR/5h_usage.txt"
-      # Also update next-reset.json from primary cache if available
       FIVE_RESET=$(jq -r '.five_hour.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
       SEVEN_RESET=$(jq -r '.seven_day.resets_at // empty' "$CACHE_FILE" 2>/dev/null)
       if [ -n "$FIVE_RESET" ] && [ -n "$SEVEN_RESET" ]; then
@@ -107,14 +102,12 @@ open('$STATE_DIR/next-reset.json', 'w').write(json.dumps(existing, indent=2))
     fi
   fi
 
-  # SECONDARY FALLBACK (v2.1.116): ~/.harness-state/last_usage.json — last successful read
   FALLBACK=$(load_last_usage)
   FALLBACK_FIVE="${FALLBACK%%|*}"
   FALLBACK_REST="${FALLBACK#*|}"
   FALLBACK_SEVEN="${FALLBACK_REST%%|*}"
   FALLBACK_AGE="${FALLBACK_REST##*|}"
   if [ -n "$FALLBACK_FIVE" ] && [ "$FALLBACK_FIVE" != "?" ]; then
-    # Return with age tag so fmt_usage can show staleness
     echo "${FALLBACK_FIVE}|${FALLBACK_SEVEN}|stale:${FALLBACK_AGE}"
     return
   fi
@@ -122,25 +115,23 @@ open('$STATE_DIR/next-reset.json', 'w').write(json.dumps(existing, indent=2))
   echo "?|?"
 }
 
-# ─── Parse usage result (supports optional stale:AGE 3rd field) ───
+# ─── Parse usage result ───
 parse_usage() {
   local USAGE="$1"
   FIVE="${USAGE%%|*}"
   local REST="${USAGE#*|}"
   SEVEN="${REST%%|*}"
   USAGE_STALE=""
-  # Extract stale tag if present (v2.1.116 fallback)
   if [[ "$REST" == *"|stale:"* ]]; then
     USAGE_STALE="${REST##*|stale:}"
   fi
 }
 
-# ─── Usage threshold check (10% increments) ───
+# ─── Usage threshold check ───
 check_usage_threshold() {
   USAGE=$(get_usage)
   parse_usage "$USAGE"
 
-  # Skip threshold check if usage is unknown
   if [ "$FIVE" = "?" ]; then
     echo "$USAGE"
     return
@@ -156,10 +147,8 @@ check_usage_threshold() {
   PREV_BUCKET=$((PREV_FIVE / 10))
   CURR_BUCKET=$((FIVE / 10))
 
-  # Only alert at 50%+ in 10% increments
   if [ "$CURR_BUCKET" -gt "$PREV_BUCKET" ] 2>/dev/null && [ "$FIVE" -ge 50 ] 2>/dev/null; then
     WARN=""
-    RESET_INFO=""
     if [ "$FIVE" -ge 80 ] 2>/dev/null; then
       WARN=$'\n🚨 위험 구간! 토큰 절약 필수'
     elif [ "$FIVE" -ge 50 ] 2>/dev/null; then
@@ -187,7 +176,7 @@ track_session() {
   echo "$COUNT"
 }
 
-# ─── Debounce: prevent duplicate messages within N seconds ───
+# ─── Debounce ───
 debounce_check() {
   local EVENT_TYPE="$1"
   local COOLDOWN="${2:-15}"
@@ -198,26 +187,22 @@ debounce_check() {
     LAST_TS=$(cat "$LOCK_FILE" 2>/dev/null || echo 0)
     ELAPSED=$((NOW - LAST_TS))
     if [ "$ELAPSED" -lt "$COOLDOWN" ] 2>/dev/null; then
-      return 1  # Too soon, skip
+      return 1
     fi
   fi
 
   echo "$NOW" > "$LOCK_FILE"
-  return 0  # OK to send
+  return 0
 }
 
 # ─── Get context window usage from transcript ───
 get_context() {
-  # 2026-05-04 P-114 fix: PWD 기반 정확한 프로젝트 transcript 식별
-  # 기존 fallback(ls -t */jsonl)은 모든 프로젝트의 최신 가져와 stale·wrong-project 위험
-  # Claude Code는 PWD를 ~/.claude/projects/{lowercase, : → --, / → --, 첫 - 제거} 로 매핑
   local CWD_KEY=$(echo "$PWD" | tr '[:upper:]' '[:lower:]' | sed 's|:|--|g; s|/|--|g; s|^-*||')
   local PROJECT_TRANSCRIPT_DIR="$HOME/.claude/projects/$CWD_KEY"
   local TRANSCRIPT=""
   if [ -d "$PROJECT_TRANSCRIPT_DIR" ]; then
     TRANSCRIPT=$(ls -t "$PROJECT_TRANSCRIPT_DIR"/*.jsonl 2>/dev/null | head -1)
   fi
-  # Secondary: session_start 마커 후 newer (현재 세션 보장)
   if [ -z "$TRANSCRIPT" ]; then
     TRANSCRIPT=$(find "$HOME/.claude/projects" -name "*.jsonl" -not -path "*/subagents/*" -newer "$STATE_DIR/session_start" 2>/dev/null | head -1)
   fi
@@ -225,20 +210,17 @@ get_context() {
     echo "?"
     return
   fi
-  # Extract latest cache_read_input_tokens (= approximate context size)
   local CTX=$(grep -oE '"cache_read_input_tokens":[0-9]+' "$TRANSCRIPT" 2>/dev/null | tail -1 | grep -oE '[0-9]+')
   if [ -z "$CTX" ]; then
     echo "?"
   else
-    # 2026-05-04 P-111 audit fix: self-evolve-trigger.sh가 의존하는 context_usage.txt 공급
-    # CTX는 token 수 → 1M(1000000) 기준 % 변환
     local CTX_PCT=$((CTX * 100 / 1000000))
     echo "$CTX_PCT" > "$STATE_DIR/context_usage.txt"
     echo "$CTX"
   fi
 }
 
-# ─── Format context as percentage of 1M ───
+# ─── Format context as percentage ───
 fmt_context() {
   local CTX="$1"
   if [ "$CTX" = "?" ]; then
@@ -257,7 +239,6 @@ fmt_context() {
 }
 
 # ─── Format UTC ISO string to KST short ───
-# Input: 2026-04-16T05:15:41Z  Output: 14:15 (today) or 4/20 11:00 (later)
 fmt_kst() {
   local ISO="$1"
   [ -z "$ISO" ] && { echo ""; return; }
@@ -276,7 +257,7 @@ except Exception:
 " "$ISO" 2>/dev/null
 }
 
-# ─── Format usage string (with KST reset times, v2.1.116 stale fallback) ───
+# ─── Format usage string ───
 fmt_usage() {
   local USAGE="$1"
   parse_usage "$USAGE"
@@ -286,14 +267,12 @@ fmt_usage() {
     SEVEN_RESET=$(fmt_kst "$(jq -r '.seven_day.resets_at // empty' "$STATE_DIR/next-reset.json" 2>/dev/null)")
   fi
   if [ "$FIVE" = "?" ]; then
-    # LAST RESORT: no cache at all
     echo "📊 Usage: 확인 불가 (API rate limited)"
   else
     local LINE="📊 5H: ${FIVE}%"
     [ -n "$FIVE_RESET" ] && LINE="$LINE (리셋 ${FIVE_RESET})"
     LINE="$LINE | 7D: ${SEVEN}%"
     [ -n "$SEVEN_RESET" ] && LINE="$LINE (리셋 ${SEVEN_RESET})"
-    # v2.1.116 fallback: mark stale data so user knows it's cached
     if [ -n "$USAGE_STALE" ]; then
       LINE="$LINE [캐시 ${USAGE_STALE}]"
     fi
@@ -307,7 +286,6 @@ case "$EVENT" in
     echo "$(date +%s)" > "$STATE_DIR/session_start"
     SESSION_NUM=$(track_session)
     USAGE=$(check_usage_threshold)
-    # Get current working directory from environment
     CWD="${CLAUDE_CWD:-$(pwd)}"
     PROJECT=$(basename "$CWD" 2>/dev/null || echo "?")
     send_msg "🚀 세션 시작 (#${SESSION_NUM})
@@ -326,7 +304,6 @@ $(fmt_usage "$USAGE")"
     if debounce_check "stop" 30; then
       USAGE=$(get_usage)
       CTX=$(get_context)
-      # Calculate session duration
       DURATION=""
       if [ -f "$STATE_DIR/session_start" ]; then
         START_TS=$(cat "$STATE_DIR/session_start" 2>/dev/null || echo 0)
@@ -367,14 +344,11 @@ ${EXTRA}
     ;;
 
   heartbeat)
-    # No message — just set typing indicator for bot status
     set_typing
-    # Still check usage threshold (sends alert only at 50%+)
     check_usage_threshold > /dev/null
     ;;
 
   done)
-    # Task completion — send message only on explicit "done" event
     USAGE=$(get_usage)
     CTX=$(get_context)
     send_msg "✅ 작업 완료
