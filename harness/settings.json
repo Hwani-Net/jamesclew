@@ -539,7 +539,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh start; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"[INIT] JamesClaw Agent. 즉시실행(할까요금지), Built-in>Bash>MCP, 토큰효율최우선, 에러3회재시도후보고.\\\"}}\"'",
+            "command": "bash -c 'bash $HOME/.claude/hooks/telegram-notify.sh start; echo \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"SessionStart\\\",\\\"additionalContext\\\":\\\"[INIT] JamesClaw Agent. 즉시실행(할까요금지), Built-in>Bash>MCP, 토큰효율최우선, 에러3회재시도후보고.\\\"}}\"\'',
             "timeout": 10000
           },
           {
