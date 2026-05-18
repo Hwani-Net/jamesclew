@@ -101,6 +101,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/cdp-auto-ensure.sh",
+            "timeout": 30000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/quality-gate.sh pre-commit",
             "if": "Bash(git commit *)",
             "timeout": 5000
