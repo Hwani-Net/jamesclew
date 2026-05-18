@@ -99,7 +99,7 @@ MOD_TELEGRAM=$(prompt_yesno "Telegram notifications" "n")
 MOD_OBSIDIAN="n"
 [[ -n "$OBSIDIAN" ]] && MOD_OBSIDIAN="y"
 MOD_CODEX=$(prompt_yesno "Codex CLI (external code review)" "n")
-MOD_COPILOT=$(prompt_yesno "copilot-api (GPT-4.1 proxy on :4141)" "n")
+MOD_COPILOT=$(prompt_yesno "ollama (GPT-4.1 proxy on :4141)" "n")
 MOD_OLLAMA=$(prompt_yesno "Ollama local LLM fallback" "n")
 echo ""
 
@@ -201,7 +201,7 @@ fi
 echo ""
 echo "🔧 Installing selected external tools..."
 [[ "$MOD_CODEX" == "y" ]]   && npm install -g @openai/codex && echo "   ✓ codex"
-[[ "$MOD_COPILOT" == "y" ]] && npm install -g copilot-api   && echo "   ✓ copilot-api"
+[[ "$MOD_COPILOT" == "y" ]] && # ollama DEPRECATED 2026-05 — use ollama instead   && echo "   ✓ ollama"
 if [[ "$MOD_OLLAMA" == "y" ]]; then
   if ! command -v ollama >/dev/null; then
     echo "   ⚠ Ollama not installed. Download: https://ollama.com/download"

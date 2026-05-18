@@ -204,3 +204,108 @@ DESIGN REFERENCE — MotionSites Premium Hero Style (from extracted free prompts
 - `ai-automation.png` — black vertical lines, minimal (AI Automation Hero 원본)
 - `nexora.png` — nature bg + app mockup (Nexora Automation 원본)
 - `grow-ai.png` — deep black + blue aurora wave
+
+---
+
+## Stitch March 2026 Update — 추가 기능 (2026-05-16 보강)
+
+> 출처: engincanveske.substack.com / Google Labs 공식 announcement / mcp-stitch 도구 시그니처
+
+### 1. AI-native 무한 캔버스
+- **고정 프레임 폐기** → 프로젝트 성장에 따라 캔버스가 자동 확장.
+- 초기 sketch → 프로토타입 → 최종 디자인 단일 캔버스 안에서 진화.
+- Stitch 호출 시 화면 개수를 미리 정하지 말고 "user journey" 단위로 프롬프트 작성 가능.
+
+### 2. 멀티 화면 단일 생성 (한 번에 최대 5화면)
+- 프롬프트에 "user journey" 또는 "screen flow"를 명시하면 5화면을 한 호출로 생성.
+- 예시: "5 screens of productivity app: RSS Feed → Read Later → Todo → Eisenhower Matrix → Calendar"
+- MCP 도구: `mcp__stitch__generate_screen_from_text` (다중 화면 단일 호출 지원)
+
+### 3. 인터랙티브 프로토타입
+- Stitch 캔버스에서 화면 간 링크 연결 → **Play 버튼** → 클릭 시뮬레이션.
+- 사용자가 탭한 위치에 따라 **다음 logical 화면 자동 생성** (예측 생성).
+- Figma 대비 약 4배 빠른 prototype 작업 시간.
+
+### 4. Voice Canvas (음성 인터페이스)
+- 캔버스에 음성으로 디자인 지시. AI 에이전트가 듣고 명확화 질문 + 디자인 비평을 실시간으로 응답.
+- 탐색 단계 (idea → mockup)에서 키보드보다 빠른 경우 多.
+
+### 5. 정밀 편집 (March update 신규)
+- 텍스트 element 클릭 → 직접 rewrite (프롬프트 재실행 불필요).
+- 이미지 swap, spacing 조정 모두 manual.
+- 프롬프트 재실행으로 전체 재생성하지 말 것 — 잔여 디테일 유지를 위해 manual edit 우선.
+
+### 6. DESIGN.md 내보내기 (핵심 — agent handoff 표준)
+
+**Stitch의 가장 큰 가치 — design system을 portable 파일로 export.**
+
+- 형식: agent-readable Markdown (YAML frontmatter + 디자인 토큰 + 컴포넌트 spec)
+- 내보내기 트리거: 캔버스에서 visual system 확정 후 `Export DESIGN.md` 또는 MCP `mcp__stitch__upload_design_md`
+- 받는 쪽: Claude Code / Cursor / Codex CLI / Gemini CLI / GitHub Copilot 모두 동일한 design system 인식.
+- 우리 워크플로 적용:
+  ```
+  Stitch에서 디자인 → DESIGN.md export → 우리 프로젝트 루트에 저장 → /design-review 또는 drift-guard로 라이브 페이지와 비교
+  ```
+
+#### DESIGN.md 표준 구조 (Stitch 산출물 기반)
+```markdown
+---
+name: <project-name>
+version: 0.1.0
+created_with: stitch
+exported_at: 2026-05-16T12:34:56Z
+---
+
+## Color Tokens
+- primary: #F59E0B
+- background: #050508
+- text-primary: #FFFFFF
+- ...
+
+## Typography
+- display: Inter Bold 80px / 1.1
+- h1: Inter Bold 56px / 1.1
+- body: Inter Regular 16px / 1.5
+- accent: Instrument Serif Italic
+
+## Spacing
+- 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64
+
+## Components
+### Pill Badge
+- background: rgba(245,158,11,0.15)
+- border: 1px solid rgba(245,158,11,0.3)
+- ...
+
+### Hero CTA
+- primary: filled amber (#F59E0B), rounded-full
+- secondary: glass (rgba(255,255,255,0.1)), border-white/20
+
+## Screens
+- screen-1-hero.png
+- screen-2-features.png
+- ...
+```
+
+### 7. 우리 하네스 통합 시나리오
+
+| 단계 | 도구 | 우리 자산 |
+|------|------|-----------|
+| 1. 탐색·아이디어 | Stitch Voice Canvas | 무료, 한도 없음 |
+| 2. 멀티 화면 빠른 mock | Stitch 5화면 단일 생성 | `mcp__stitch__generate_screen_from_text` |
+| 3. 인터랙티브 검증 | Stitch Play 모드 | UX 흐름 검증 |
+| 4. DESIGN.md export | Stitch → `mcp__stitch__upload_design_md` | 우리 repo 루트에 commit |
+| 5. drift-guard init | `npx drift-guard init --from DESIGN.md` | `verify-deploy.sh`에 통합됨 (P-054) |
+| 6. 마감 폴리시 | Claude Design (다음 reference 참조) | Claude Code 직통 핸드오프 |
+| 7. 구현 | Claude Code (`/blog-generate`/`/blog-publish`) | Firebase 배포 |
+
+### 8. 비용 정책 (대표님 정책 반영)
+
+- **Stitch는 무료** — 탐색·반복 실험에 제한 없음. 매 idea마다 부담 없이 호출 가능.
+- 우리 환경에 `claude-code-templates` 같은 패키지 매니저로 추가 도구 부담 0.
+
+### 9. 우리 reference 갱신 정책
+
+- 새 Stitch 기능 발견 시 본 파일 끝에 "Update N" 섹션 추가.
+- DESIGN.md export 패턴은 향후 변할 수 있음 — Stitch 공식 docs 우선.
+- Claude Design과의 경계는 `rules/claude-design-reference.md` 참조.

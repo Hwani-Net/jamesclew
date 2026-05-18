@@ -29,9 +29,10 @@ Tavily search: search_depth="basic", max_results=5
 수집: 상위 5개 URL, 제목, 메타 디스크립션, 주요 H2 구조
 ```
 
-**1-2. 관련 키워드 클러스터 (Perplexity search MCP)**
+**1-2. 관련 키워드 클러스터 (Tavily search MCP)**
 ```
-Perplexity search: "{키워드} 관련 검색어 AND 자주 묻는 질문"
+Tavily search: search_depth="basic", max_results=5
+쿼리: "{키워드} 관련 검색어 AND 자주 묻는 질문"
 수집: relatedKeywords[], questions[] (FAQ 소스)
 ```
 

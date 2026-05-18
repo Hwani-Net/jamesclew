@@ -80,12 +80,12 @@ $(cat MultiBlog/drafts/{slug}/draft.md)"
 **라운드 3 — GPT-4.1 (또는 Gemma 4 로컬)**
 ```bash
 CONTENT=$(cat MultiBlog/drafts/{slug}/draft.md)
-curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
+curl -s --max-time 30 http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"다음 블로그 글의 품질 문제를 수정하라.\\n\\n실패 항목: {failedGates}\\n수정 지시: {수정 프롬프트}\\n이전 2회 수정이 실패한 이유: {라운드 1,2 실패 분석}\\n이번이 마지막 시도이므로 가장 보수적으로 수정하라.\\n\\n전체 수정된 마크다운 출력.\\n\\n---\\n$CONTENT\"}]}" \
   | jq -r '.choices[0].message.content'
 ```
-GPT-4.1 실패 시 (copilot-api 서버 다운 등) Gemma 4 로컬 폴백:
+GPT-4.1 실패 시 (Codex CLI / Ollama 서버 다운 등) Gemma 4 로컬 폴백:
 ```bash
 curl -s http://localhost:11434/api/generate -d '{
   "model": "gemma3:27b",

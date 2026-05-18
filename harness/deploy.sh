@@ -71,6 +71,18 @@ echo "✅ scripts/ ($(ls "$SCRIPT_DIR/scripts/" | wc -l)개)"
 cp "$SCRIPT_DIR/scripts/tavily-rotator.mjs" "$TARGET/tavily-rotator.mjs"
 echo "✅ tavily-rotator.mjs"
 
+# P-154: tavily-mcp/build/index.js must expose its axios instance via globalThis so
+# tavily-rotator.mjs can monkey-patch the *same* axios module instance (ESM/CJS
+# dual-package-hazard otherwise gives us a different cache). The patch is idempotent —
+# already-patched installs are a no-op. Silent skip if tavily-mcp isn't installed.
+if [ -f "$SCRIPT_DIR/scripts/patch-tavily-mcp.sh" ]; then
+  if bash "$SCRIPT_DIR/scripts/patch-tavily-mcp.sh" >/dev/null 2>&1; then
+    echo "✅ patch-tavily-mcp.sh (axios interception verified)"
+  else
+    echo "⚠️  patch-tavily-mcp.sh skipped (tavily-mcp 미설치 또는 anchor 변경 — 수동 실행 필요)"
+  fi
+fi
+
 # Agents
 mkdir -p "$TARGET/agents"
 cp "$SCRIPT_DIR/agents/"*.md "$TARGET/agents/"
@@ -94,18 +106,22 @@ if [ -d "$SCRIPT_DIR/../docs/adr" ]; then
   echo "✅ docs/adr/"
 fi
 
-# Mirror commands + rules + docs to Obsidian for reference
+# Mirror commands + rules + docs + pitfalls to Obsidian for reference
 VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
 if [ -d "$VAULT/01-jamesclaw/harness" ]; then
   mkdir -p "$VAULT/01-jamesclaw/harness/commands"
   mkdir -p "$VAULT/01-jamesclaw/harness/rules"
   mkdir -p "$VAULT/01-jamesclaw/harness/docs"
+  mkdir -p "$VAULT/01-jamesclaw/harness/pitfalls"
   cp -u "$SCRIPT_DIR/commands/"*.md "$VAULT/01-jamesclaw/harness/commands/" 2>/dev/null
   cp -u "$SCRIPT_DIR/rules/"*.md "$VAULT/01-jamesclaw/harness/rules/" 2>/dev/null
   if [ -d "$SCRIPT_DIR/docs" ]; then
     cp -ru "$SCRIPT_DIR/docs/"* "$VAULT/01-jamesclaw/harness/docs/" 2>/dev/null
   fi
-  echo "✅ commands/ + rules/ + docs/ mirrored to Obsidian"
+  if [ -d "$SCRIPT_DIR/pitfalls" ]; then
+    cp -u "$SCRIPT_DIR/pitfalls/"*.md "$VAULT/01-jamesclaw/harness/pitfalls/" 2>/dev/null
+  fi
+  echo "✅ commands/ + rules/ + docs/ + pitfalls/ mirrored to Obsidian"
 fi
 
 echo ""

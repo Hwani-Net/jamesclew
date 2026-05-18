@@ -40,7 +40,7 @@ modules:
   telegram_notify: false     # 작업 완료 텔레그램 알림
   obsidian_sync: false       # 세션→옵시디언 자동 저장
   gbrain: false              # 영구 지식 베이스
-  copilot_api: false         # GPT-4.1 프록시 (localhost:4141)
+  ollama: true               # Ollama 로컬 LLM (localhost:11434)
   codex_cli: false           # Codex CLI (6계정 로테이션)
   ollama_fallback: false     # Gemma 4 로컬 폴백 (localhost:11434)
   wiki_pipeline: false       # 일일 raw 소스 ingest
@@ -107,4 +107,4 @@ bash harness/install.sh --non-interactive
 | 영어 응답으로 전환 | `~/.harness/persona.yaml` | `language: en` |
 | 텔레그램 알림 활성화 | `~/.harness/persona.yaml` | `modules.telegram_notify: true` |
 | Obsidian 연동 | `~/.harness/persona.yaml` | `obsidian_vault: "C:/..."` + `modules.obsidian_sync: true` |
-| GPT-4.1 외부 검수 활성화 | `~/.harness/persona.yaml` | `modules.copilot_api: true` |
+| Ollama 로컬 LLM 활성화 | `~/.harness/persona.yaml` | `modules.ollama: true` |

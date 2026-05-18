@@ -86,7 +86,7 @@ argument-hint: "<프로젝트 목표 한 문장> [--ralph]"
 2. **teammate 프롬프트에 task 훅 주입 필수** — teammate도 각자 ToolSearch 수행 후 자신의 task를 클레임.
 3. **TeamCreate는 system prompt 주입 지원 안 함** — Agent() spawn 시 prompt 파라미터에 역할 프롬프트 포함.
 4. **git init 필수** (R8). pre-commit hook이 초기 empty commit을 차단할 수 있어 초기 commit은 skip 가능. dev 첫 구현 후 자연스러운 commit 발생.
-5. **copilot-api 기동 확인**: `curl -s --max-time 2 http://localhost:4141/v1/models` → 200. 미기동 시 SessionStart hook이 자동 기동.
+5. **Codex CLI / Ollama 기동 확인**: `curl -s --max-time 2 http://localhost:4141/v1/models` → 200. 미기동 시 SessionStart hook이 자동 기동.
 6. **Codex CLI**: `codex exec` 는 ChatGPT 계정 모델(gpt-5.2-codex, gpt-5-codex) 미지원. reviewer가 사용 시 **harness/scripts/codex-rotate.sh** 경유하거나 GPT-4.1 /v1/messages 60s fallback.
 
 ---
@@ -97,9 +97,9 @@ argument-hint: "<프로젝트 목표 한 문장> [--ralph]"
 |---|---|---|---|---|
 | 디렉터 | (이 세션) | Opus Lead | — | **PRD Read 후 승인** (R10) + **TaskCreate 초기 5건** (R13) + **watchdog 주기 점검** (R14). qa PASS 즉시 `<promise>TEAM-DONE</promise>`. |
 | 기획자 A | `planner-a` | Sonnet | — | PRD 작성 + **테스트 벡터 검증** (R9) + counter 1회 증가 + **TaskUpdate(status:completed)** (R13) |
-| 기획자 B | `planner-b` | Sonnet | curl copilot-api 60s | 교차검증 + counter 1회 증가 + **TaskUpdate** |
+| 기획자 B | `planner-b` | Sonnet | curl Codex CLI / Ollama 60s | 교차검증 + counter 1회 증가 + **TaskUpdate** |
 | 개발팀 | `dev` | Sonnet | — | 빌드 성공 + **silent fail 금지** + **TaskList 클레임 → TaskUpdate** |
-| 리뷰어 | `reviewer` | Sonnet | curl copilot-api `/v1/messages` 60s + codex-rotate.sh | Read 검증 + review.md + **R2.5 Read 재검증** + **TaskUpdate** |
+| 리뷰어 | `reviewer` | Sonnet | curl Codex CLI / Ollama `/v1/messages` 60s + codex-rotate.sh | Read 검증 + review.md + **R2.5 Read 재검증** + **TaskUpdate** |
 | QA | `qa` | Sonnet | expect MCP (vite 기동) | 실물 렌더 + 중복 요청 통합 + **TaskUpdate** |
 
 ---

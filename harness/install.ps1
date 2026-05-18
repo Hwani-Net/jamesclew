@@ -76,7 +76,7 @@ Write-Host "🧩 Optional modules" -ForegroundColor Yellow
 $ModTelegram = Prompt-YesNo "Telegram notifications" "n"
 $ModObsidian = if ($Obsidian) { "y" } else { "n" }
 $ModCodex    = Prompt-YesNo "Codex CLI (external code review)" "n"
-$ModCopilot  = Prompt-YesNo "copilot-api (GPT-4.1 proxy on :4141)" "n"
+$ModCopilot  = Prompt-YesNo "ollama (GPT-4.1 proxy on :4141)" "n"
 $ModOllama   = Prompt-YesNo "Ollama local LLM fallback" "n"
 Write-Host ""
 
@@ -172,7 +172,7 @@ Write-Host "✅ Harness deployed"
 Write-Host ""
 Write-Host "🔧 Installing selected external tools..."
 if ($ModCodex -eq "y")   { npm install -g "@openai/codex"; Write-Host "   ✓ codex" }
-if ($ModCopilot -eq "y") { npm install -g copilot-api;     Write-Host "   ✓ copilot-api" }
+if ($ModCopilot -eq "y") { # ollama DEPRECATED 2026-05 — use ollama instead;     Write-Host "   ✓ ollama" }
 if ($ModOllama -eq "y" -and -not (Get-Command ollama -ErrorAction SilentlyContinue)) {
     Write-Host "   ⚠ Ollama not installed. Download: https://ollama.com/download"
 }

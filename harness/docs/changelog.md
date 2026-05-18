@@ -11,7 +11,7 @@
 | Hook `type: "mcp_tool"` 지원 | bash subprocess 없이 MCP 도구 직접 호출. `telegram-notify.sh`, gbrain 저장 hook 등 전환 후보 | `CLAUDE.md` v2.1.118 섹션 |
 | `/cost` + `/stats` → `/usage` 통합 | typing shortcut은 유지. 커스텀 커맨드 `commands/cost.md`는 독립 유지 | `CLAUDE.md`, `docs/claude-code-manual.md` |
 | Auto mode `"$defaults"` 병합 모드 | built-in 규칙 덮어쓰지 않고 추가 가능 | `docs/claude-code-manual.md` |
-| `/model` + `ANTHROPIC_BASE_URL` gateway | copilot-api(:4141) / HydraTeams(:3456)에서 `ANTHROPIC_DEFAULT_*_MODEL_NAME` override로 라벨 커스터마이징 가능 | `CLAUDE.md` |
+| `/model` + `ANTHROPIC_BASE_URL` gateway | HydraTeams(:3456)에서 `ANTHROPIC_DEFAULT_*_MODEL_NAME` override로 라벨 커스터마이징 가능 | `CLAUDE.md` |
 | `DISABLE_UPDATES` env | 수동 `claude update`까지 차단 (stricter) | — |
 | MCP OAuth 6건 수정 | 토큰 만료/갱신/race/keychain/revoked | — |
 | Agent-type hooks 비-Stop 이벤트 버그 수정 | "Messages are required for agent hooks" 에러 해소 | — |

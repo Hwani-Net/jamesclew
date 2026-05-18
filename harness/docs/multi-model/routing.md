@@ -23,11 +23,11 @@ Claude Code는 두 가지 사용량 제약을 가집니다.
 |------|----------|------|------|
 | Sonnet 서브에이전트 | `Agent(model: "sonnet")` | 풀 도구 접근, 파일 편집 | 5H 소비 (느림), Sonnet 7D |
 | Codex CLI | `bash harness/scripts/codex-rotate.sh "프롬프트"` | 독립적 코드 관점, 6계정 로테이션 | 5H 0, 7D 0 |
-| GPT-4.1 (copilot-api) | `curl -s --max-time 30 http://localhost:4141/v1/chat/completions` | 콘텐츠 톤, AI냄새 감지 | 5H 0, 7D 0 |
+| GPT-4.1 (Codex CLI / Ollama) | `curl -s --max-time 30 http://localhost:11434/api/chat` | 콘텐츠 톤, AI냄새 감지 | 5H 0, 7D 0 |
 | Gemma 4 로컬 | Ollama API `localhost:11434` | 무제한, 오프라인 | 0 |
 | GLM-5.1 클라우드 | `ollama run glm-5.1:cloud` | 무료, 고성능 | 수동 호출만 (cloud 과금 리스크) |
 
-GPT-4.1 호출 전 copilot-api 서버가 실행 중이어야 합니다: `copilot-api start --port 4141`
+GPT-4.1 호출 전 Codex CLI / Ollama 서버가 실행 중이어야 합니다: `ollama run gemma4`
 
 ---
 
@@ -102,7 +102,7 @@ node harness/tools/HydraTeams/dist/index.js \
   --model gpt-4o-mini --provider openai --port 3456 --passthrough lead
 ```
 
-copilot-api(`localhost:4141`)는 단일 API 호출용, HydraTeams(`localhost:3456`)는 Agent Teams teammate 전용입니다. 혼용하지 마십시오.
+Codex CLI / Ollama(`localhost:11434`)는 단일 API 호출용, HydraTeams(`localhost:3456`)는 Agent Teams teammate 전용입니다. 혼용하지 마십시오.
 
 ---
 
@@ -130,11 +130,11 @@ copilot-api(`localhost:4141`)는 단일 API 호출용, HydraTeams(`localhost:345
 5H가 소진되면 GPT-4.1을 Claude Code 메인 모델로 전환할 수 있습니다.
 
 ```bash
-# 1. copilot-api 서버 시작
-copilot-api start --port 4141 &
+# 1. Codex CLI / Ollama 서버 시작
+ollama run gemma4 &
 
 # 2. GPT-4.1을 메인으로 새 세션 시작
-ANTHROPIC_BASE_URL=http://localhost:4141 claude
+ANTHROPIC_BASE_URL=http://localhost:11434 claude
 
 # 3. Opus 어드바이저는 반드시 별도 Claude Code 세션으로 유지
 ```
@@ -171,4 +171,4 @@ ANTHROPIC_BASE_URL=http://localhost:4141 claude
 - `D:/jamesclew/harness/tools/HydraTeams/`
 - `D:/jamesclew/harness/scripts/codex-rotate.sh`
 - P-055: Sonnet Vision 정확도 격차
-- P-029: Ralph Loop + GPT-4.1 copilot-api 연동 패턴
+- P-029: Ralph Loop + GPT-4.1 Codex CLI / Ollama 연동 패턴

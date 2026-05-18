@@ -48,7 +48,7 @@ git clone <YOUR_REPO_URL> jamesclew; cd jamesclew; powershell -ExecutionPolicy B
 
 설치 마법사는 다음을 순서대로 물어봅니다:
 1. **페르소나** — 호칭(기본: 대표님), 언어, 톤
-2. **모듈 선택** — Telegram 알림, Obsidian 연동, Codex/copilot-api/Ollama
+2. **모듈 선택** — Telegram 알림, Obsidian 연동, Codex/ollama/Ollama
 3. **MCP 서버 선택** — Perplexity, Tavily, Stitch, Desktop Control
 4. **API 키 입력** — 선택한 모듈에 필요한 키만 (hidden input)
 5. **Obsidian Vault 자동 셋업** — OBSIDIAN_VAULT 경로 입력 시 폴더 구조 자동 생성
@@ -96,7 +96,7 @@ bash harness/scripts/bootstrap-gbrain.sh
 - Node.js 20+
 - Git
 - [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) (`claude` 명령어)
-- (선택) `codex`, `copilot-api`, `ollama` — 인스톨러가 원하면 자동 설치
+- (선택) `codex`, `ollama`, `ollama` — 인스톨러가 원하면 자동 설치
 - (선택) `gbrain` — `bun install -g gbrain` (지식 베이스 셋업 시 필요)
 
 ### 재배포 / 업데이트

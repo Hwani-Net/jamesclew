@@ -39,7 +39,7 @@ modules:
   telegram_notify: false    # Requires TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
   obsidian_sync: false      # Requires obsidian_vault path
   gbrain: false             # Requires gbrain CLI installed
-  copilot_api: false        # Requires copilot-api (GPT-4.1 proxy on :4141)
+  ollama: true              # Ollama local LLM (localhost:11434)
   codex_cli: false          # Requires @openai/codex npm package
   ollama_fallback: false    # Requires Ollama running on :11434
   wiki_pipeline: false      # Daily ingest + raw save hooks

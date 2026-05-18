@@ -4,13 +4,6 @@
 
 modules:
   # ─── MCP Servers ───
-  perplexity:
-    name: "Perplexity AI Search"
-    description: "Web-grounded search, Q&A, research (4 tools)"
-    install: "claude mcp add perplexity -s user -- npx -y server-perplexity-ask"
-    requires_env: ["PERPLEXITY_API_KEY"]
-    cost: "paid (~$0.006-0.80/call)"
-
   tavily:
     name: "Tavily Search & Crawl"
     description: "Web search + site crawling + extract (5 tools)"
@@ -48,14 +41,6 @@ modules:
     cost: "subject to ChatGPT Plus account"
     notes: "Supports 6-account rotation via scripts/codex-rotate.sh"
 
-  copilot_api:
-    name: "GitHub Copilot API proxy (GPT-4.1)"
-    description: "GPT-4.1 as Anthropic-compatible endpoint on :4141"
-    install: "npm install -g copilot-api"
-    verify: "copilot-api --version"
-    startup: "copilot-api start --port 4141 &"
-    cost: "GitHub Copilot Pro $10/mo (unlimited) or Free (50 req/mo)"
-
   ollama:
     name: "Ollama Local LLM"
     description: "Local model fallback (Gemma 4, Llama, etc)"
@@ -89,7 +74,7 @@ modules:
 
   wiki_pipeline:
     name: "Daily Wiki Ingest"
-    description: "Auto-ingest Perplexity/Tavily results → Obsidian 06-raw/"
+    description: "Auto-ingest Tavily results → Obsidian 06-raw/"
     requires: ["obsidian_sync"]
     scheduler: "Task Scheduler (Windows) / cron (Unix) at 09:17 local"
 
