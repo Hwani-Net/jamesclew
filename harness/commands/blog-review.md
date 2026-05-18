@@ -113,10 +113,30 @@ Opus 또는 Sonnet 서브에이전트가 초안을 직접 분석:
 □ FAQ 섹션 2개+ 질문-답변 쌍
 □ 이미지 alt 태그 전수 (마크다운 이미지 문법 확인)
 □ 본문 2,000자+ (wc -m)
+□ [PARTNERS GATE] 실제 쿠팡 파트너스 링크 1개+ (제품 리뷰 필수) — 아래 참조
 ```
 
+**[PARTNERS GATE] 파트너스 링크 검증 (제품 리뷰 전용 HARD GATE)**
+```bash
+# placeholder 감지 → 즉시 FAIL (점수 무관)
+PLACEHOLDER=$(grep -cE 'link\.coupang\.com/a/placeholder' draft.md 2>/dev/null || echo 0)
+# 실제 파트너스 링크 카운트 (placeholder 제외)
+REAL_PARTNERS=$(grep -cE 'link\.coupang\.com/a/[^p]' draft.md 2>/dev/null || echo 0)
+
+if [[ "$PLACEHOLDER" -gt 0 ]]; then
+  echo "PARTNERS_GATE: FAIL — placeholder link(s) found: $PLACEHOLDER"
+  # → status.json failedGates에 "partners_placeholder" 추가
+fi
+if [[ "$REAL_PARTNERS" -eq 0 ]]; then
+  echo "PARTNERS_GATE: FAIL — 0 real partners links (www.coupang.com search URLs do not qualify)"
+  # → status.json failedGates에 "partners_missing" 추가
+fi
+```
+- `www.coupang.com` 검색 URL → 파트너스 링크로 인정 불가 (수수료 미발생)
+- PARTNERS GATE FAIL은 SEO 점수와 무관하게 전체 FAIL 판정 (override)
+
 각 항목 PASS/FAIL → `quality-report.json`의 `seo` 필드에 기록.
-6/7 이상 PASS → SEO 통과. 5 이하 → FAIL.
+7/8 이상 PASS → SEO 통과. 6 이하 또는 PARTNERS GATE FAIL → FAIL.
 
 ### Phase 4: 이미지 검증
 

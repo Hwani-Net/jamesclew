@@ -27,6 +27,29 @@ OUT_DIR="$PUBLIC_ROOT/$SLUG"
 
 [[ -f "$DRAFT_MD" ]] || { echo "ERROR: $DRAFT_MD not found" >&2; exit 1; }
 
+# --- 0. Pre-publish gate: block placeholder & missing partners links ---
+# Rule A: placeholder links (link.coupang.com/a/placeholder-*) must not reach production
+PLACEHOLDER_COUNT=$(grep -cE 'link\.coupang\.com/a/placeholder' "$DRAFT_MD" 2>/dev/null || true)
+if [[ "$PLACEHOLDER_COUNT" -gt 0 ]]; then
+  echo "ERROR: $PLACEHOLDER_COUNT placeholder Coupang partners link(s) found in $DRAFT_MD" >&2
+  echo "       Replace every 'link.coupang.com/a/placeholder-*' with a real partners URL before publishing." >&2
+  exit 2
+fi
+
+# Rule B: product-review posts must contain at least one real partners link (link.coupang.com/a/...)
+# Detect product-review by slug pattern containing common appliance keywords
+PARTNERS_COUNT=$(grep -cE 'link\.coupang\.com/a/[^p]' "$DRAFT_MD" 2>/dev/null || true)
+IS_PRODUCT_POST=false
+if echo "$SLUG" | grep -qiE '추천|비교|모니터|청소기|건조기|밥솥|에어프라이어|선풍기|서큘레이터|제습기|식기세척기|이어폰|노트북|킥보드'; then
+  IS_PRODUCT_POST=true
+fi
+if [[ "$IS_PRODUCT_POST" == "true" && "$PARTNERS_COUNT" -eq 0 ]]; then
+  echo "ERROR: Product-review post '$SLUG' has 0 real Coupang partners links (link.coupang.com/a/...)." >&2
+  echo "       www.coupang.com search URLs are NOT partners links — they earn no commission." >&2
+  echo "       Add at least one real partners link via the Coupang Partners API before publishing." >&2
+  exit 2
+fi
+
 # --- 1. Install marked if missing ---
 if ! command -v marked &>/dev/null; then
   echo "[publish] Installing marked globally..."

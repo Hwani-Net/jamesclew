@@ -138,6 +138,48 @@ curl -o "MultiBlog/drafts/{date}-{slug}/images/{n}.jpg" "{url}"
 ![{alt}](images/{n}.jpg)
 ```
 
+### Phase 4.5: 쿠팡 파트너스 링크 생성 (가전/제품 리뷰 필수)
+
+**REQUIRED for product-review posts** — 이미지 삽입 직후 실행. 링크 없이 Phase 5 진입 금지.
+
+**4.5-1. 파트너스 링크 생성 방식 (우선순위 순)**
+```
+1순위: 쿠팡 파트너스 API (COUPANG_ACCESS_KEY + COUPANG_SECRET_KEY 환경변수 있을 때)
+   API endpoint: https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/products/link
+   요청: productId 또는 keyword 기반 딥링크 생성
+   결과: link.coupang.com/a/{실제ID} 형태의 진짜 파트너스 URL
+
+2순위: 파트너스 앱/콘솔에서 수동 생성한 URL을 meta.json의 "partnersLinks" 배열에 미리 기록
+   meta.json 예시:
+   { "partnersLinks": [
+       { "productName": "삼성 비스포크 제트", "url": "https://link.coupang.com/a/XXXXXX" },
+       ...
+   ]}
+
+3순위: 위 두 방법 모두 불가 시 → FAIL-LOUD (아래 규칙 참조)
+```
+
+**4.5-2. 초안 삽입**
+- 각 제품 섹션에 파트너스 링크 삽입: `[쿠팡 최저가 보기](https://link.coupang.com/a/{실제ID})`
+- `www.coupang.com` 일반 검색 URL 사용 금지 — 파트너스 수수료 미발생
+- `link.coupang.com/a/placeholder-*` 형태 절대 금지
+
+**4.5-3. FAIL-LOUD 정책 (fail-silent 절대 금지)**
+```
+파트너스 API 실패 / meta.json partnersLinks 없음 → 즉시 중단:
+  1. status.json을 { "status": "blocked", "reason": "no-partners-links" }로 기록
+  2. 대표님에게 에스컬레이션:
+     "⚠️ {slug} — 쿠팡 파트너스 링크 없음. API 키 확인 또는 파트너스 콘솔에서
+      수동 링크를 meta.json partnersLinks에 추가 후 /blog-generate 재실행 요청."
+  3. Phase 5(저장) 진행 금지. Phase 3(팩트검증)까지만 저장.
+```
+
+**4.5-4. 링크 수 검증**
+```bash
+PARTNERS_COUNT=$(grep -cE 'link\.coupang\.com/a/[^p]' "$DRAFT_MD" 2>/dev/null || echo 0)
+# [^p] = placeholder 제외. 0개면 위 FAIL-LOUD 실행
+```
+
 ### Phase 5: 저장 + 완료
 
 **5-1. 파일 저장**
@@ -180,3 +222,4 @@ echo "blog-generate: {slug} | {generator} | {wordcount}자 | $(date)" >> ~/.harn
 - MCP 호출 실패 → 3회 재시도 후 해당 Phase 스킵 + 로그 기록
 - CLI fallback 전체 실패 → 대표님 보고 (텔레그램 또는 터미널)
 - 이미지 다운로드 실패 → placeholder 삽입 + [IMAGE_FAILED] 태그
+- **쿠팡 파트너스 링크 생성 실패 → Phase 4.5 FAIL-LOUD 정책 실행. placeholder 링크 삽입 금지.**
