@@ -12,7 +12,7 @@ lines: 469
 배포 경로: `~/.claude/settings.json` (전역) 또는 `D:/jamesclew/.claude/settings.json` (프로젝트)
 
 **수정 절차**: 소스를 편집 → `bash harness/deploy.sh` → Claude Code 재시작.
-하네스 파일 수정 전 외부 모델(Codex/GPT-4.1) 검토를 거쳐야 합니다(충돌·회귀 방지).
+하네스 파일 수정 전 외부 모델(Codex) 검토를 거쳐야 합니다(충돌·회귀 방지).
 
 ---
 

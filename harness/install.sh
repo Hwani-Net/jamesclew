@@ -99,7 +99,7 @@ MOD_TELEGRAM=$(prompt_yesno "Telegram notifications" "n")
 MOD_OBSIDIAN="n"
 [[ -n "$OBSIDIAN" ]] && MOD_OBSIDIAN="y"
 MOD_CODEX=$(prompt_yesno "Codex CLI (external code review)" "n")
-MOD_COPILOT=$(prompt_yesno "ollama (GPT-4.1 proxy on :4141)" "n")
+MOD_COPILOT=$(prompt_yesno "ollama (gemma4 로컬 보조, :11434)" "n")
 MOD_OLLAMA=$(prompt_yesno "Ollama local LLM fallback" "n")
 echo ""
 

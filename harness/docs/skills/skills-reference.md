@@ -90,7 +90,7 @@ Firebase 자동 발행을 담당합니다.
 | `/pipeline-install` | 11단계 품질 파이프라인 프로젝트 초기 설치 | `<project-dir>` | 신규 프로젝트 기반 구축 | commands/pipeline-install.md | 169 |
 | `/pipeline-run` | 7단계 Multi-Pass Review 실행 (구조→SEO→AI냄새→사실→이미지→경쟁→배포) | — | 결과물 종합 품질 검증 | commands/pipeline-run.md | 208 |
 | `/prd` | 요구사항 인터뷰 → PRD.md 자동 생성 | `<project-name>` | 빌드 착수 전 설계 문서화 | commands/prd.md | 228 |
-| `/qa` | 외부 모델(Codex+GPT-4.1) QA 루프, 사용자 관점 검증 | `<url>` | 배포 후 외부 검수 | commands/qa.md | 127 |
+| `/qa` | 외부 모델(Codex 1순위, gemma4 보조) QA 루프, 사용자 관점 검증 | `<url>` | 배포 후 외부 검수 | commands/qa.md | 127 |
 | `/ralph-loop` | Ralph Loop 자율 개선 루프 시작 | — | 장기 자율 개선 | commands/ralph-loop.md | 17 |
 | `/reset-ping-setup` | 5H/7D 리셋 Remote Trigger 설정 (헬스체크 자동화) | — | 사용량 모니터링 설정 | commands/reset-ping-setup.md | 44 |
 | `/self-heal` | 3 에이전트 경쟁 수정으로 버그 자가 치유 | `<issue-description>` | 반복 버그 자동 해결 | commands/self-heal.md | 94 |
@@ -126,7 +126,7 @@ Firebase 자동 발행을 담당합니다.
   → /qa <url>
   → /audit
 ```
-`/pipeline-run`이 Multi-Pass Review를 수행하고, `/qa`가 외부 모델(Codex+GPT-4.1) 사용자 관점 검수를 추가합니다. `/audit`으로 세션 규칙 준수 상태를 최종 확인합니다.
+`/pipeline-run`이 Multi-Pass Review를 수행하고, `/qa`가 외부 모델(Codex 1순위, gemma4 보조) 사용자 관점 검수를 추가합니다. `/audit`으로 세션 규칙 준수 상태를 최종 확인합니다.
 
 ### 공모전 준비
 ```

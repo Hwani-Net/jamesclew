@@ -25,7 +25,7 @@ argument-hint: "[공모전URL] [과제설명서PDF...]"
 - 본문 내 괄호 인용 + 문서 끝 참고문헌 섹션
 
 ### 4. 외부 모델 검증
-- Codex CLI / Ollama (GPT-4.1/GPT-5.4/Gemini 3.1 Pro) 중 2개+ 모델로 채점
+- Codex CLI (1순위) + gemma4 보조 의견으로 채점 (단독 판단 금지)
 - Perplexity는 검색 도구이지 검증 모델이 아님에 주의
 
 ### 5. Agent Teams × Ralph Loop 고도화

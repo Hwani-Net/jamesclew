@@ -27,7 +27,7 @@ REGRESSION_LOG="$STATE_DIR/regression-failed.log"
 # ── 1. PITFALLS 신규 기록 추출 (incremental, last-processed-slug 기반) ───
 # 2026-05-04 fix: 기존 ISO 날짜 grep("2026-05-04")이 gbrain list 출력 형식("Mon May 04")
 # 과 불일치하여 매번 매칭 실패 → 어떤 pitfall도 자동 적재 안 됨. 이를 last-slug 기반
-# incremental 추출로 교체. GPT-4.1 검수 통과.
+# incremental 추출로 교체. Codex 검수 통과.
 NEW_PITFALLS=""
 LAST_PITFALL_FILE="$STATE_DIR/last_processed_pitfall_slug"
 PITFALL_LIST_LIMIT=50

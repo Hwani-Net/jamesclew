@@ -59,7 +59,7 @@ summary: "3줄 요약" (Distilled 이상)
 ### 예시 1 — Raw
 `05-wiki/sources/2026-04-24-ai-pricing-monetization-playbook-bvp.md`
 - BVP 아티클 원문 복사본
-- frontmatter: `tier: raw`, `source: https://...`, `summary: (GPT-4.1 자동 요약)`
+- frontmatter: `tier: raw`, `source: https://...`, `summary: (자동 요약)`
 
 ### 예시 2 — Distilled
 `05-wiki/distilled/ai-pricing-tradeoffs-ko.md`

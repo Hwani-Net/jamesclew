@@ -135,9 +135,8 @@ _run_codex() {
   return 1
 }
 
-# ── 5단계 모델 로테이션: codex → copilot(GPT-4.1) → openrouter무료 → gemma4로컬 → codex backoff ──
-# [DEPRECATED] Antigravity(opencode) 2026-04 폐기 → GPT-4.1(ollama) + Gemma 4로 대체
-# ollama 프록시 추가 (localhost:4141, GitHub Copilot 인증)
+# ── 5단계 모델 로테이션: codex (1순위) → gemma4 (보조) → codex backoff ──
+# [DEPRECATED] copilot-api 2026-05 GitHub 차단. gemma4(Ollama localhost:11434) 보조만 사용.
 MODELS=("codex" "copilot_gpt" "openrouter_free" "gemma4_local" "codex_backoff")
 OPENROUTER_KEYS_FILE="$HOME/.claude/openrouter-keys.json"
 MODEL_USED=""
@@ -151,10 +150,10 @@ for MODEL in "${MODELS[@]}"; do
       _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
       ;;
     copilot_gpt)
-      # GitHub Copilot proxy (ollama on localhost:4141)
+      # [DEPRECATED] GitHub Copilot proxy — 2026-05 차단. gemma4(localhost:11434) 보조 사용.
       curl -s --max-time 60 http://localhost:11434/api/chat \
         -H "Content-Type: application/json" \
-        -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | jq -Rs .)}],\"max_tokens\":1000}" \
+        -d "{"model":"gemma4","stream":false,"messages":[{"role":"user","content":$(echo "$PROMPT" | jq -Rs .)}]}" \
         | jq -r '.choices[0].message.content // empty' > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?
       ;;
     openrouter_free)

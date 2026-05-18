@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# self-evolve-trigger.sh — Stop hook: 컨텍스트 마일스톤(20/40/60/80%) 도달 시 GPT-4.1 자동 검수
+# self-evolve-trigger.sh — Stop hook: 컨텍스트 마일스톤(20/40/60/80%) 도달 시 gemma4 (보조) 자동 검수
 # PRD P5 | AC-5.1~5.5 | R9 TV-5A/B/C
 # BLOCKER-1 해결: FAKE_CONTEXT_PCT → CLAUDE_CONTEXT → context_usage.txt → skip
 # BLOCKER-2 해결: 텔레그램 실패 시 stderr 로그 후 exit 0
@@ -52,7 +52,7 @@ fi
 
 # TEST_HARNESS mock 분기
 if [[ -n "${TEST_HARNESS:-}" ]]; then
-    echo "[self-evolve] TEST: 컨텍스트 ${PCT}% — 마일스톤 ${MILESTONE}% 도달, GPT-4.1 mock 호출"
+    echo "[self-evolve] TEST: 컨텍스트 ${PCT}% — 마일스톤 ${MILESTONE}% 도달, gemma4 mock 호출"
     echo "$MILESTONE" > "$MILESTONE_FILE"
     exit 0
 fi

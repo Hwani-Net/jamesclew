@@ -1,7 +1,7 @@
 #!/bin/bash
 # harness-self-audit.sh — 메타 hook (2026-05-04 신설, P-111 영구 차단)
 #
-# 외부 검수(Codex gpt-5.5 + GPT-4.1) 권장 설계:
+# 외부 검수(Codex gpt-5.5 1순위 + gemma4 보조) 권장 설계:
 #   SessionStart + 주 1회 cron으로 모든 hook의 4단계 자동 검증.
 #   1. 등록 (settings.json hooks 배열 entry)
 #   2. 존재 (파일 + 실행권한)

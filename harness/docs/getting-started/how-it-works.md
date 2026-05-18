@@ -39,12 +39,12 @@ diátaxis: Explanation
     │
     ├──────────────────────────────────┐
     ▼                                  ▼
-[Generator — Sonnet 서브에이전트]   [Generator — GPT-4.1]
- 코드 작성, 파일 편집, 배포          콘텐츠 생성, 벌크 작업
+[Generator — Sonnet 서브에이전트]   [Generator — gemma4 (보조)]
+ 코드 작성, 파일 편집, 배포          보조 의견 (단독 판단 금지)
     │                                  │
     └──────────────┬───────────────────┘
                    ▼
-          [Evaluator — Codex + GPT-4.1 병렬]
+          [Evaluator — Codex (1순위) + gemma4 (보조)]
            교차 검수, AI냄새 감지, 품질 판정
                    │
                    ▼
@@ -97,8 +97,8 @@ PreCompact (컨텍스트 45%+)
 작업 유형
     │
     ├── 코드 작성/수정 ──────► Sonnet 서브에이전트 ──► Codex 리뷰
-    ├── 코드 리뷰 ──────────► Codex + GPT-4.1 병렬 ──► Opus 판단
-    ├── 콘텐츠 리뷰 ────────► GPT-4.1 (localhost:4141)
+    ├── 코드 리뷰 ──────────► Codex (1순위) + gemma4 (보조) ──► Opus 판단
+    ├── 콘텐츠 리뷰 ────────► Codex (1순위), gemma4 (보조, localhost:11434)
     ├── Vision 분석 ────────► Opus 직접 Read (Sonnet Vision 금지)
     ├── 웹 리서치 ──────────► Perplexity/Tavily MCP (5H 0)
     ├── 벌크/반복 ──────────► Gemma 4 로컬 (Ollama :11434)

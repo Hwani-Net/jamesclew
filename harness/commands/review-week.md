@@ -34,27 +34,9 @@ ls "$VAULT/06-raw/"*.md 2>/dev/null
 - 파일 목록 수집 후 `05-wiki/` 에 동명 파일이 없는 것 = inbox 상태로 판별
 - inbox 파일 목록을 LLM 프롬프트에 함께 포함
 
-### Step 4: LLM 분석 (GPT-4.1 → Codex fallback)
+### Step 4: LLM 분석 (Codex 1순위 → gemma4 보조)
 
-**GPT-4.1 호출 (1순위)**:
-```bash
-PAYLOAD=$(cat <<EOF
-{
-  "model": "gpt-4.1",
-  "messages": [{
-    "role": "user",
-    "content": "아래 주간 신규 지식 목록을 분석하라.\n\n[gbrain 신규 페이지]\n${GBRAIN_LIST}\n\n[Obsidian 06-raw inbox]\n${INBOX_LIST}\n\n다음 4가지를 JSON으로 출력하라:\n1. top_themes: 핵심 주제 3개 (배열)\n2. link_suggestions: 연결 제안 (이 페이지 slug ↔ 기존 페이지 slug, 이유 포함, 최대 5쌍)\n3. delete_candidates: 삭제 후보 slug + 이유 (중복·과잉 디테일, 최대 3개)\n4. next_research: 다음주 우선순위 리서치 키워드 3개 (배열)"
-  }]
-}
-EOF
-)
-echo "$PAYLOAD" > /tmp/review-week-payload.json
-RESULT=$(curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d @/tmp/review-week-payload.json)
-```
-
-**Codex fallback (GPT-4.1 실패 또는 서버 미응답 시)**:
+**Codex 호출 (1순위)**:
 ```bash
 bash harness/scripts/codex-rotate.sh "주간 지식 목록: ${GBRAIN_LIST}\n\nInbox: ${INBOX_LIST}\n\n핵심주제 3개, 연결 제안 5쌍, 삭제후보 3개, 리서치키워드 3개를 JSON으로 출력"
 ```
@@ -110,7 +92,7 @@ gbrain put "weekly-review-${YEAR}-W${WEEK}" < "$OUTPUT_FILE"
 ## 전제 조건
 - gbrain CLI 설치 및 서버 실행 중 (`gbrain serve`)
 - `$OBSIDIAN_VAULT/01-jamesclaw/reviews/` 디렉토리 존재
-- GPT-4.1 (localhost:4141) 또는 Codex CLI 사용 가능
+- Codex CLI 사용 가능 (gemma4 Ollama는 보조 의견 전용)
 
 ## 주의사항
 - 기존 weekly 파일 덮어쓰기 금지 — 충돌 시 `-YYYYMMDDHHMM` 접미사 자동 부여

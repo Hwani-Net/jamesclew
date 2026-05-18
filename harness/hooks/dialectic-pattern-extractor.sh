@@ -2,10 +2,10 @@
 # dialectic-pattern-extractor.sh — Stop hook (2026-05-04 신설)
 #
 # Honcho(Plastic Labs)의 dialectic reasoning 개념을 자체 구현.
-# 매 Stop event마다 transcript 마지막 N턴 → GPT-4.1 패턴 추출 → gbrain 적재.
+# 매 Stop event마다 transcript 마지막 N턴 → gemma4 (보조) 패턴 추출 → gbrain 적재.
 # 외부 의존 0 (Ollama 로컬), AGPL 0, 비용 0.
 #
-# 외부 검수(Codex + GPT-4.1) REWORK 4건 반영:
+# 외부 검수(Codex 1순위 + gemma4 보조) REWORK 4건 반영:
 # 1. transcript hash + timestamp 이중 debounce (동일 대화 재처리 방지)
 # 2. 프롬프트 "2회 이상 반복 증거 시에만 추출" 조건
 # 3. prompt injection 방어: system/user 메시지 분리 + <transcript> 태그 wrapping
@@ -193,7 +193,7 @@ $FILTERED
 ## 분석 메타
 - 마지막 10턴 기반 dialectic reasoning
 - session-learning.sh와 보완 관계 (구조화 사실 vs 암묵적 패턴)
-- 외부 검수: Codex + GPT-4.1 (4/5 일치 + 3 REWORK 반영)"
+- 외부 검수: Codex (1순위) + gemma4 (보조) (4/5 일치 + 3 REWORK 반영)"
 
 if timeout 20 gbrain put "$SLUG" --content "$CONTENT" >/dev/null 2>&1; then
   echo "[dialectic] $SLUG 적재 완료"

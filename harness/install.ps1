@@ -76,7 +76,7 @@ Write-Host "🧩 Optional modules" -ForegroundColor Yellow
 $ModTelegram = Prompt-YesNo "Telegram notifications" "n"
 $ModObsidian = if ($Obsidian) { "y" } else { "n" }
 $ModCodex    = Prompt-YesNo "Codex CLI (external code review)" "n"
-$ModCopilot  = Prompt-YesNo "ollama (GPT-4.1 proxy on :4141)" "n"
+$ModCopilot  = Prompt-YesNo "ollama (gemma4 로컬 보조, :11434)" "n"
 $ModOllama   = Prompt-YesNo "Ollama local LLM fallback" "n"
 Write-Host ""
 

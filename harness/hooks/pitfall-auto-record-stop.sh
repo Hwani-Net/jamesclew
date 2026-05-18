@@ -6,7 +6,7 @@
 #   2. 본 hook이 Stop 이벤트에서 transcript_path로 마지막 assistant 응답 추출
 #   3. 응답에 agree 키워드 매치 시 → 다음 턴에 PITFALL 자동 기록 안내 주입
 #
-# 외부 검수: Codex(gpt-5.5) + GPT-4.1 100% 일치 권장 (Option A+B 하이브리드)
+# 외부 검수: Codex(gpt-5.5) 1순위 + gemma4 보조 권장 (Option A+B 하이브리드)
 # 참조: P-111 (코드 존재 ≠ 동작 — pitfall-auto-record가 4/17~5/4 침묵)
 
 set -euo pipefail

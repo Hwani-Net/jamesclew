@@ -58,15 +58,15 @@ expect MCP 7단계를 스킵하고 Phase 2~4만 실행. `quality-report.json`에
 
 ### Phase 2: AI 냄새 검사 (외부 모델 교차검수)
 
-**2-1. GPT-4.1 검사**
+**2-1. Codex AI냄새 검사 (1순위)**
 ```bash
 DRAFT=$(cat "MultiBlog/drafts/{slug}/draft.md")
-curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"다음 블로그 글이 AI가 쓴 것처럼 느껴지는 부분을 지적하라. 각 부분에 대해 이유를 설명하고, 전체 AI 생성 확률을 0~100 점수로 평가하라. 점수만 마지막 줄에 'SCORE: NN' 형식으로 출력.\\n\\n---\\n$(cat MultiBlog/drafts/{slug}/draft.md)\"}]}" \
-  | jq -r '.choices[0].message.content'
+bash harness/scripts/codex-rotate.sh "다음 블로그 글이 AI가 쓴 것처럼 느껴지는 부분을 지적하라. 각 부분에 대해 이유를 설명하고, 전체 AI 생성 확률을 0~100 점수로 평가하라. 점수만 마지막 줄에 'SCORE: NN' 형식으로 출력.
+
+---
+$DRAFT"
 ```
-출력에서 `SCORE: NN` 파싱 → `aiSmell.gpt41` 필드에 기록.
+출력에서 `SCORE: NN` 파싱 → `aiSmell.codex` 필드에 기록. (로컬 단독 판단 금지 — Codex 결과가 기준)
 
 **2-2. 벤치마크 비교 평가 (단독 평가보다 우선)**
 ```bash
@@ -174,7 +174,7 @@ gbrain query "pitfall 콘텐츠"
 ```
 ✅ /blog-review 완료 — PASS
 📄 "{제목}"
-🤖 AI냄새: 22/100 (PASS) — GPT-4.1 25, Codex 20
+🤖 AI냄새: 22/100 (PASS) — Codex 25, gemma4 20 (보조)
 🔍 SEO: 6/7 통과 — 키워드 5회, FAQ 3개
 🖼️ 이미지: 4/4 검증 완료
 ➡️ 다음: /blog-publish 로 발행
@@ -183,7 +183,7 @@ gbrain query "pitfall 콘텐츠"
 
 ❌ /blog-review 완료 — FAIL
 📄 "{제목}"
-🤖 AI냄새: 55/100 (FAIL) — GPT-4.1 60, Codex 50
+🤖 AI냄새: 55/100 (FAIL) — Codex 60, gemma4 50 (보조)
 🔍 SEO: 4/7 통과 — 내부링크 부족, FAQ 부족
 ➡️ 다음: /blog-fix 로 자동 수정
 ```

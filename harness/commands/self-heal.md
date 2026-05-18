@@ -65,7 +65,7 @@ Agent(model: sonnet, isolation: "worktree", prompt: "
 |------|------|
 | 1개만 PASS | 해당 fix 적용 |
 | 2-3개 PASS | 가장 작은 diff 적용 |
-| 모두 FAIL | GPT-4.1에 3개 실패 분석 의뢰 → 대표님 보고 |
+| 모두 FAIL | Codex에 3개 실패 분析 의뢰 → 대표님 보고 |
 | 동점 (diff 크기 같음) | Minimal > Refactor > Defensive 순 |
 
 ### Phase 3: 적용 + 검증

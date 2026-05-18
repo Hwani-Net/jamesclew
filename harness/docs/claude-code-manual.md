@@ -1086,7 +1086,7 @@ CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 | in-process 모드 | tmux 불필요. Windows Terminal에서 바로 동작 |
 | teammate 전환 | `Shift+Down` |
 | teammate 수 제한 | 없음 (작업 복잡도에 따라 자율 결정) |
-| 권장 구성 | Lead(Opus) + 구현(Sonnet teammate) + 검수(GPT-4.1 via HydraTeams) |
+| 권장 구성 | Lead(Opus) + 구현(Sonnet teammate) + 검수(Codex CLI, gemma4 보조) |
 | 비용 최적 | `model: sonnet` 명시 필수. 미지정 시 Opus 풀 차감 |
 
 **HydraTeams 프록시** (`harness/tools/HydraTeams/`): Agent Teams teammate를 GPT-4o-mini 등 외부 모델로 라우팅.
@@ -1427,7 +1427,7 @@ JamesClaw 하네스의 PreCompact 파이프라인 (5단계 순차 실행):
 
 **5H 롤링 윈도우**: 모든 Claude 모델 공통 (Sonnet 서브에이전트도 포함).
 **7D 주간 풀**: Opus / Sonnet **별도** — `Agent(model: sonnet)` 사용 시 Opus 7D 풀 보존에 유효.
-**외부 모델** (Codex / GPT-4.1 / Gemma4): 5H + 7D 양쪽 모두 0 소비.
+**외부 모델** (Codex 1순위 / Gemma4 보조): 5H + 7D 양쪽 모두 0 소비.
 
 ---
 
@@ -1543,23 +1543,22 @@ claude --effort high # CLI 플래그
 # 1. 서버 기동
 # copilot-api DEPRECATED 2026-05 (GitHub blocked) &
 
-# 2. GPT-4.1 메인 세션 시작
-ANTHROPIC_BASE_URL=http://localhost:4141 claude
+# 2. GPT-4.1 메인 세션 — DEPRECATED 2026-05 (GitHub 차단)
+# 대체: /model sonnet 또는 gemma4 보조 의견
 
 # 3. 단일 API 호출 (검수용)
-curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4.1","messages":[{"role":"user","content":"프롬프트"}]}'
+# localhost:4141 차단됨 — gemma4 보조 사용:
+curl -s http://localhost:11434/api/chat -d '{"model":"gemma4","stream":false,"messages":[{"role":"user","content":"프롬프트"}]}'
 ```
 
-**GPT-4.1 프록시 제약**
+**(deprecated) GPT-4.1 프록시 — 2026-05 사용 불가**
 
 | 항목 | 내용 |
 |------|------|
-| 사용 가능 모델 | GPT-4.1, GPT-4o, GPT-5 mini, Claude Haiku 4.5 |
+| 사용 가능 모델 | (차단됨) GPT-4.1, GPT-4o 등 |
 | 미지원 | /model 로 Opus/Sonnet 선택 시 에러 |
 | Opus advisor | 반드시 별도 Claude Code 세션 필요 |
-| 비용 | GitHub Copilot Pro $10/월 (GPT-4.1/4o 무제한) |
+| 비용 | (deprecated) GitHub Copilot Pro $10/월 |
 | 오케스트레이터 적합성 | 부적합 (Opus 60~65% 수준). 단순 반복/벌크 작업 전용 |
 
 **HydraTeams 프록시** (`localhost:3456`): Agent Teams teammate를 외부 모델로 라우팅. HydraTeams(`localhost:3456`, **deprecated 2026-05**)와 역할이 다름.
@@ -1728,7 +1727,7 @@ Claude Code 외부에서 세션을 트리거하는 기능입니다.
 
 | 증상 | 원인 | 대응 |
 |------|------|------|
-| 5H limit 도달 | Claude 모델 공통 5H 롤링 소비 | 외부 모델(GPT-4.1) 전환 또는 대기 |
+| 5H limit 도달 | Claude 모델 공통 5H 롤링 소비 | /model sonnet 전환 또는 대기 |
 | 5H 수치 N/A | Usage endpoint 429 | Settings Usage 탭 직접 확인 (v2.1.116+) 또는 캐시 삭제 후 재시도 |
 | 429 즉각 표시 | Bedrock/Vertex/Foundry에서 raw JSON 덤프 | v2.1.105+에서 수정됨 |
 | 긴 Retry-After 대기 | Retry-After가 작을 때 전체 시도를 13초에 소비 | v2.1.97+에서 지수 백오프 최소값 적용으로 수정 |
@@ -1825,7 +1824,7 @@ Claude Code 외부에서 세션을 트리거하는 기능입니다.
 | NotebookLM (Claude Code 공식 매뉴얼) | `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` |
 | NotebookLM (하네스 Blueprint) | `PYTHONUTF8=1 nlm notebook query "fc9fcf38-0a88-4e76-b5ec-6e381693a7ae" "질문"` |
 | Codex 로테이션 | `bash harness/scripts/codex-rotate.sh "프롬프트"` |
-| GPT-4.1 단일 호출 | `curl -s http://localhost:4141/v1/chat/completions` |
+| gemma4 단일 호출 (보조) | `curl -s http://localhost:11434/api/chat` |
 | Ollama 로컬 | `http://localhost:11434` (Gemma 4 폴백) |
 
 ---

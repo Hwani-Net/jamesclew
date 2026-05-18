@@ -42,27 +42,27 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 ---
 
 **Step 2: 품질 검수 (체크포인트)**
-- Codex + GPT-4.1 병렬 호출 (무료, 5H/7D = 0)
+- Codex 1순위 호출 + gemma4 보조 의견 (무료, 5H/7D = 0)
   ```bash
   PROMPT="다음 코드 변경사항을 rules/quality.md 코드 검토 5패스 기준으로 검토하라. PASS/REWORK/FAIL 판정과 구체적 수정 항목을 출력: $(git diff HEAD~1 --stat | head -20)"
 
-  # Codex 리뷰
+  # Codex 리뷰 (1순위, 판정 기준)
   bash "$HOME/.claude/scripts/codex-rotate.sh" "$PROMPT" 2>&1 \
     | tee ~/.harness-state/pipeline_review_codex.log &
 
-  # GPT-4.1 리뷰
-  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
+  # gemma4 보조 의견 (단독 판정 금지)
+  curl -s --max-time 30 http://localhost:11434/api/chat \
     -H "Content-Type: application/json" \
-    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$PROMPT\"}]}" \
-    2>&1 | tee ~/.harness-state/pipeline_review_gpt41.log &
+    -d "{\"model\":\"gemma4\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"$PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_review_local.log &
 
   wait  # 두 호출 완료 대기
-  # 불일치 시 메인(Opus/GPT-4.1 메인)이 최종 판정
+  # 불일치 시 Opus가 최종 판정 (로컬 단독 결정 금지)
   ```
-- **saturation 판정**: 두 모델 모두 수정 0건이면 완료. 어느 하나라도 FAIL이면 Step 1로 복귀
+- **saturation 판정**: Codex 수정 0건이면 완료. FAIL이면 Step 1로 복귀
 - 완료 시:
   ```bash
-  echo '{"step":2,"tool":"codex+gpt41","verdict":"PASS","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' \
+  echo '{"step":2,"tool":"codex+gemma4-assist","verdict":"PASS","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' \
     > ~/.harness-state/pipeline_review_done
   ```
 - 증거 파일 없으면 deploy hook이 차단
@@ -114,17 +114,17 @@ description: "7단계 품질 파이프라인 실행 (루프)"
   mcp__expect__close()
   ```
 
-- Design Rubric 평가: Codex + GPT-4.1 병렬 호출 (무료)
+- Design Rubric 평가: Codex 1순위 + gemma4 보조 (무료)
   ```bash
   RUBRIC_PROMPT="Design Rubric(~/.claude/rules/design_rubric.md) 4축(Consistency/Originality/Polish/Functionality) 기준으로 각 0-10 점수와 PASS/REWORK/FAIL 판정을 JSON으로 출력하라. 스크린샷 결과: $(cat ~/.harness-state/pipeline_screenshot.log 2>/dev/null | head -5)"
 
   bash "$HOME/.claude/scripts/codex-rotate.sh" "$RUBRIC_PROMPT" 2>&1 \
     | tee ~/.harness-state/pipeline_rubric_codex.log &
 
-  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
+  curl -s --max-time 30 http://localhost:11434/api/chat \
     -H "Content-Type: application/json" \
-    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$RUBRIC_PROMPT\"}]}" \
-    2>&1 | tee ~/.harness-state/pipeline_rubric_gpt41.log &
+    -d "{\"model\":\"gemma4\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"$RUBRIC_PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_rubric_local.log &
 
   wait
   ```
@@ -159,17 +159,17 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 ---
 
 **Step 6: 최종 판정 (루프 판정)**
-- Codex + GPT-4.1 병렬 최종 검수 (Step 2와 동일 방식, 라이브 배포 기준)
+- Codex 최종 검수 (1순위) + gemma4 보조 (Step 2와 동일 방식, 라이브 배포 기준)
   ```bash
   FINAL_PROMPT="라이브 배포 후 최종 품질 판정. rules/quality.md 코드 검토 5패스 + 배포 스모크테스트 결과 기준. PASS 시 PIPELINE_COMPLETE 승인, FAIL 시 구체적 수정 항목 출력. 배포 URL 응답: $(cat ~/.harness-state/pipeline_deploy.log 2>/dev/null | tail -5)"
 
   bash "$HOME/.claude/scripts/codex-rotate.sh" "$FINAL_PROMPT" 2>&1 \
     | tee ~/.harness-state/pipeline_final_codex.log &
 
-  curl -s --max-time 30 http://localhost:4141/v1/chat/completions \
+  curl -s --max-time 30 http://localhost:11434/api/chat \
     -H "Content-Type: application/json" \
-    -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":\"$FINAL_PROMPT\"}]}" \
-    2>&1 | tee ~/.harness-state/pipeline_final_gpt41.log &
+    -d "{\"model\":\"gemma4\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"$FINAL_PROMPT\"}]}" \
+    2>&1 | tee ~/.harness-state/pipeline_final_local.log &
 
   wait
   ```
@@ -219,7 +219,7 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 - 텔레그램 알림 자동 전송 (Stop hook)
 
 ## 참고: /ultrareview (선택적 유료)
-Claude Code v2.1.111 신규. **체험권 3회 후 과금.** 예산 여유 시 Step 2/6 대신 1회 호출로 대체 가능 (더 심층적인 멀티에이전트 리뷰). 기본 파이프라인에서는 무료 외부 모델(Codex + GPT-4.1, `:414`)을 사용.
+Claude Code v2.1.111 신규. **체험권 3회 후 과금.** 예산 여유 시 Step 2/6 대신 1회 호출로 대체 가능 (더 심층적인 멀티에이전트 리뷰). 기본 파이프라인에서는 무료 외부 모델(Codex 1순위, gemma4 보조)을 사용.
 
 ## 증거 파일 참조표
 | 파일 | 생성 시점 | hook 확인 |

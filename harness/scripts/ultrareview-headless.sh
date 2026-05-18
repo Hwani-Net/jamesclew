@@ -12,7 +12,7 @@
 #   ./ultrareview-headless.sh --out result.json
 #
 # ⚠️ /ultrareview는 체험권 3회 후 과금. 자동화 호출 빈도 주의.
-# 기본 외부 검수는 무료 모델(Codex + GPT-4.1) 사용. 본 스크립트는 예산 여유 시에만.
+# 기본 외부 검수는 무료 모델(Codex 1순위, gemma4 보조) 사용. 본 스크립트는 예산 여유 시에만.
 
 set -euo pipefail
 

@@ -112,11 +112,11 @@ prompt = (
 summary = None
 model_used = None
 
-# --- Attempt 1: ollama (GPT-4.1) ---
+# --- Attempt 1: ollama (gemma4 보조) ---
 try:
     import urllib.request
     payload = json.dumps({
-        "model": "gpt-4.1",
+        "model": "gemma4",
         "messages": [{"role": "user", "content": prompt}]
     }).encode('utf-8')
     req = urllib.request.Request(
@@ -130,9 +130,9 @@ try:
         candidate = resp.get('choices', [{}])[0].get('message', {}).get('content', '')
         if candidate.strip():
             summary = candidate.strip()
-            model_used = 'gpt-4.1'
+            model_used = 'gemma4'
 except Exception as e:
-    log(f"gpt-4.1 failed: {e}")
+    log(f"gemma4 failed: {e}")
 
 # --- Attempt 2: Ollama gemma4:e4b ---
 if not summary:
@@ -191,7 +191,7 @@ log(f"success model={model_used} chars={len(summary_line)} file={os.path.basenam
 # Log API cost (observation-only — Copilot Pro is flat-rate, Ollama is $0)
 try:
     import subprocess
-    service = 'ollama' if model_used == 'gpt-4.1' else 'ollama'
+    service = 'ollama'
     cost_script = os.path.expanduser('~/.claude/scripts/log-api-cost.sh')
     if os.path.isfile(cost_script):
         subprocess.run(

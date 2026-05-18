@@ -347,7 +347,7 @@ check_error_retry() {
 # ─── Check 18: 외부 모델 실제 호출 (Claude 자기 검수 금지) ───
 check_external_model_calls() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  local gpt41=$(safe_count "grep -c 'localhost:4141\|gpt-4.1' \"$TRANSCRIPT\"")
+  local gpt41=$(safe_count "grep -c 'localhost:4141' "$TRANSCRIPT"") # deprecated: copilot-api 2026-05 차단|local gpt41=$(safe_count "grep -c 'localhost:4141' "$TRANSCRIPT"") # deprecated: copilot-api 2026-05 차단
   local codex=$(safe_count "grep -c 'codex exec\|codex ' \"$TRANSCRIPT\"")
   local gemini=$(safe_count "grep -c 'gemini ' \"$TRANSCRIPT\"")
   local total=$((gpt41 + codex + gemini))
