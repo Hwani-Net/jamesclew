@@ -3,7 +3,9 @@ slug: pitfall-164-coupang-partners-link-silent-fail
 date: 2026-05-18
 severity: critical
 tags: [blog-pipeline, monetization, coupang-partners, fail-silent, gate-missing]
-related: [[pitfall-001-image-lazy-loading]] [[pitfall-157-publisher-collection-mismatch-with-live-site]]
+related:
+  - "[[pitfall-001-image-lazy-loading]]"
+  - "[[pitfall-157-publisher-collection-mismatch-with-live-site]]"
 ---
 
 # P-164 — 쿠팡 파트너스 링크 silent fail로 9개 페이지 수익 0

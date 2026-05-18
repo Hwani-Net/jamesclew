@@ -3,7 +3,9 @@ slug: pitfall-166-coupang-dryer-no-standalone
 date: 2026-05-18
 severity: high
 tags: [monetization, coupang-partners, category-mismatch, content-strategy]
-related: [[pitfall-164-coupang-partners-link-silent-fail]] [[pitfall-163-gpt-4-1-doc-vs-runtime-mismatch]]
+related:
+  - "[[pitfall-164-coupang-partners-link-silent-fail]]"
+  - "[[pitfall-163-gpt-4-1-doc-vs-runtime-mismatch]]"
 ---
 
 # P-166 — 쿠팡 파트너스 의류건조기 단독 무재고 (세탁기+세트만 노출)
