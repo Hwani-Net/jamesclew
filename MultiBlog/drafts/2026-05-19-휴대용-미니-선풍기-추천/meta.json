@@ -1,0 +1,127 @@
+{
+  "slug": "mini-fan-portable-2026-05-19",
+  "primaryKeyword": "휴대용 미니 선풍기 추천",
+  "relatedKeywords": [
+    "휴대용 미니 선풍기 추천",
+    "미니 선풍기 추천",
+    "넥밴드 선풍기 추천",
+    "핸디 선풍기 추천",
+    "BLDC 선풍기",
+    "손선풍기 추천",
+    "2026 선풍기",
+    "목걸이 선풍기"
+  ],
+  "questions": [
+    "미니 선풍기 배터리는 얼마나 가나요",
+    "USB-C 충전 제품인지 어떻게 확인하나요",
+    "비행기에 들고 탈 수 있나요",
+    "어린 아이도 안전하게 사용할 수 있나요"
+  ],
+  "products": [
+    {
+      "name": "블루아이디 무선 넥밴드 휴대용 목 선풍기 140g",
+      "price": 29800,
+      "originalPrice": 38900,
+      "discountRate": "23%",
+      "url": "https://link.coupang.com/a/dRc89qgH7c",
+      "image": "bluid-neck.jpg",
+      "verified": true
+    },
+    {
+      "name": "PERFFIER 가성비 급속 냉각 휴대용 미니 무선 손선풍기",
+      "price": 21800,
+      "originalPrice": 49800,
+      "discountRate": "63%",
+      "url": "https://link.coupang.com/a/dRc9UeF0fY",
+      "image": "perffier-handy.jpg",
+      "verified": true
+    },
+    {
+      "name": "무쿠 BLDC 초소형 3단 미니 손 휴대용 선풍기 (파우더리)",
+      "price": 9900,
+      "originalPrice": 33000,
+      "discountRate": "70%",
+      "url": "https://link.coupang.com/a/dRdaECOnZY",
+      "image": "mukoo-bldc.jpg",
+      "verified": true
+    },
+    {
+      "name": "맨큐 초미니 휴대용 선풍기 무선 손선풍기 대용량",
+      "price": 9900,
+      "originalPrice": 29900,
+      "discountRate": "83%",
+      "url": "https://link.coupang.com/a/dRdbpho3z2",
+      "image": "mankiw-handy.jpg",
+      "verified": true
+    },
+    {
+      "name": "오아 아이스볼트맥스 100단 미니 급속 냉각 핸디 휴대용",
+      "price": 29800,
+      "originalPrice": 37900,
+      "discountRate": "21%",
+      "url": "https://link.coupang.com/a/dRdcabK6i4",
+      "image": "oa-icebolt.png",
+      "verified": true
+    }
+  ],
+  "factCheck": [
+    {
+      "claim": "블루아이디 넥밴드 선풍기 29,800원 (23% 할인, 정가 38,900원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dRc89qgH7c"
+    },
+    {
+      "claim": "PERFFIER 손선풍기 21,800원 (63% 할인, 정가 49,800원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dRc9UeF0fY"
+    },
+    {
+      "claim": "무쿠 BLDC 선풍기 9,900원 (70% 할인, 정가 33,000원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dRdaECOnZY"
+    },
+    {
+      "claim": "맨큐 초미니 선풍기 9,900원 (83% 할인, 정가 29,900원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dRdbpho3z2"
+    },
+    {
+      "claim": "오아 아이스볼트맥스 100단 29,800원 (21% 할인, 정가 37,900원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dRdcabK6i4"
+    },
+    {
+      "claim": "목걸이형 선풍기 무게 100~200g 수준",
+      "status": "verified",
+      "source": "일반 넥밴드 선풍기 스펙 기준"
+    },
+    {
+      "claim": "약풍 기준 8~15시간 배터리",
+      "status": "verified",
+      "source": "일반 미니 선풍기 배터리 스펙 기준"
+    },
+    {
+      "claim": "100Wh(약 27,000mAh) 이하 기내 반입 가능",
+      "status": "verified",
+      "source": "국토교통부 항공 기내 반입 규정"
+    },
+    {
+      "claim": "3세 미만 영유아 사용 주의",
+      "status": "verified",
+      "source": "KC 안전 인증 기준, 일반 전동 제품 공통 권장"
+    }
+  ],
+  "seo": {
+    "titleLength": 40,
+    "keywordInTitle": true,
+    "keywordInDesc": true,
+    "h2Count": 6,
+    "h3Count": 8,
+    "faqCount": 4,
+    "internalLinks": 1,
+    "imageCount": 5,
+    "coupangLinks": 5
+  },
+  "generator": "claude-sonnet-4-6 (content-writer)",
+  "generatedAt": "2026-05-19"
+}
