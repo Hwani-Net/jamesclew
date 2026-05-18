@@ -135,6 +135,29 @@ fi
 - `www.coupang.com` 검색 URL → 파트너스 링크로 인정 불가 (수수료 미발생)
 - PARTNERS GATE FAIL은 SEO 점수와 무관하게 전체 FAIL 판정 (override)
 
+**[GATE C] PRICE_CONSISTENCY — P-164 v2 (blog-publish.sh 자동 실행)**
+```bash
+# Gate A·B 통과 후 자동 실행: harness/scripts/gate_cd_check.py
+# 알고리즘:
+# 1. HTML/MD 본문에서 모델명([A-Z]{2,}[-/]?[A-Z0-9]{2,}) 추출
+# 2. 동일 모델이 2회+ 등장 시 인접 150자 윈도우에서 가격 수집
+# 3. 정규화(쉼표/공백/할인표기 제거) 후 가격 집합 크기 ≥ 2 → FAIL
+```
+- 감지 예시: "샤오미 MI-32 99,200원" ↔ "MI-32 130,000원" → FAIL
+- 허용: "99,200원" = "99,200원 (23% 할인)" (정규화 후 동일)
+- FAIL 시 exit 2로 발행 차단
+
+**[GATE D] CATEGORY_MATCH — P-164 v2 (blog-publish.sh 자동 실행)**
+```bash
+# 슬러그 키워드로 글 카테고리 자동 감지 → 쿠팡 링크 컨텍스트(±200자) 검사
+```
+- 의류건조기 페이지: "세탁기 세트", "WF24", "WF20" 등장 시 FAIL
+- 모니터 페이지: "CCTV", "TV " 등장 시 FAIL
+- 에어프라이어 페이지: "큐커", "MO22" 등장 시 FAIL
+- 식기세척기 페이지: "식기건조기" 단독 등장 시 FAIL
+- 선풍기/서큘레이터 페이지: "캠핑 드라이기", "헤어드라이기" 등장 시 FAIL
+- FAIL 시 exit 2로 발행 차단
+
 각 항목 PASS/FAIL → `quality-report.json`의 `seo` 필드에 기록.
 7/8 이상 PASS → SEO 통과. 6 이하 또는 PARTNERS GATE FAIL → FAIL.
 

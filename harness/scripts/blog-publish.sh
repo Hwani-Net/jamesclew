@@ -50,6 +50,20 @@ if [[ "$IS_PRODUCT_POST" == "true" && "$PARTNERS_COUNT" -eq 0 ]]; then
   exit 2
 fi
 
+# Rule C+D: PRICE_CONSISTENCY + CATEGORY_MATCH (P-164 v2)
+GATE_CD_SCRIPT="$(dirname "$0")/gate_cd_check.py"
+if [[ -f "$GATE_CD_SCRIPT" ]] && command -v python3 &>/dev/null; then
+  python3 "$GATE_CD_SCRIPT" "$DRAFT_MD" "$SLUG"
+  GATE_CD_EXIT=$?
+  if [[ "$GATE_CD_EXIT" -ne 0 ]]; then
+    echo "ERROR: PARTNERS GATE C+D failed for '$SLUG' — publishing blocked." >&2
+    echo "       Fix price inconsistencies (Gate C) and/or category mismatches (Gate D) before publishing." >&2
+    exit 2
+  fi
+else
+  echo "[WARN] gate_cd_check.py not found or python3 unavailable — Gate C+D skipped" >&2
+fi
+
 # --- 1. Install marked if missing ---
 if ! command -v marked &>/dev/null; then
   echo "[publish] Installing marked globally..."
