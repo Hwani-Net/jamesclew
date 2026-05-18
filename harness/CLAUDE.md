@@ -40,17 +40,53 @@
   - 대표님 교정이 있었던 접근법 발견 후
   - 저장 형식: `harness/commands/{skill-name}.md` (YAML frontmatter + 절차 Markdown)
   - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
-- **위키 소스 자동 저장**: 세션 중 Perplexity/Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
+- **위키 소스 자동 저장**: 세션 중 Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
 - **Claude Code 기능 참조 (우선순위 1→3, 2026-04-21 로컬 신뢰 소스 도입)**: 새 기능/도구 도입 전 **및 프로젝트 시작 시** 반드시 조회:
-  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.117 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
+  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.142 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
   2. **Raw changelog**: `~/.claude/cache/changelog.md` (Claude Code가 업데이트마다 자동 갱신)
   3. **NLM (보조, stale 가능)**: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` — v2.1.101 시점에 멈춘 상태. 로컬 매뉴얼과 불일치 시 **로컬 우선**
   - 하네스 설계 조회: `~/.claude/docs/index.md` (로컬) 또는 NLM `"fc9fcf38-0a88-4e76-b5ec-6e381693a7ae"` (Harness Blueprint)
   - 추측으로 기능 존재 여부를 판단하지 않는다.
 
+## Memory Layers (자동 캡처 vs 도메인 지식)
+
+3개 메모리 시스템을 역할 분리하여 운영. 어디에 무엇을 넣을지 헷갈리지 말 것.
+
+### Layer 1 — agentmemory MCP (자동 작업 기억)
+- **역할**: Claude Code hook이 자동 캡처하는 세션 히스토리. 다음 세션 시작 시 관련 기억을 prompt에 자동 주입 (INJECT_CONTEXT=true)
+- **저장 대상**: 도구 호출 결과, 파일 액세스, 코드 결정의 맥락, 에러→해결 흐름
+- **검색**: BM25+벡터+그래프 하이브리드 (LongMemEval-S 95.2% R@5)
+- **노출 도구**: 7 core (memory_save, memory_search, recall 등) — 
+- **자동 export**:  로 마크다운 자동 export (BASB Raw tier 진입)
+
+### Layer 2 — gbrain + Obsidian (도메인 지식 / BASB)
+- **역할**: 사람이 진화시키는 영구 지식. PITFALLS, 위키, 리서치 결과, 절차 매뉴얼
+- **저장 대상**: 도구 사용법, 외부 API 패턴, 디버깅 핵심 원인, 폐기 도구 경고
+- **검색**: gbrain (BM25+벡터), Obsidian backlink
+- **진화**: BASB 3-tier (Raw → Distilled → Synthesized)
+
+### Layer 3 — MEMORY.md (사용자·프로젝트 메타)
+- **역할**: JamesClaw가 직접 작성하는 사용자/피드백/프로젝트/참조 메모리
+- **저장 대상**: 대표님 선호, 반복 피드백 패턴, 프로젝트 상태
+- **위치**: 
+
+### 사용 시점 가이드
+| 질문 | 사용 시스템 |
+|------|-------------|
+| "어제 X 작업 어떻게 했더라?" | **agentmemory** (자동 회상) |
+| "쿠팡 파트너스 정책은?" | **gbrain/Obsidian** (도메인 지식) |
+| "대표님이 선호하는 X 방식?" | **MEMORY.md** |
+| "PITFALL-NNN 해결법?" | **gbrain** (PITFALLS) + **agentmemory** (현장 맥락) |
+
+### 위험 옵션 (영구 OFF 유지)
+-  — Stop hook recursion (#149). 우리 stop-dispatcher.sh와 무한 루프 위험
+-  — CLAUDE.md 자동 미러. 우리 MEMORY.md와 충돌
+
+설계 문서: 
+
 ## Autonomous Operation
 1. TodoWrite로 작업 분할 후 **우선순위 공식**으로 정렬 실행
-2. 막히면 Perplexity/Tavily로 자체 조사. 해결 불가 시에만 질문.
+2. 막히면 Tavily로 자체 조사. 해결 불가 시에만 질문.
 3. Multi-Pass Review: 1라운드 수정 0건이면 2라운드 확인 후 완료 (최소 2라운드 필수는 quality.md 참조). 외부 모델(GPT-4.1 + Codex) 검수 필수. → rules/quality.md
 
 ### 우선순위 공식 (작업 정렬)
@@ -95,7 +131,7 @@
 |------|------|------|------|
 | Sonnet 서브에이전트 | `Agent(model: sonnet)` | 풀 도구 접근, 파일 편집 | 코딩, 탐색, 배포 |
 | Codex CLI | `codex exec "..."` (6계정 로테이션) | 독립적 코드 관점 | 코드 리뷰, 설계 평가 |
-| GPT-4.1 | `curl -s --max-time 30 http://localhost:4141/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gpt-4.1","messages":[{"role":"user","content":"..."}]}'` | 콘텐츠 톤, AI냄새 감지 | 콘텐츠 리뷰, 차별화 분석 |
+| GPT-4.1 (Ollama) | `ollama run <model>` 또는 `curl -s http://localhost:11434/api/chat` | 콘텐츠 톤, AI냄새 감지 | 콘텐츠 리뷰, 차별화 분석 |
 | Gemma 4 로컬 | Ollama API (localhost:11434) | 무제한, 오프라인 | 벌크 작업, 최종 폴백 |
 | GLM-5.1 클라우드 | Ollama `glm-5.1:cloud` (localhost:11434) | 무료, 고성능 | 수동 호출만 (cloud=과금 리스크). `ollama run glm-5.1:cloud` |
 
@@ -160,12 +196,12 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - **teammate 갯수 제한 없음**: 작업 복잡도에 따라 자율 결정. Sonnet(7D 별도 풀) + HydraTeams(5H 0) 조합이므로 비용 병목 없음
 - **모델 선택**: 리드=Opus, 구현 teammate=Sonnet(`model: sonnet`), 리뷰 teammate=GPT via HydraTeams(`localhost:3456`)
 - **HydraTeams 프록시**: `harness/tools/HydraTeams/` — Agent Teams teammate를 GPT-4o-mini 등 외부 모델로 라우팅. `node dist/index.js --model gpt-4o-mini --provider openai --port 3456 --passthrough lead`
-- **copilot-api와 역할 분리**: copilot-api(`localhost:4141`) = 단일 API 호출(검수, AI냄새). HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
+- **외부 검수 vs HydraTeams 역할 분리**: 단일 API 검수(Codex CLI / Ollama)는 직접 호출. HydraTeams(`localhost:3456`) = Agent Teams teammate 전용
 - **서브에이전트 vs Agent Teams**: 결과만 반환하면 서브에이전트, teammate 간 대화/태스크 조율이 필요하면 Agent Teams
 - **in-process 모드 기본**: tmux 불필요. Windows Terminal에서 바로 동작. `Shift+Down`으로 teammate 전환
 - **"외부 팀" 패턴**: 대표님이 "외부 팀으로" 또는 "외부 에이전트 팀" 지시 시, Sonnet teammate 안에서 Bash로 `ANTHROPIC_BASE_URL=http://localhost:3456 claude --print --dangerously-skip-permissions "프롬프트"` 호출하여 GPT-4.1에 분석/검수를 위임. HydraTeams 프록시 경유 검증 완료 (로그: `→ gpt-4.1`). Sonnet이 도구를 쓰고 GPT가 판단하는 하이브리드 가능.
-- **비용 최적 팀 구성**: Lead(Opus 판단) + 검수(GPT-4.1 via copilot-api, 5H 0) + 구현(Sonnet teammate, Sonnet 풀) = Opus 최소 소비
-- **자율 외부 검수**: 대표님 지시 없이도, Agent Teams/서브에이전트 결과물에 검수가 필요하면 GPT-4.1(copilot-api)에 자동 위임. payload를 UTF-8 파일로 저장 후 `curl -d @file localhost:4141` 방식. "외부 팀으로" 명시 불필요 — 토큰 절약 + 품질 보장을 위해 항상 자율 판단.
+- **비용 최적 팀 구성**: Lead(Opus 판단) + 검수(Codex CLI / Ollama, 5H 0) + 구현(Sonnet teammate, Sonnet 풀) = Opus 최소 소비
+- **자율 외부 검수**: 대표님 지시 없이도, Agent Teams/서브에이전트 결과물에 검수가 필요하면 Codex CLI(`bash harness/scripts/codex-rotate.sh`) 또는 Ollama(`localhost:11434`)에 자동 위임. "외부 팀으로" 명시 불필요 — 토큰 절약 + 품질 보장을 위해 항상 자율 판단.
 
 ### Advisor Loop (Opus ↔ 모델 반복 대화)
 1. **라우팅**: Opus가 작업 유형 판단 → 최적 모델(들) 선택
@@ -185,7 +221,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 
 ## External Model CLI Reference
 - Codex: `bash harness/scripts/codex-rotate.sh "프롬프트"` (6계정 자동 로테이션 + gemma4 폴백). 단일 계정: `codex exec "프롬프트"` — -q 옵션 없음, timeout 30초
-- GPT-4.1 (copilot-api): `curl -s --max-time 30 http://localhost:4141/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"gpt-4.1","messages":[{"role":"user","content":"프롬프트"}]}'` — copilot-api 서버 실행 필수 (`copilot-api start --port 4141`)
+- ⚠️ GPT-4.1 외부 프록시 (copilot-api): **2026-05 GitHub 차단으로 사용 불가**. 대체: Ollama `curl -s http://localhost:11434/api/chat -d '{"model":"gemma4","stream":false,"messages":[{"role":"user","content":"프롬프트"}]}'`
 - Ollama: localhost:11434 API — 무제한, 최종 폴백
 - **Monitor tool**: 백그라운드 Bash의 stdout 실시간 감시. `run_in_background` 대신 빌드/배포 진행률 추적에 사용. `Monitor(command: "npm run build")` → 각 stdout 라인이 알림으로 전달.
 - **HTTP hooks** (v2.1.63): hook에서 `"type": "http"`로 URL에 POST 가능. bash 프로세스 스폰 없이 직접 HTTP 전송. Slack/Discord webhook 연동에 적합. 단, 환경변수 보간 미지원 — URL/body에 시크릿 하드코딩 필요하므로 현재 bash hook 유지. 향후 보간 지원 시 전환 고려.
@@ -230,7 +266,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
   - 코드 리뷰/평가: **Codex CLI** (5H 0, 7D 0)
   - 반복/벌크 코딩: **GPT-4.1** 별도 세션 (5H 0, 7D 0)
   - 외부 검수: **Codex + Gemma4** (5H 0, 7D 0)
-  - 리서치: **Perplexity/Tavily** MCP 직접 (5H 0)
+  - 리서치: **Tavily** MCP 직접 (5H 0)
   - 코딩 (도구 필요): Sonnet 서브에이전트 (5H 소비, 7D Sonnet 풀)
   - 탐색 3회+: Sonnet(Explore) (5H 소비, 7D Sonnet 풀)
   - 단일 파일/판단: Opus 직접 (5H 소비 큼, 7D Opus 풀)
@@ -244,16 +280,9 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
    - `echo -n "/model sonnet" | clip` → `mcp__desktop-control__computer(action: "key", text: "ctrl+v")` → Enter
 5. Sonnet 메인 전환 후에도 Opus 풀은 보존됨 — 리밋 해제 후 `/model opus`로 복귀
 
-### GPT 메인 전환 (copilot-api 프록시)
-copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로, GPT-4.1을 Claude Code 메인 모델로 사용 가능:
-1. **서버 시작**: `copilot-api start --port 4141 &` (백그라운드)
-2. **전환**: `ANTHROPIC_BASE_URL=http://localhost:4141 claude` 로 새 세션 시작
-3. **모델**: GPT-4.1이 Claude Code의 모든 도구(Read/Edit/Write/Agent 등)를 사용
-4. **Opus 어드바이저**: 별도 Claude Code 세션(Opus)을 열어 판단/검증 요청
-5. **비용**: GitHub Copilot Pro $10/월 (GPT-4.1/4o 무제한) 또는 Free (50 req/월)
-6. **복귀**: 리밋 해제 후 `ANTHROPIC_BASE_URL` 없이 재시작 → Opus 복귀
-⚠️ **제약**: 프록시 세션에서 /model로 Opus/Sonnet 선택 시 에러 (프록시가 미지원). 프록시에서 사용 가능: GPT-4.1, GPT-4o, GPT-5 mini, Claude Haiku 4.5만. Opus 어드바이저는 반드시 별도 세션.
-⚠️ **GPT-4.1 한계**: 오케스트레이터 부적합 (Opus 60-65% 수준). 단순 반복/벌크 작업에만 사용. 판단/설계는 Opus 세션에서.
+### GPT 메인 전환 — DEPRECATED 2026-05
+> ⚠️ copilot-api는 GitHub 외부 접근 차단으로 2026-05부터 사용 불가. 이 섹션은 역사 참조용으로만 보존.
+> 대체: HydraTeams(`localhost:3456`) 또는 Ollama 로컬 모델 직접 사용.
 
 ## Context & Session
 - **Opus 세션**: compact **45%에 옵시디언 세션 저장 → `/compact`**. 저장 없이 compact 금지 (P-007). v2.1.105+: PreCompact hook이 옵시디언 저장 실패 시 `exit 2`로 compact 자동 차단.
@@ -264,7 +293,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - **opusplan** (권장 기본): `/model opusplan` — Plan(설계)=Opus, 실행=Sonnet 자동 분리. Opus 7D 풀 보존 + Sonnet이 코딩/배포 수행. Ralph Loop, 장기 작업에 최적.
 - **Opus 오케스트레이터**: `/model opus` — 모든 것을 Opus가 직접. 짧은 대화·판단·커밋에 적합. 5H 소비 큼.
 - **Sonnet 메인**: `/model sonnet` — 단순 단일 작업 전용. Opus advisor 없음.
-- **GPT-4.1** (copilot-api): `ANTHROPIC_BASE_URL=http://localhost:4141`. 무료(multiplier 0). 오케스트레이터 부적합 — 단순 반복/벌크 작업만.
+- **GPT-4.1** (HydraTeams): `ANTHROPIC_BASE_URL=http://localhost:3456`. 무료(multiplier 0). 오케스트레이터 부적합 — 단순 반복/벌크 작업만.
 - Sonnet 서브에이전트: Opus/opusplan 세션 내에서 `Agent(model: "sonnet")`으로 자동 사용.
 - **Advisor API** (참고): Messages API에서 `tools=[{"type":"advisor_20260301","model":"claude-opus-4-6"}]`로 Sonnet+Opus 자문 패턴 구현 가능. SWE-bench +2.7%, 비용 -11.9%.
 
@@ -302,7 +331,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - **2.1.128 — 1M-context + 작은 autocompact window false "Prompt is too long" 차단 fix**: P-115/P-116 영역의 native fix. 우리 wrapper(`claude-opus.cmd` + `.claude/settings.local.json`)는 여전히 유효
 - **2.1.128 — `workspace`는 reserved MCP server name**: 동일 이름 서버는 skip + warning. 우리 MCP에 `workspace` 없음 (확인 완료)
 - **2.1.122 — malformed `hooks` settings.json 단일 entry 파일 무효화 안 함**: hook 작성 안전성 ↑. 잘못된 hook 추가해도 다른 hook 죽지 않음
-- **2.1.121 — MCP `alwaysLoad` option**: 서버 단위로 ToolSearch deferral skip + 항상 활성. 자주 쓰는 MCP에 적용. 현재 적용: `tavily`, `expect`, `perplexity` (2026-05-07)
+- **2.1.121 — MCP `alwaysLoad` option**: 서버 단위로 ToolSearch deferral skip + 항상 활성. 자주 쓰는 MCP에 적용. 현재 적용: `tavily`, `expect` (2026-05-07)
 - **2.1.121 — PostToolUse hooks `updatedToolOutput` 모든 도구 지원** (이전 MCP 전용): 도구 출력 redact/transform hook 패턴 가능
 - **2.1.120 — `claude ultrareview [target]` CLI 서브커맨드**: non-interactive 모드. CI/scripts/Remote agent에서 호출 가능. `--json` 원시 출력. `harness/scripts/ultrareview-headless.sh` 래퍼 신설(2026-05-07)
 - **2.1.120 — Windows: Git for Windows 불필요**: 부재 시 PowerShell이 shell tool. 대표님 환경(Git Bash 사용)은 영향 없음
@@ -319,7 +348,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 
 ### 🟢 신규 ENV / Settings
 - **2.1.132**: `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` (fullscreen → native scrollback 유지)
-- **2.1.129**: `CLAUDE_CODE_FORCE_SYNC_OUTPUT=1`, `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` (Homebrew/WinGet 백그라운드 업그레이드), `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` (copilot-api/HydraTeams `/v1/models` 자동 picker)
+- **2.1.129**: `CLAUDE_CODE_FORCE_SYNC_OUTPUT=1`, `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` (Homebrew/WinGet 백그라운드 업그레이드), `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` (HydraTeams `/v1/models` 자동 picker)
 - **2.1.122**: `ANTHROPIC_BEDROCK_SERVICE_TIER`
 - **2.1.119**: `prUrlTemplate`, `CLAUDE_CODE_HIDE_CWD`
 
@@ -334,6 +363,81 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - 기존 hook 모두 동작 유지. 신규 활용: `duration_ms`(P-119), `alwaysLoad`(P-121), `ultrareview` CLI(P-120)
 - `bash-tool-blocker.sh` + `irreversible-alert.sh` 독립 동작 유지 (P-026)
 - P-115/P-116 우회는 native fix(2.1.128) 후에도 유효 — 자동화 정책 보존
+
+---
+
+## v2.1.139~v2.1.142 신규 기능 (2026-05-11 ~ 2026-05-15)
+
+### 🔴 하네스 직접 영향
+- **2.1.142 — `MCP_TOOL_TIMEOUT` HTTP/SSE 60초 캡 fix**: 이전엔 설정값 무시하고 60초 강제. 이제 정상 적용. tavily 등 원격 MCP에서 장기 작업 가능
+- **2.1.142 — Fast mode default Opus 4.6 → Opus 4.7**: `/fast` 자동 강력화. Opus 4.6 핀 원하면 `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1`
+- **2.1.142 — `claude agents` 플래그 8개 신설**: `--add-dir`, `--settings`, `--mcp-config`, `--plugin-dir`, `--permission-mode`, `--model`, `--effort`, `--dangerously-skip-permissions`. background dispatch 자동화 가능
+- **2.1.142 — Reactive compaction overflow seed 개선**: Opus 1M 세션 효율 ↑
+- **2.1.142 — Hook 구성 에러 명확화**: `SessionStart`/`Setup`/`SubagentStart`에는 command-type만 허용 (prompt/agent type 불가)
+- **2.1.141 — Hook `terminalSequence` JSON output**: 데스크톱 알림/창 제목/벨을 controlling terminal 없이 emit. `telegram-notify.sh` 대안 검토 가능
+- **2.1.141 — markdown table cell wrapping vertical fallback regression(v2.1.136) fix**: 우리 환경 출력 깨짐 가능성 해소
+- **2.1.140 — Agent tool `subagent_type` case/separator insensitive 매칭**: `"Code Reviewer"` → `code-reviewer` 자동 매칭. Agent 호출 편의 ↑
+- **2.1.140 — `/loop` redundant wakeups fix**: notify하는 background task에 polling 안 함. R14 watchdog 보완
+- **2.1.140 — `Read` tool `offset` whitespace/`+` prefix string fix**: validation 통과
+- **2.1.139 — Hook `args: string[]` exec form**: 셸 없이 직접 spawn — path placeholders quoting 불필요. 보안 + 신뢰성 ↑. 우리 hook 점진 마이그레이션 후보
+- **2.1.139 — Hook `continueOnBlock: true` (PostToolUse)**: hook rejection reason을 모델에 피드백하고 턴 계속 — `test-manipulation-guard.sh`, `regression-guard.sh` 등에 적용 시 자동 교정 패턴 가능
+- **2.1.139 — MCP stdio servers `CLAUDE_PROJECT_DIR` env 주입**: 플러그인 configs에서 `${CLAUDE_PROJECT_DIR}` 참조 가능
+- **2.1.139 — `/mcp` Reconnect `.mcp.json` hot-reload**: restart 불필요
+- **2.1.139 — Compaction prompt sensitive instructions 보존**
+
+### 🟢 신규 기능
+- **2.1.139 — `claude agents` Agent View (Research Preview)**: 모든 세션(running/blocked/done) 한눈에. Ralph Loop, 장기 background 작업 가시성 ↑. docs: code.claude.com/docs/en/agent-view
+- **2.1.139 — `/goal` 커맨드**: completion condition 설정 → Claude가 turn 넘어 자동 지속. interactive/`-p`/Remote Control. live elapsed/turns/tokens 오버레이. 자동 진화 루프와 결합 가능
+- **2.1.142 — Plugin root-level `SKILL.md` 단독 surfacing**: `skills/` 없어도 인식
+- **2.1.141 — Rewind menu "Summarize up to here"**: 이전 컨텍스트 압축 + 최근 turn 유지
+- **2.1.141 — `ANTHROPIC_WORKSPACE_ID`**: workload identity federation 토큰 scope
+- **2.1.139 — Transcript navigation**: `?` shortcuts, `{`/`}` prompt 점프, `v` panel toggle
+- **2.1.139 — `/scroll-speed`**, `claude plugin details <name>` (컴포넌트 + 토큰 추정)
+
+### 🟡 주의 / 정책 변화
+- **2.1.139 — Remote Control / `/schedule` / claude.ai MCP connectors / 알림 비활성 조건**: `ANTHROPIC_API_KEY`/`apiKeyHelper`/`ANTHROPIC_AUTH_TOKEN` 설정 시 (Claude.ai 로그인 있어도). API key 사용 시 features 일부 차단됨
+
+### 신규 ENV / Settings
+- **2.1.142**: `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1` (Fast mode Opus 4.6 pin)
+- **2.1.141**: `CLAUDE_CODE_PLUGIN_PREFER_HTTPS`, `ANTHROPIC_WORKSPACE_ID`
+
+### 영향 분석 — 하네스 hook 신규 활용 후보
+- **`args: string[]` 마이그레이션**: 경로 quoting 의존 hook 점진 전환 (보안성 ↑)
+- **`continueOnBlock: true`**: 차단형 hook에 적용 시 자동 교정 루프 — 신중 검토 필요
+- **`terminalSequence`**: 텔레그램 hook + 데스크톱 알림 보완 가능
+
+---
+
+## v2.1.133~v2.1.138 신규 기능 (2026-05-08 ~ 2026-05-10)
+
+### 🔴 하네스 직접 영향
+- **2.1.136 — plan mode + `Edit(...)` allow rule 보안 fix**: 이전엔 matching `Edit(...)` allow rule이 있으면 plan mode가 file writes를 차단하지 못했음. 이제 봉쇄. `enforce-build-transition.sh`와 충돌 없음 (오히려 보강)
+- **2.1.136 — `settings.autoMode.hard_deny` 신규**: auto mode classifier rules가 user intent / allow exception **무시하고 무조건 차단**. 위험 작업 영구 차단용. R6 보안 hook과 보완 가능 — 향후 `irreversible-alert.sh`와 분담 검토
+- **2.1.136 — MCP OAuth 다중 서버 refresh token race fix**: 동시 refresh로 토큰 lost → 일일 재인증 필요했던 문제 해소. tavily/expect 등 다중 MCP 환경에서 효과
+- **2.1.136 — `AskUserQuestion` array multi-select 답변 discarded fix**: 우리 사용 패턴 직접 영향. 이전엔 multiSelect 결과가 가끔 폐기됐을 가능성
+- **2.1.136 — MCP tool results invisible when server returns content blocks fix**: MCP 응답 손실 가능성 제거
+- **2.1.136 — `--resume`/`--continue` underscore 경로 fix**: 우리 환경 영향 없음 (대표님 프로젝트 경로 underscore 없음)
+- **2.1.136 — `CLAUDE_ENV_FILE` SessionStart hooks env vars stale after `/resume`/`/clear` fix**: 우리 텔레그램 hook은 직접 export 방식이라 영향 없음, 인지만 필요
+- **2.1.133 — `worktree.baseRef` 설정 신설** (`fresh`/`head`): default `fresh` (origin/<default>로 복귀). 2.1.128부터 local HEAD였던 동작이 다시 origin 기반으로. **Agent isolation worktree에서 unpushed commits 보존하려면** `~/.claude/settings.json`에 `"worktree": {"baseRef": "head"}` 명시 필요
+- **2.1.133 — Hooks `effort.level` JSON input + `$CLAUDE_EFFORT` env**: hook과 Bash subprocess에서 active effort level 참조 가능. `tool-duration-monitor.sh` 같은 hook이 effort 기반 분기 가능
+- **2.1.133 — 병렬 세션 401 dead-end fix**: refresh-token race로 shared credentials 삭제되던 버그 해소
+- **2.1.133 — `/effort` 세션 간 영향 fix**: 한 세션의 `/effort`가 다른 동시 세션 effort 변경하던 버그 해소
+
+### 🟡 사용자 영향 미미
+- **2.1.138**: Internal fixes only. `claude --version` 2.1.138 확인됨, npm latest 동일
+- **2.1.137**: VS Code 확장 Windows 활성화 실패 fix (`createRequire` polyfill)
+- **2.1.134/v2.1.135**: changelog 자체가 비어있음 (skipped versions)
+
+### 🟢 신규 ENV / Settings
+- **2.1.136**: `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL` (엔터프라이즈 OTel 캡처 — 개인 사용자 무관)
+- **2.1.136**: `settings.autoMode.hard_deny`
+- **2.1.133**: `worktree.baseRef` (`fresh`/`head`), `sandbox.bwrapPath` / `sandbox.socatPath` (Linux/WSL), `parentSettingsBehavior` (admin-tier)
+- **2.1.133**: `$CLAUDE_EFFORT` env in Bash + hook `effort.level` JSON input
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- 기존 hook 모두 동작 유지. 신규 활용 후보: `$CLAUDE_EFFORT` env (P-133), `autoMode.hard_deny` 위험 작업 차단(P-136)
+- `bash-tool-blocker.sh` + `irreversible-alert.sh` 독립 동작 유지 (P-026)
+- `worktree.baseRef: "head"` 명시 필요 여부는 Agent worktree 사용 빈도에 따라 결정 — 현재 미설정(default fresh)
 
 ---
 
@@ -356,7 +460,7 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 
 ### `/model` picker + `ANTHROPIC_BASE_URL` 게이트웨이
 - `ANTHROPIC_DEFAULT_*_MODEL_NAME` / `_DESCRIPTION` override 지원.
-- copilot-api(`:4141`) / HydraTeams(`:3456`) 세션에서 모델 라벨 커스터마이징 가능.
+- HydraTeams(`:3456`) 세션에서 모델 라벨 커스터마이징 가능.
 
 ### 신규 플러그인 / 테마
 - **`claude plugin tag`**: 플러그인용 release git tag 생성 + 버전 검증.
@@ -501,8 +605,8 @@ copilot-api 서버(`localhost:4141`)가 Anthropic API 호환을 지원하므로,
 - `~/.harness-state/` 디렉토리 (hooks가 자동 생성)
 - 환경변수: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (텔레그램 알림용)
 - 환경변수: `OBSIDIAN_VAULT` (세션 저장용, 미설정 시 옵시디언 연동 비활성)
-- 외부 CLI: `codex` (npm 글로벌 설치), `copilot-api` (localhost:4141, GPT-4.1 프록시)
-- MCP: Perplexity, Tavily (settings.json에 등록)
+- 외부 CLI: `codex` (npm 글로벌 설치), Ollama (localhost:11434, 로컬 LLM)
+- MCP: Tavily (settings.json에 등록)
 - 로컬: Ollama (localhost:11434, 폴백용 — 없으면 클라우드만 사용)
 
 ## Hosting

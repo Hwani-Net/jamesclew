@@ -57,22 +57,22 @@ if [[ -n "${TEST_HARNESS:-}" ]]; then
     exit 0
 fi
 
-# GPT-4.1 호출 (copilot-api, timeout 30s)
-PAYLOAD=$(printf '{"model":"gpt-4.1","messages":[{"role":"user","content":"세션 컨텍스트 %d%% 도달. 현재까지 진행 상황과 품질을 200자 이내로 검수하라."}]}' "$PCT")
+# 외부 LLM 호출 (Ollama, timeout 30s)
+PAYLOAD=$(printf '{"model":"gemma4","stream":false,"messages":[{"role":"user","content":"세션 컨텍스트 %d%% 도달. 현재까지 진행 상황과 품질을 200자 이내로 검수하라."}]}' "$PCT")
 RESPONSE=$(curl -s --max-time 30 \
-    http://localhost:4141/v1/chat/completions \
+    http://localhost:11434/api/chat \
     -H "Content-Type: application/json" \
     -d "$PAYLOAD" 2>/dev/null || echo "")
 
 if [[ -z "$RESPONSE" ]]; then
-    echo "[self-evolve] copilot-api 미응답 — 수동 검수 필요" >&2
-    REVIEW_TEXT="[self-evolve] 컨텍스트 ${PCT}% 도달. GPT-4.1 미응답 — 수동 검수 필요"
+    echo "[self-evolve] Ollama 미응답 — 수동 검수 필요" >&2
+    REVIEW_TEXT="[self-evolve] 컨텍스트 ${PCT}% 도달. Ollama 미응답 — 수동 검수 필요"
 else
     REVIEW_TEXT=$(echo "$RESPONSE" | \
-        python3 -c "import sys,json; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'])" \
+        python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('message',{}).get('content','') or d.get('choices',[{}])[0].get('message',{}).get('content',''))" \
         2>/dev/null || echo "")
     if [[ -z "$REVIEW_TEXT" ]]; then
-        REVIEW_TEXT="[self-evolve] 컨텍스트 ${PCT}% — GPT-4.1 응답 파싱 실패"
+        REVIEW_TEXT="[self-evolve] 컨텍스트 ${PCT}% — Ollama 응답 파싱 실패"
     fi
     echo "[self-evolve] ${PCT}% 마일스톤: $REVIEW_TEXT"
 fi

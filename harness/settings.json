@@ -6,7 +6,9 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "ENABLE_PROMPT_CACHING_1H": "1",
     "CLAUDE_CODE_ENABLE_AWAY_SUMMARY": "1",
-    "CLAUDE_STREAM_IDLE_TIMEOUT_MS": "180000"
+    "CLAUDE_STREAM_IDLE_TIMEOUT_MS": "180000",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONUTF8": "1"
   },
   "permissions": {
     "allow": [
@@ -252,7 +254,7 @@
         ]
       },
       {
-        "matcher": "mcp__perplexity__.*|mcp__tavily__.*|Bash",
+        "matcher": "mcp__tavily__.*|Bash",
         "hooks": [
           {
             "type": "command",
@@ -262,7 +264,7 @@
         ]
       },
       {
-        "matcher": "mcp__perplexity__.*|mcp__tavily__.*",
+        "matcher": "mcp__tavily__.*",
         "hooks": [
           {
             "type": "command",
@@ -272,7 +274,7 @@
         ]
       },
       {
-        "matcher": "Write|mcp__perplexity__.*|mcp__tavily__.*",
+        "matcher": "Write|mcp__tavily__.*",
         "hooks": [
           {
             "type": "command",
@@ -398,11 +400,6 @@
           },
           {
             "type": "command",
-            "command": "node --experimental-strip-types \"$HOME/.claude/hooks/curation.ts\"",
-            "timeout": 120000
-          },
-          {
-            "type": "command",
             "command": "bash -c 'ROOT=$(git rev-parse --show-toplevel 2>/dev/null); if [ -n \"$ROOT\" ]; then cd \"$ROOT\" && gbrain sync --repo . --no-pull --no-embed 2>/dev/null && echo \"[gbrain] synced (git)\"; else gbrain import . --max-depth 2 2>/dev/null && echo \"[gbrain] imported (non-git)\"; fi || true'",
             "timeout": 15000
           }
@@ -447,15 +444,6 @@
             "timeout": 15000
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $HOME/.claude/hooks/dialectic-pattern-extractor.sh",
-            "timeout": 45000
-          }
-        ]
       }
     ],
     "StopFailure": [
@@ -486,6 +474,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/post-compact-resume.sh",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/dialectic-pattern-extractor.sh",
+            "timeout": 30000
           }
         ]
       }
@@ -554,11 +547,6 @@
           },
           {
             "type": "command",
-            "command": "bash $HOME/.claude/hooks/copilot-api-autostart.sh",
-            "timeout": 8000
-          },
-          {
-            "type": "command",
             "command": "node --experimental-strip-types \"$HOME/.claude/hooks/session-start.ts\"",
             "timeout": 10000
           },
@@ -575,6 +563,15 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/harness-self-audit.sh",
             "timeout": 30000
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/distress-queue-loader.sh",
+            "timeout": 8000
           }
         ]
       }
