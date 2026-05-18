@@ -50,3 +50,6 @@ sessions/
 Jamesclew/
 MultiBlog/.firebase/
 harness/scripts/connect-ai-adapter.disabled-*/
+
+# Workflow scratch (cdp scripts, intermediate JSON)
+tmp/
