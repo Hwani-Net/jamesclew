@@ -14,10 +14,10 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 39개 (2026-04-29)
-# 마지막 업데이트: 2026-04-29 (check_v121_post_tool_output, check_v121_mcp_always_load,
-#                               check_v120_powershell_fallback, check_v119_config_persistence 추가
-#                               — Claude Code v2.1.119~v2.1.123 신기능 감사)
+# 현재 체크 수: 52개 (2026-05-18)
+# 마지막 업데이트: 2026-05-18 (check_v122~check_v142 13개 추가
+#                               — Claude Code v2.1.122~v2.1.142 신기능 감사
+#                               — Issue #2 "침묵 의심 D+11" 해결)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -59,9 +59,22 @@
 #  37 check_v121_mcp_always_load    — v2.1.121 MCP alwaysLoad 옵션 적용 여부
 #  38 check_v120_powershell_fallback — v2.1.120 Windows Git Bash 설치 확인 (하네스 bash 의존)
 #  39 check_v119_config_persistence — v2.1.119 settings.json /config 영구 저장 정상 작동
+#  40 check_v122_malformed_hooks    — v2.1.122 malformed hook 단일 entry 파일 무효화 방지
+#  41 check_v128_prompt_cache       — v2.1.128 ENABLE_PROMPT_CACHING_1H 1h TTL 정상 적용
+#  42 check_v128_long_context_fix   — v2.1.128 P-115/P-116 1M-context 워크어라운드 유효성
+#  43 check_v132_context_window     — v2.1.132 statusline context_window fix / heartbeat 정확도
+#  44 check_v132_session_id         — v2.1.132 CLAUDE_CODE_SESSION_ID Bash hook 활용
+#  45 check_v133_worktree_baseref   — v2.1.133 worktree.baseRef 설정 (unpushed commits 보존)
+#  46 check_v133_claude_effort_env  — v2.1.133 $CLAUDE_EFFORT env hook 활용
+#  47 check_v136_hard_deny          — v2.1.136 autoMode.hard_deny 위험 작업 차단 설정
+#  48 check_v139_goal_agentview     — v2.1.139 /goal + Agent View (claude agents) 활용
+#  49 check_v139_hook_args_exec     — v2.1.139 Hook args: string[] exec form 마이그레이션
+#  50 check_v141_terminal_sequence  — v2.1.141 Hook terminalSequence JSON output 활용
+#  51 check_v142_agents_flags       — v2.1.142 claude agents 8개 플래그 background dispatch
+#  52 check_v142_fast_mode_opus47   — v2.1.142 /fast 기본값 Opus 4.7 변경 인지
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# (없음 — 모든 TODO 구현 완료 2026-04-29)
+# (없음 — 모든 TODO 구현 완료 2026-05-18)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -669,6 +682,275 @@ check_v120_powershell_fallback() {
   fi
 }
 
+# ─── Check 40: v2.1.122 malformed hooks 단일 entry 파일 무효화 방지 ───
+# v2.1.122부터 잘못된 hook 추가해도 다른 hook 죽지 않음.
+# settings.json hooks 배열이 최소 1개 이상 유효하게 유지되는지 점검.
+check_v122_malformed_hooks() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "N/A|settings.json 없음"
+    return
+  fi
+  # Count hooks entries in settings.json
+  local hook_count
+  hook_count=$(grep -c '"command"' "$settings_file" 2>/dev/null || echo "0")
+  hook_count=$(echo "$hook_count" | tr -d '[:space:]')
+  if [ "$hook_count" -gt 0 ]; then
+    echo "PASS|hooks 항목 ${hook_count}개 확인 — v2.1.122 단일 entry 무효화 방지 적용 환경"
+  else
+    echo "WARN|settings.json hooks 항목 0건 — hook 설정 확인 필요"
+  fi
+}
+
+# ─── Check 41: v2.1.128 ENABLE_PROMPT_CACHING_1H=1 1시간 TTL 적용 ───
+# v2.1.128 이전엔 ENABLE_PROMPT_CACHING_1H=1 설정해도 5분으로 잘림.
+# 이제 정상 1시간. .env 또는 settings.json에 설정 여부 확인.
+check_v128_prompt_cache() {
+  local env_file="$HOME/.claude/.env"
+  local settings_file="$HOME/.claude/settings.json"
+  local harness_env="$HOME/.harness-state/.env"
+  local found=0
+  # Check .env files
+  for f in "$env_file" "$harness_env" "$HOME/.env"; do
+    if [ -f "$f" ] && grep -q "ENABLE_PROMPT_CACHING_1H" "$f" 2>/dev/null; then
+      found=$((found + 1))
+    fi
+  done
+  # Check settings.json env section
+  if [ -f "$settings_file" ] && grep -q "ENABLE_PROMPT_CACHING_1H" "$settings_file" 2>/dev/null; then
+    found=$((found + 1))
+  fi
+  if [ "$found" -gt 0 ]; then
+    echo "PASS|ENABLE_PROMPT_CACHING_1H 설정 확인 — v2.1.128+ 정상 1h TTL 적용"
+  else
+    echo "WARN|ENABLE_PROMPT_CACHING_1H 미설정 — 1h 캐시 TTL 미활용 (참고용, 강제 아님)"
+  fi
+}
+
+# ─── Check 42: v2.1.128 1M-context 워크어라운드 유효성 ───
+# v2.1.128 native fix 후에도 우리 wrapper(claude-opus.cmd + settings.local.json) 유지.
+# P-115/P-116 방어선이 여전히 존재하는지 확인.
+check_v128_long_context_fix() {
+  local settings_local="$HOME/.claude/settings.local.json"
+  local claude_cmd
+  # Check for settings.local.json (P-115/P-116 workaround)
+  if [ -f "$settings_local" ]; then
+    local long_ctx=$(grep -c 'maxTokens\|contextWindow\|compaction\|autocompact' "$settings_local" 2>/dev/null || echo "0")
+    long_ctx=$(echo "$long_ctx" | tr -d '[:space:]')
+    if [ "$long_ctx" -gt 0 ]; then
+      echo "PASS|settings.local.json에 long-context 설정 ${long_ctx}건 — P-115/P-116 방어선 유지"
+      return
+    fi
+  fi
+  # Check for claude-opus.cmd wrapper
+  for f in "$HOME/.claude/claude-opus.cmd" "$HOME/claude-opus.cmd"; do
+    if [ -f "$f" ]; then
+      echo "PASS|claude-opus.cmd wrapper 존재 — P-115/P-116 방어선 유지"
+      return
+    fi
+  done
+  echo "WARN|P-115/P-116 워크어라운드 파일 미확인 — v2.1.128 native fix 의존 (참고용)"
+}
+
+# ─── Check 43: v2.1.132 statusline context_window fix (heartbeat 정확도) ───
+# v2.1.132부터 statusline이 누적 세션 토큰 대신 현재 컨텍스트 사용량을 표시.
+# telegram-notify.sh heartbeat 정확도 회복. 스크립트 존재 + 버전 인식 체크.
+check_v132_context_window() {
+  local notify_sh="$HOME/.claude/hooks/telegram-notify.sh"
+  if [ ! -f "$notify_sh" ]; then
+    # Also check scripts dir
+    notify_sh="$HOME/.claude/scripts/telegram-notify.sh"
+  fi
+  if [ ! -f "$notify_sh" ]; then
+    echo "WARN|telegram-notify.sh 없음 — heartbeat 스크립트 확인 필요"
+    return
+  fi
+  # Check for heartbeat function / context reading
+  local has_heartbeat=$(grep -c 'heartbeat\|context_usage\|context_window' "$notify_sh" 2>/dev/null || echo "0")
+  has_heartbeat=$(echo "$has_heartbeat" | tr -d '[:space:]')
+  if [ "$has_heartbeat" -gt 0 ]; then
+    echo "PASS|telegram-notify.sh heartbeat 로직 ${has_heartbeat}건 확인 — v2.1.132 context_window fix 수혜"
+  else
+    echo "WARN|telegram-notify.sh heartbeat 로직 미확인 — context 수치 정확도 점검 권장"
+  fi
+}
+
+# ─── Check 44: v2.1.132 CLAUDE_CODE_SESSION_ID Bash hook 활용 ───
+# v2.1.132부터 Bash subprocess에 session_id 자동 export.
+# hook에서 $CLAUDE_CODE_SESSION_ID 사용 가능. 활용 hook 존재 여부 확인.
+check_v132_session_id() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local usage
+  usage=$(grep -rli "CLAUDE_CODE_SESSION_ID" "$hooks_dir" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$usage" -gt 0 ]; then
+    local files
+    files=$(grep -rli "CLAUDE_CODE_SESSION_ID" "$hooks_dir" 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ')
+    echo "PASS|CLAUDE_CODE_SESSION_ID 활용 hook ${usage}개: ${files}"
+  else
+    echo "WARN|CLAUDE_CODE_SESSION_ID 미활용 — v2.1.132 신기능. hook 세션 추적에 활용 가능 (참고용)"
+  fi
+}
+
+# ─── Check 45: v2.1.133 worktree.baseRef 설정 ───
+# v2.1.133부터 default 'fresh' (origin/<default>)로 복귀.
+# Agent worktree에서 unpushed commits 보존 필요 시 "head" 명시 필요.
+check_v133_worktree_baseref() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "N/A|settings.json 없음"
+    return
+  fi
+  local baseref=$(grep -c '"baseRef"' "$settings_file" 2>/dev/null || echo "0")
+  baseref=$(echo "$baseref" | tr -d '[:space:]')
+  if [ "$baseref" -gt 0 ]; then
+    local val
+    val=$(grep '"baseRef"' "$settings_file" 2>/dev/null | head -1)
+    echo "PASS|worktree.baseRef 명시 설정 — ${val}"
+  else
+    echo "WARN|worktree.baseRef 미설정 — default 'fresh'(origin 기반). unpushed commits 있는 Agent worktree 사용 시 'head' 명시 권장"
+  fi
+}
+
+# ─── Check 46: v2.1.133 $CLAUDE_EFFORT env hook 활용 ───
+# v2.1.133부터 Bash subprocess + hook JSON에 effort.level 주입.
+# $CLAUDE_EFFORT env 또는 JSON effort.level을 hook이 활용하는지 확인.
+check_v133_claude_effort_env() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local usage
+  usage=$(grep -rli "CLAUDE_EFFORT\|effort\.level" "$hooks_dir" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$usage" -gt 0 ]; then
+    local files
+    files=$(grep -rli "CLAUDE_EFFORT\|effort\.level" "$hooks_dir" 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ')
+    echo "PASS|CLAUDE_EFFORT/effort.level 활용 hook ${usage}개: ${files}"
+  else
+    echo "WARN|CLAUDE_EFFORT env 미활용 — v2.1.133 신기능. effort 기반 hook 분기 가능 (참고용)"
+  fi
+}
+
+# ─── Check 47: v2.1.136 autoMode.hard_deny 위험 작업 차단 설정 ───
+# v2.1.136 신규. user intent / allow exception 무시하고 무조건 차단.
+# 위험 작업 영구 차단용. settings.json에 설정 여부 확인.
+check_v136_hard_deny() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "N/A|settings.json 없음"
+    return
+  fi
+  local hard_deny=$(grep -c '"hard_deny"' "$settings_file" 2>/dev/null || echo "0")
+  hard_deny=$(echo "$hard_deny" | tr -d '[:space:]')
+  if [ "$hard_deny" -gt 0 ]; then
+    echo "PASS|autoMode.hard_deny 설정 확인 — v2.1.136 위험 작업 영구 차단 활성"
+  else
+    echo "WARN|autoMode.hard_deny 미설정 — v2.1.136 신기능. irreversible-alert.sh로 대체 중 (참고용)"
+  fi
+}
+
+# ─── Check 48: v2.1.139 /goal 커맨드 + Agent View 활용 ───
+# v2.1.139 신규. /goal: completion condition 설정 → Claude 자동 지속.
+# claude agents: 모든 세션 가시성. 하네스 운용에 직접 유용.
+check_v139_goal_agentview() {
+  local harness_dir="$HOME/.claude"
+  # Check if /goal is referenced in commands or CLAUDE.md
+  local goal_ref=$(grep -rl '/goal\b' "$harness_dir/CLAUDE.md" "$harness_dir/commands/" "$harness_dir/rules/" 2>/dev/null | wc -l | tr -d ' ')
+  # Check if claude agents is referenced
+  local agents_ref=$(grep -rl '"claude agents"\|claude agents\b' "$harness_dir/CLAUDE.md" "$harness_dir/rules/" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$goal_ref" -gt 0 ] || [ "$agents_ref" -gt 0 ]; then
+    echo "PASS|/goal 참조 ${goal_ref}건, claude agents 참조 ${agents_ref}건 — v2.1.139 신기능 인지"
+  else
+    echo "WARN|/goal / claude agents 참조 없음 — v2.1.139 신기능 미활용 (참고용)"
+  fi
+}
+
+# ─── Check 49: v2.1.139 Hook args: string[] exec form 마이그레이션 ───
+# v2.1.139 신규. args: string[] 형식은 셸 없이 직접 spawn — path quoting 불필요.
+# 우리 hook 점진 마이그레이션 후보. settings.json에 args 배열 사용 여부 확인.
+check_v139_hook_args_exec() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "N/A|settings.json 없음"
+    return
+  fi
+  # args: string[] in hooks = JSON array after "args" key
+  local args_array=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open('$settings_file'))
+    hooks = d.get('hooks', {})
+    count = 0
+    for events in hooks.values():
+        for h in (events if isinstance(events, list) else []):
+            if isinstance(h.get('args'), list):
+                count += 1
+    print(count)
+except: print(0)
+" 2>/dev/null || echo "0")
+  args_array=$(echo "$args_array" | tr -d '[:space:]')
+  if [ "$args_array" -gt 0 ]; then
+    echo "PASS|hook args: string[] 형식 ${args_array}개 사용 — v2.1.139 exec form 적용"
+  else
+    echo "WARN|hook args: string[] 미사용 — 모두 command string 형식. v2.1.139 exec form 점진 마이그레이션 권장 (참고용)"
+  fi
+}
+
+# ─── Check 50: v2.1.141 Hook terminalSequence JSON output ───
+# v2.1.141 신규. hook이 terminalSequence를 stdout에 출력 시 데스크톱 알림/창 제목 emit.
+# telegram-notify.sh 대안 또는 보완으로 활용 가능. 현재 활용 여부 확인.
+check_v141_terminal_sequence() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local usage
+  usage=$(grep -rli "terminalSequence\|terminal_sequence" "$hooks_dir" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$usage" -gt 0 ]; then
+    local files
+    files=$(grep -rli "terminalSequence\|terminal_sequence" "$hooks_dir" 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ')
+    echo "PASS|terminalSequence 활용 hook ${usage}개: ${files}"
+  else
+    echo "WARN|terminalSequence 미활용 — v2.1.141 신기능. 데스크톱 알림 보완 가능 (참고용)"
+  fi
+}
+
+# ─── Check 51: v2.1.142 claude agents 8개 플래그 background dispatch ───
+# v2.1.142 신규. --add-dir, --settings, --model, --effort 등 8개 플래그.
+# harness scripts에서 'claude agents' 명시적 호출 여부 확인.
+check_v142_agents_flags() {
+  local scripts_dir="$HOME/.claude/scripts"
+  local commands_dir="$HOME/.claude/commands"
+  local usage=0
+  for dir in "$scripts_dir" "$commands_dir"; do
+    if [ -d "$dir" ]; then
+      local cnt
+      cnt=$(grep -rli "claude agents\b\|claude[[:space:]]\+agents" "$dir" 2>/dev/null | wc -l | tr -d ' ')
+      usage=$((usage + cnt))
+    fi
+  done
+  if [ "$usage" -gt 0 ]; then
+    echo "PASS|claude agents 호출 스크립트 ${usage}개 — v2.1.142 8-flag background dispatch 활용 가능"
+  else
+    echo "WARN|claude agents 미활용 — v2.1.142 신기능. background dispatch 자동화 가능 (참고용)"
+  fi
+}
+
+# ─── Check 52: v2.1.142 Fast mode Opus 4.7 기본값 인지 ───
+# v2.1.142부터 /fast 기본 모델이 Opus 4.6→4.7로 변경.
+# Opus 4.6 pin 필요 시 CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1 필요.
+# settings.json 또는 .env에 override 설정 여부 확인.
+check_v142_fast_mode_opus47() {
+  local settings_file="$HOME/.claude/settings.json"
+  local found_override=0
+  for f in "$HOME/.claude/.env" "$HOME/.env" "$HOME/.harness-state/.env"; do
+    if [ -f "$f" ] && grep -q "CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE" "$f" 2>/dev/null; then
+      found_override=1
+    fi
+  done
+  if [ -f "$settings_file" ] && grep -q "CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE" "$settings_file" 2>/dev/null; then
+    found_override=1
+  fi
+  if [ "$found_override" -eq 1 ]; then
+    echo "PASS|CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE 설정 — /fast 시 Opus 4.6 pin 유지"
+  else
+    echo "WARN|CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE 미설정 — v2.1.142+ /fast 기본값=Opus 4.7. 4.6 pin 불필요하면 정상 (참고용)"
+  fi
+}
+
 # ─── Check 39: v2.1.119 /config 설정 settings.json 영구 저장 ───
 # v2.1.119부터 /config 변경값이 ~/.claude/settings.json에 저장됨.
 # theme, editor mode, verbose 등이 재시작 후에도 유지되는지 점검.
@@ -748,11 +1030,24 @@ R36=$(check_v121_post_tool_output)
 R37=$(check_v121_mcp_always_load)
 R38=$(check_v120_powershell_fallback)
 R39=$(check_v119_config_persistence)
+R40=$(check_v122_malformed_hooks)
+R41=$(check_v128_prompt_cache)
+R42=$(check_v128_long_context_fix)
+R43=$(check_v132_context_window)
+R44=$(check_v132_session_id)
+R45=$(check_v133_worktree_baseref)
+R46=$(check_v133_claude_effort_env)
+R47=$(check_v136_hard_deny)
+R48=$(check_v139_goal_agentview)
+R49=$(check_v139_hook_args_exec)
+R50=$(check_v141_terminal_sequence)
+R51=$(check_v142_agents_flags)
+R52=$(check_v142_fast_mode_opus47)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52")
 
-TOTAL_CHECKS=39
+TOTAL_CHECKS=52
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0
