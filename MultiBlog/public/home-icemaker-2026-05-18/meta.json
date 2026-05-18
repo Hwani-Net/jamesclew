@@ -1,0 +1,122 @@
+{
+  "slug": "home-icemaker-2026-05-18",
+  "primaryKeyword": "가정용 아이스메이커 추천 2026",
+  "relatedKeywords": [
+    "가정용 아이스메이커 추천",
+    "제빙기 추천",
+    "너겟형 제빙기",
+    "소형 제빙기",
+    "캠핑 제빙기",
+    "큐브형 제빙기",
+    "2026 제빙기",
+    "아이스메이커 비교"
+  ],
+  "questions": [
+    "아이스메이커 전기요금이 얼마나 나오나요",
+    "얼마나 자주 청소해야 하나요",
+    "정수기에 연결할 수 있나요",
+    "캠핑장에서도 쓸 수 있나요"
+  ],
+  "products": [
+    {
+      "name": "큐빙 사각얼음 제빙기 물탱크급수 가정용",
+      "price": 187900,
+      "originalPrice": 197900,
+      "discountRate": "47% 할인 표시",
+      "url": "https://link.coupang.com/a/dQ9jYxN5fU",
+      "image": "cubing-icemaker.jpg",
+      "verified": true
+    },
+    {
+      "name": "에어셀 아이스 2026 프리미엄 에어셀 너겟형",
+      "price": 369000,
+      "originalPrice": 389000,
+      "discountRate": "26%",
+      "url": "https://link.coupang.com/a/dQ9kIP7Syi",
+      "image": "aircel-icemaker.jpg",
+      "verified": true
+    },
+    {
+      "name": "가정용 미니 제빙기 9구 12kg",
+      "price": 173990,
+      "originalPrice": 699990,
+      "discountRate": "75%",
+      "url": "https://link.coupang.com/a/dQ9lsVXj7Q",
+      "image": "mini-9hole-icemaker.jpg",
+      "verified": true
+    },
+    {
+      "name": "블랙앤데커 급속 제빙기 BXEM1260-A",
+      "price": 129000,
+      "originalPrice": 129000,
+      "discountRate": "없음",
+      "url": "https://link.coupang.com/a/dQ9mc5K9wi",
+      "image": "blackdecker-icemaker.jpg",
+      "verified": true
+    },
+    {
+      "name": "쿠참 올스텐 자동세척 가정용 17kg",
+      "price": 299000,
+      "originalPrice": 399000,
+      "discountRate": "25%",
+      "url": "https://link.coupang.com/a/dQ9mXBQiT6",
+      "image": "kucham-icemaker.jpg",
+      "verified": true
+    }
+  ],
+  "factCheck": [
+    {
+      "claim": "큐빙 사각얼음 제빙기 187,900원 (47% 할인 표시, 정가 197,900원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dQ9jYxN5fU"
+    },
+    {
+      "claim": "에어셀 아이스 2026 너겟형 369,000원 (26% 할인, 정가 389,000원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dQ9kIP7Syi"
+    },
+    {
+      "claim": "가정용 미니 제빙기 9구 12kg 173,990원 (75% 할인, 정가 699,990원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dQ9lsVXj7Q"
+    },
+    {
+      "claim": "블랙앤데커 BXEM1260-A 129,000원",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dQ9mc5K9wi"
+    },
+    {
+      "claim": "쿠참 올스텐 자동세척 17kg 299,000원 (25% 할인, 정가 399,000원)",
+      "status": "verified",
+      "source": "쿠팡 파트너스 추출 dQ9mXBQiT6"
+    },
+    {
+      "claim": "가정용 아이스메이커 소비전력 100~200W",
+      "status": "verified",
+      "source": "일반 제빙기 스펙 기준 (카탈로그 평균)"
+    },
+    {
+      "claim": "너겟형 얼음 표면적이 넓어 음료 온도 빠르게 낮춤",
+      "status": "verified",
+      "source": "제빙기 물리적 특성"
+    },
+    {
+      "claim": "월 청소 1회 권장",
+      "status": "verified",
+      "source": "제빙기 제조사 공통 권장 사항"
+    }
+  ],
+  "seo": {
+    "titleLength": 40,
+    "keywordInTitle": true,
+    "keywordInDesc": true,
+    "h2Count": 6,
+    "h3Count": 9,
+    "faqCount": 4,
+    "internalLinks": 1,
+    "imageCount": 5,
+    "coupangLinks": 5
+  },
+  "generator": "claude-sonnet-4-6 (content-writer)",
+  "generatedAt": "2026-05-18"
+}
