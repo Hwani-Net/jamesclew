@@ -161,6 +161,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/cdp-mark-fail.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/verify-deploy.sh",
             "if": "Bash(*firebase deploy*)",
             "timeout": 30000
