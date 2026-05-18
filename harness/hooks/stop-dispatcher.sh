@@ -183,11 +183,14 @@ if echo "$RESULT" | grep -q '"decision":"block"'; then
 fi
 
 # 3. self-evolve (non-blocking, background-safe)
-bash "$HOME/.claude/scripts/self-evolve.sh" --apply >/dev/null 2>&1 &
+# P-153 fix: wrap with `timeout` so a hung child can never block the dispatcher.
+timeout 5 bash "$HOME/.claude/scripts/self-evolve.sh" --apply >/dev/null 2>&1 &
 
 # 4. curation (non-blocking, skip if MEMORY_CURATOR_ACTIVE)
+# P-153 fix: curation.ts fetches localhost:8765 — if the memory API is down, Node fetch
+# blocks indefinitely. Hard 5s ceiling.
 if [ "$MEMORY_CURATOR_ACTIVE" != "1" ]; then
-  node --experimental-strip-types "$HOME/.claude/hooks/curation.ts" <<< "$INPUT" >/dev/null 2>&1 &
+  timeout 5 node --experimental-strip-types "$HOME/.claude/hooks/curation.ts" <<< "$INPUT" >/dev/null 2>&1 &
 fi
 
 # 5. telegram stop (non-blocking)
@@ -196,7 +199,7 @@ if [ -f "$RESULT_FILE" ]; then
   RESULT_CONTENT=$(cat "$RESULT_FILE")
   rm -f "$RESULT_FILE"
   if [ -n "$RESULT_CONTENT" ]; then
-    bash "$HOME/.claude/hooks/telegram-notify.sh" done "$RESULT_CONTENT" >/dev/null 2>&1 &
+    timeout 5 bash "$HOME/.claude/hooks/telegram-notify.sh" done "$RESULT_CONTENT" >/dev/null 2>&1 &
   fi
 fi
 
@@ -209,6 +212,9 @@ check_review_evidence
 # 8. skill candidate reminder (non-blocking, systemMessage only)
 check_skill_candidate
 
-# Wait for background jobs (max 5s)
-wait -n 2>/dev/null
+# Wait for background jobs.
+# P-153 fix: previously `wait -n` (no timeout) hung 22+ min when curation.ts stalled on
+# http://localhost:8765 fetch. Each child is now wrapped in `timeout 5` so this `wait`
+# can never exceed ~5s. We keep the wait so fast children (telegram) flush before exit.
+wait 2>/dev/null
 exit 0

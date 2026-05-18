@@ -39,12 +39,12 @@ for (( i=0; i<${#ACCTS[@]}; i++ )); do
   # Swap auth
   cp "$ACCT" "$CODEX_CONFIG/auth.json" 2>/dev/null || true
 
-  # Run codex
-  OUTPUT=$(codex exec "$PROMPT" 2>&1) || true
+  # Run codex (--skip-git-repo-check: cwd 가 git repo 아니어도 동작)
+  OUTPUT=$(codex exec --skip-git-repo-check "$PROMPT" 2>&1) || true
 
-  # Check for rate limit
-  if echo "$OUTPUT" | grep -q "usage_limit_reached\|429\|rate.*limit\|hit your usage limit"; then
-    echo "[codex-rotate] $ACCT_NAME: rate limited, trying next..." >&2
+  # Check for rate limit OR auth-expired (refresh_token reuse) → 다음 계정 전환
+  if echo "$OUTPUT" | grep -qE "usage_limit_reached|429|rate.*limit|hit your usage limit|refresh_token.*already used|access token could not be refreshed|Failed to refresh token|401 Unauthorized"; then
+    echo "[codex-rotate] $ACCT_NAME: limit/auth-expired, trying next..." >&2
     continue
   fi
 

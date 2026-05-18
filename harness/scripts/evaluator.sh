@@ -136,8 +136,8 @@ _run_codex() {
 }
 
 # ── 5단계 모델 로테이션: codex → copilot(GPT-4.1) → openrouter무료 → gemma4로컬 → codex backoff ──
-# [DEPRECATED] Antigravity(opencode) 2026-04 폐기 → GPT-4.1(copilot-api) + Gemma 4로 대체
-# copilot-api 프록시 추가 (localhost:4141, GitHub Copilot 인증)
+# [DEPRECATED] Antigravity(opencode) 2026-04 폐기 → GPT-4.1(ollama) + Gemma 4로 대체
+# ollama 프록시 추가 (localhost:4141, GitHub Copilot 인증)
 MODELS=("codex" "copilot_gpt" "openrouter_free" "gemma4_local" "codex_backoff")
 OPENROUTER_KEYS_FILE="$HOME/.claude/openrouter-keys.json"
 MODEL_USED=""
@@ -151,8 +151,8 @@ for MODEL in "${MODELS[@]}"; do
       _run_codex "$PROMPT" "$TEMP_RESULT" && RC=0 || RC=$?
       ;;
     copilot_gpt)
-      # GitHub Copilot proxy (copilot-api on localhost:4141)
-      curl -s --max-time 60 http://localhost:4141/v1/chat/completions \
+      # GitHub Copilot proxy (ollama on localhost:4141)
+      curl -s --max-time 60 http://localhost:11434/api/chat \
         -H "Content-Type: application/json" \
         -d "{\"model\":\"gpt-4.1\",\"messages\":[{\"role\":\"user\",\"content\":$(echo "$PROMPT" | jq -Rs .)}],\"max_tokens\":1000}" \
         | jq -r '.choices[0].message.content // empty' > "$TEMP_RESULT" 2>&1 && RC=0 || RC=$?

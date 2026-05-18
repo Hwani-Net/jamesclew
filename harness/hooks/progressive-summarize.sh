@@ -112,7 +112,7 @@ prompt = (
 summary = None
 model_used = None
 
-# --- Attempt 1: copilot-api (GPT-4.1) ---
+# --- Attempt 1: ollama (GPT-4.1) ---
 try:
     import urllib.request
     payload = json.dumps({
@@ -120,7 +120,7 @@ try:
         "messages": [{"role": "user", "content": prompt}]
     }).encode('utf-8')
     req = urllib.request.Request(
-        'http://localhost:4141/v1/chat/completions',
+        'http://localhost:11434/api/chat',
         data=payload,
         headers={'Content-Type': 'application/json'},
         method='POST'
@@ -191,7 +191,7 @@ log(f"success model={model_used} chars={len(summary_line)} file={os.path.basenam
 # Log API cost (observation-only — Copilot Pro is flat-rate, Ollama is $0)
 try:
     import subprocess
-    service = 'copilot-api' if model_used == 'gpt-4.1' else 'ollama'
+    service = 'ollama' if model_used == 'gpt-4.1' else 'ollama'
     cost_script = os.path.expanduser('~/.claude/scripts/log-api-cost.sh')
     if os.path.isfile(cost_script):
         subprocess.run(

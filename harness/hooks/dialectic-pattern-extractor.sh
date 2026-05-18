@@ -3,7 +3,7 @@
 #
 # Honcho(Plastic Labs)의 dialectic reasoning 개념을 자체 구현.
 # 매 Stop event마다 transcript 마지막 N턴 → GPT-4.1 패턴 추출 → gbrain 적재.
-# 외부 의존 0 (copilot-api 로컬), AGPL 0, 비용 0.
+# 외부 의존 0 (Ollama 로컬), AGPL 0, 비용 0.
 #
 # 외부 검수(Codex + GPT-4.1) REWORK 4건 반영:
 # 1. transcript hash + timestamp 이중 debounce (동일 대화 재처리 방지)
@@ -100,7 +100,7 @@ $EXCHANGE
 PAYLOAD=$(python3 -c "
 import json, sys
 print(json.dumps({
-    'model': 'gpt-4.1',
+    'model': 'gemma4',
     'messages': [
         {'role': 'system', 'content': sys.argv[1]},
         {'role': 'user', 'content': sys.argv[2]}
@@ -112,12 +112,12 @@ if [ -z "$PAYLOAD" ]; then
   exit 0
 fi
 
-RESPONSE=$(curl -s --max-time 30 localhost:4141/v1/chat/completions \
+RESPONSE=$(curl -s --max-time 30 http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD" 2>/dev/null || echo "")
 
 if [ -z "$RESPONSE" ]; then
-  echo "[dialectic] copilot-api 미응답 — skip" >&2
+  echo "[dialectic] Ollama 미응답 — skip" >&2
   exit 0
 fi
 
@@ -125,7 +125,7 @@ EXTRACTION=$(echo "$RESPONSE" | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
-    print(d['choices'][0]['message']['content'])
+    print(d.get('message',{}).get('content','') or d['choices'][0]['message']['content'])
 except:
     pass
 " 2>/dev/null || echo "")
@@ -181,7 +181,7 @@ TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 # Windows/Unix 호환: --content 방식 (P-064)
 CONTENT="# Dialectic Pattern — $TS
 
-추출 모델: GPT-4.1 (copilot-api)
+추출 모델: Ollama (local)
 신뢰도 필터: confidence >= 0.6
 대화 hash: $CURRENT_HASH
 
@@ -195,7 +195,7 @@ $FILTERED
 - session-learning.sh와 보완 관계 (구조화 사실 vs 암묵적 패턴)
 - 외부 검수: Codex + GPT-4.1 (4/5 일치 + 3 REWORK 반영)"
 
-if gbrain put "$SLUG" --content "$CONTENT" >/dev/null 2>&1; then
+if timeout 20 gbrain put "$SLUG" --content "$CONTENT" >/dev/null 2>&1; then
   echo "[dialectic] $SLUG 적재 완료"
 else
   echo "[dialectic] gbrain put 실패" >&2
