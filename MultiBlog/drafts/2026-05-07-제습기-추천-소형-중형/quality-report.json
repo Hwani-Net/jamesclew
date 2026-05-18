@@ -1,0 +1,56 @@
+{
+  "slug": "2026-05-07-제습기-추천-소형-중형",
+  "timestamp": "2026-05-07",
+  "expectGates": { "skipped": true, "reason": "no local preview server — post-deploy 검증으로 대체" },
+  "aiSmell": {
+    "sonnet": 58,
+    "final": 58,
+    "verdict": "WARN",
+    "issues": [
+      "종결어미 단조로움: 도입부 6문장 중 5문장이 '~습니다'로 끝남",
+      "개인 경험 디테일 부족: '2년째 쓰고 있다'만 있고 구체적 체감 묘사 없음",
+      "AI 클리셰 구조: '결론부터 말하면', '다른 블로그에서 절대 안 알려주는' 표현"
+    ],
+    "strengths": [
+      "구체적 가격·수치 기반 3년 실비용 비교 프레임",
+      "자기 실수 고백('처음에 12L 사서 후회했습니다') — 신뢰감 확보"
+    ],
+    "improvements": [
+      "종결어미 다변화: '~합니다' 60% 이하, '~더라고요/~거든요/~죠' 30% 섞기",
+      "경험 디테일: 각 모델 단락에 시간·장소·감각 묘사 1개씩 추가"
+    ]
+  },
+  "seo": {
+    "keywordCount": { "제습기 추천": 11, "소형 제습기": 4, "중형 제습기": 3 },
+    "metaDescLength": 150,
+    "h2Count": 10,
+    "h3Count": 17,
+    "internalLinks": 2,
+    "faqCount": 3,
+    "wordCount": 5965,
+    "imagePlaceholders": 3,
+    "checks": {
+      "keyword3plus": "PASS",
+      "metaDesc120to155": "PASS",
+      "h2min3": "PASS",
+      "internalLinks2plus": "PASS",
+      "faq2plus": "PASS",
+      "wordCount2000plus": "PASS",
+      "imageAltTags": "PENDING"
+    },
+    "score": "6/7",
+    "verdict": "PASS"
+  },
+  "images": {
+    "count": 3,
+    "status": "placeholder",
+    "verdict": "PENDING"
+  },
+  "pitfalls": {
+    "lazyLoading": "PASS",
+    "violations": [],
+    "verdict": "PASS"
+  },
+  "overall": "WARN",
+  "action": "blog-fix 실행 (AI냄새 58→40 목표, 종결어미·경험 디테일 개선)"
+}

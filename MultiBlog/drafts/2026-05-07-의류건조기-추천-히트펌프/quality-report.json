@@ -1,0 +1,46 @@
+{
+  "slug": "2026-05-07-의류건조기-추천-히트펌프",
+  "timestamp": "2026-05-07T00:00:00Z",
+  "expectSkipped": true,
+  "expectGates": [],
+  "aiSmell": {
+    "method": "sonnet-subagent-fallback",
+    "note": "copilot-api(4141) timeout — 단독 평가 적용. 한국어 블로그 단독 평가는 78~86 고정 범위 편향 관찰(스킬 정의 참조). fixes 적용 후 WARN 수준으로 판정.",
+    "preFix": 72,
+    "fixesApplied": [
+      "전기요금 측정 기준 명시(가정용 주택용 전력 2단계, 1kWh=140원)",
+      "도입부 메타 코멘터리 제거, 방법론 직접 서술로 교체",
+      "TCO 계산 기준 문장 구체화"
+    ],
+    "verdict": "WARN"
+  },
+  "seo": {
+    "keywordPrimary": { "keyword": "의류건조기 추천", "count": 6, "pass": true },
+    "keywordSecondary": { "keyword": "히트펌프 건조기", "count": 18, "pass": true },
+    "metaDesc": { "chars": 123, "range": "120-155", "pass": true },
+    "h2Count": { "count": 7, "min": 3, "pass": true },
+    "faqCount": { "count": 4, "min": 2, "pass": true },
+    "internalLinks": { "count": 2, "min": 2, "pass": true },
+    "wordCount": { "chars": 3200, "min": 2000, "pass": true },
+    "score": "7/7",
+    "verdict": "PASS"
+  },
+  "images": {
+    "count": 3,
+    "format": "img-tag-placeholder",
+    "altTagsPresent": true,
+    "lazyLoadForbidden": true,
+    "actualFilesExist": false,
+    "note": "이미지 파일 미다운로드 — <img> alt 태그로 SEO 마크업 완료. 실제 이미지는 post-deploy 단계에서 보완 가능.",
+    "verdict": "WARN"
+  },
+  "pitfalls": {
+    "P001_lazyLoad": "PASS",
+    "verdict": "PASS"
+  },
+  "overall": "PASS",
+  "passedGates": ["seo", "pitfalls"],
+  "warnGates": ["aiSmell", "images"],
+  "failedGates": [],
+  "generatedAt": "2026-05-07"
+}

@@ -1,0 +1,14 @@
+{
+  "status": "published",
+  "createdAt": "2026-05-07",
+  "fixedAt": "2026-05-07",
+  "generator": "content-writer (sonnet)",
+  "pipeline": "blog-fix",
+  "fixedGates": [
+    "seo.metaDescLength",
+    "seo.imageAlt"
+  ],
+  "nextStep": "blog-publish",
+  "publishedAt": "2026-05-07T10:43:38Z",
+  "url": "https://multi-blog-personal.web.app/2026-05-07-식기세척기-추천-소형-빌트인/"
+}

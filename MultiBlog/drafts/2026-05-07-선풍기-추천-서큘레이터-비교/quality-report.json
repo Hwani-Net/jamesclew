@@ -1,0 +1,49 @@
+{
+  "slug": "2026-05-07-선풍기-추천-서큘레이터-비교",
+  "timestamp": "2026-05-07T20:52:00+09:00",
+  "expectGates": [],
+  "expectSkipped": true,
+  "aiSmell": {
+    "gpt41": 60,
+    "benchmark": null,
+    "final": 60,
+    "verdict": "WARN",
+    "improvements": [
+      "종결어미 다양성 부족 — '-다', '-이다' 반복. 구어체 어미 혼용 필요",
+      "개인 경험 구체성 부족 — 실제 사용 에피소드(공간, 온도, 반응) 없음",
+      "독자 대화감 부족 — 독자에게 질문하거나 말 거는 문장 거의 없음"
+    ]
+  },
+  "seo": {
+    "keywordCount": {"선풍기 추천": 7, "서큘레이터": 62, "2026": 12},
+    "metaDescLength": 81,
+    "metaDescPass": false,
+    "h2Count": 9,
+    "internalLinks": 2,
+    "faqCount": 6,
+    "wordCount": 6537,
+    "lazyLoadingFree": true,
+    "imgAltAll": true,
+    "passCount": 6,
+    "totalCount": 7,
+    "verdict": "PASS",
+    "failedItems": ["metaDesc (81자 < 120자 최소 기준)"]
+  },
+  "images": {
+    "count": 2,
+    "allValid": true,
+    "topicMatch": true,
+    "files": ["bokuk-bldc-circulator.jpg (30KB)", "bokuk-circulator2.jpg (5.6KB)"],
+    "verdict": "PASS"
+  },
+  "pitfalls": {
+    "violations": [],
+    "verdict": "PASS"
+  },
+  "overall": "WARN",
+  "fixRequired": true,
+  "fixItems": [
+    "metaDesc 81자 → 120자 이상으로 확장",
+    "AI냄새 개선: 종결어미 다양화, 경험 에피소드 추가, 독자 대화감 강화"
+  ]
+}

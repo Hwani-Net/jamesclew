@@ -1,0 +1,28 @@
+{
+  "seo": {
+    "primaryKeyword": "의류건조기 추천",
+    "relatedKeywords": ["히트펌프 건조기", "건조기 전기세", "LG 트롬", "삼성 그랑데", "히트펌프 vs 히터식", "건조기 용량 추천"],
+    "questions": [
+      "히트펌프 건조기는 건조 시간이 더 오래 걸리나요?",
+      "소형 아파트에서 히트펌프 건조기를 쓸 수 있나요?",
+      "의류건조기 전기 계약 종류도 봐야 하나요?",
+      "히트펌프 건조기 수명은 히터식보다 길까요?"
+    ],
+    "competitorAvgLength": 3000,
+    "differentiationPoint": "가구 유형별 TCO 역전 시점 수치 계산 — 1인/신혼/4인가족 각각 구체적 역전 연도 제시"
+  },
+  "factCheck": [
+    {"claim": "히트펌프 1회 약 112원 (16kg)", "source": "buzzdaily.kr", "status": "verified"},
+    {"claim": "히터식 월 전기세 약 10,000원 (주3회)", "source": "buzzdaily.kr", "status": "verified"},
+    {"claim": "위닉스 텀블 8kg 51만원대", "source": "buzzdaily.kr", "status": "verified"},
+    {"claim": "삼성 그랑데 AI 17kg 88만원대", "source": "buzzdaily.kr", "status": "verified"},
+    {"claim": "LG 트롬 19kg 104만원대", "source": "buzzdaily.kr", "status": "verified"}
+  ],
+  "images": [
+    {"position": 1, "description": "히트펌프 vs 히터식 비교", "status": "placeholder"},
+    {"position": 2, "description": "TCO 역전 시점 그래프", "status": "placeholder"},
+    {"position": 3, "description": "가구 인원별 용량 인포그래픽", "status": "placeholder"}
+  ],
+  "generator": "sonnet-subagent",
+  "generatedAt": "2026-05-07"
+}

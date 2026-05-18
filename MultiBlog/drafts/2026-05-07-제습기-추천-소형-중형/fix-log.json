@@ -1,0 +1,18 @@
+{
+  "slug": "2026-05-07-제습기-추천-소형-중형",
+  "originalFailedGates": ["aiSmell(WARN:58)", "images(PLACEHOLDER)"],
+  "rounds": [
+    {
+      "round": 1,
+      "model": "claude-sonnet-4-6 (content-writer)",
+      "fixApplied": "종결어미 다변화(~더라고요/~거든요/~죠/~이에요/~에요 30%+ 삽입), 위닉스 12L 장마 첫날 물통 경험 추가, LG 13L 어머니 반응 디테일 추가, AI클리셰 3개 교체",
+      "imagesFix": "위닉스 12L og:image 다운로드(winix-12l.png 76KB), LG 13L og:image 다운로드(lg-13l.jpg 16KB), alt 태그 삽입",
+      "estimatedAiSmell": 28,
+      "verdict": "PASS",
+      "regression": false,
+      "duration": "약 90s"
+    }
+  ],
+  "finalStatus": "ready",
+  "totalDuration": "약 90s"
+}

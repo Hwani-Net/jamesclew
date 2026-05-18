@@ -1,0 +1,17 @@
+{
+  "status": "published",
+  "createdAt": "2026-05-07T20:47:00+09:00",
+  "reviewedAt": "2026-05-07T20:52:00+09:00",
+  "fixedAt": "2026-05-07T21:00:00+09:00",
+  "generator": "sonnet-subagent",
+  "keyword": "선풍기 추천 비교 서큘레이터 2026",
+  "pipeline": "blog-pipeline",
+  "fixRounds": 1,
+  "finalScores": {
+    "aiSmell": 92,
+    "seo": "7/7",
+    "images": "2/2"
+  },
+  "publishedAt": "2026-05-07T11:57:36Z",
+  "url": "https://multi-blog-personal.web.app/2026-05-07-선풍기-추천-서큘레이터-비교/"
+}

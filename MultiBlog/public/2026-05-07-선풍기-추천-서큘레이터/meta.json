@@ -1,0 +1,40 @@
+{
+  "slug": "2026-05-07-선풍기-추천-서큘레이터",
+  "primaryKeyword": "선풍기 추천 비교 서큘레이터 2026",
+  "relatedKeywords": ["선풍기 추천", "서큘레이터 추천", "BLDC 선풍기", "무선 선풍기", "샤오미 선풍기", "신일 선풍기", "한일 선풍기", "2026 선풍기"],
+  "questions": [
+    "선풍기 24시간 켜놔도 전기요금 폭탄 맞나요",
+    "샤오미 같은 중국산 선풍기 안전한가요",
+    "선풍기랑 서큘레이터 둘 다 꼭 사야 하나요",
+    "한일이랑 신일 중에 뭐가 더 나아요"
+  ],
+  "competitorUrls": [
+    "https://nosearch.com/recommendation/pick/season/electric_fan/유선",
+    "https://proguide.co.kr/best-standing-fans/",
+    "https://www.facilitye.kr/2026/05/bldc.html"
+  ],
+  "competitorAvgLength": 2800,
+  "differentiationPoint": "BLDC vs AC 모터 4개월(6~9월) 누적 전기요금 + 총 소유비용 표 — 경쟁사는 모델 나열만",
+  "seo": {
+    "titleLength": 42,
+    "descriptionLength": 142,
+    "keywordInTitle": true,
+    "keywordInDesc": true,
+    "h2Count": 8,
+    "h3Count": 9,
+    "faqCount": 4,
+    "internalLinks": 2,
+    "imageCount": 5
+  },
+  "generator": "claude-opus-4-7 (content-writer)",
+  "generatedAt": "2026-05-07",
+  "factCheck": [
+    {"claim": "샤오미 BPLDS03DM 정발 129,700~149,000원", "status": "verified", "source": "Danawa, 11st"},
+    {"claim": "신일 SIF-D14BN 약 72,000원", "status": "verified", "source": "SSG, GSshop"},
+    {"claim": "한일 DCF-710R BLDC 약 89,000원", "status": "verified", "source": "Danawa pcode 11223150"},
+    {"claim": "보국 제로팬 BKF-21W30DC 약 104,400원", "status": "verified", "source": "Danawa pcode 16971494"},
+    {"claim": "BLDC 약 28W vs AC 50~60W", "status": "verified", "source": "ajd.co.kr, nosearch"},
+    {"claim": "BLDC 동일출력 AC 대비 50~70% 소비전력", "status": "verified", "source": "ajd.co.kr"},
+    {"claim": "신일 서큘레이터 누적 판매 400만대 (2023)", "status": "verified", "source": "facilitye.kr"}
+  ]
+}
