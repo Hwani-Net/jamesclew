@@ -42,3 +42,11 @@ ralph-test/
 # Nested repos (tracked separately)
 harness/tools/HydraTeams/
 harness/tools/ralph-claude-code/
+
+# Local backups & session/state dumps (not versioned)
+.env-keys.bak-*
+_backup/
+sessions/
+Jamesclew/
+MultiBlog/.firebase/
+harness/scripts/connect-ai-adapter.disabled-*/
