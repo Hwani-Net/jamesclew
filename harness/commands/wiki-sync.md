@@ -1,12 +1,28 @@
 ---
-description: "gbrain ↔ Wiki 양방향 동기화"
-user_invocable: true
+description: "[DEPRECATED 2026-05-19] gbrain ↔ Wiki 양방향 동기화. gbrain 폐기 (P-172)로 사용 중단. /inbox-process 사용 권장"
+user_invocable: false
+status: deprecated
+deprecated_date: 2026-05-19
+replacement: /inbox-process
 ---
 
-# /wiki-sync — gbrain ↔ Wiki 브릿지
+# /wiki-sync — [DEPRECATED] gbrain ↔ Wiki 브릿지
 
-## 사용법
-- `/wiki-sync` — 양방향 동기화 실행
+## ⚠️ 폐기됨 (2026-05-19)
+
+gbrain 시스템 폐기로 이 스킬은 더 이상 사용하지 않습니다. P-172 참조.
+
+**대체 방법:**
+- 06-raw 인제스트 큐 처리: `/inbox-process` 스킬 사용
+- 위키 검색: `grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/`
+- 자동 회상: `mcp__agentmemory__memory_recall`
+
+아래 절차는 역사 참조용으로만 보존됩니다.
+
+---
+
+## (참조 전용) 사용법
+- `/wiki-sync` — 양방향 동기화 실행 (현재 작동 안 함, gbrain 폐기)
 
 ## 실행 절차
 

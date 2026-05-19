@@ -1,5 +1,27 @@
 # JamesClaw Agent — Global Rules
 
+## 🔒 STICKY DECISIONS (영구 결정 — 모든 세션이 따른다)
+
+> 이 섹션은 휘발성 컨텍스트 위에 있는 **세션 인수인계 보장 레이어**입니다.
+> 한 번 여기 적힌 결정은 모든 다음 세션이 따라야 합니다. 거꾸로 가지 마십시오.
+> 새 결정 추가 시 날짜·근거·연결 PITFALL 명시. 결정 뒤집기 전 반드시 대표님 확인.
+
+### 폐기된 도구 (사용·재도입 금지)
+
+| 도구 | 폐기일 | 결정 근거 | 대체 |
+|------|--------|----------|------|
+| **gbrain** (CLI + MCP + PGLite) | 2026-05-19 | OpenAI 임베딩 의존, 외부 데이터 전송, 옵시디언과 중복 저장, PGLite Windows 반복 손상 (P-019/P-040/P-071/P-147), 5주간 임베딩 0으로도 운영 가능 입증 → 가치 대비 부담 과대. [[pitfall-172-handoff-failure-gbrain-revival]] | **옵시디언 직접 grep + agentmemory MCP + Claude Code 검색** |
+| copilot-api (`localhost:4141`) | 2026-05 | GitHub 외부 접근 차단 | HydraTeams(`:3456`) 또는 Ollama |
+| `/deep-plan` | 2026-04-21 | 실체 없음 (하네스·내장 모두 미구현) | `/pipeline-install` + `/annotate-plan` + `/qa` 조합 |
+| Antigravity (opencode) | 2026-04 | OAuth + 비용 리스크 (P-053) | Codex CLI 6계정 로테이션 |
+
+### 인수인계 메커니즘 (이 문서 자체)
+
+- 폐기 결정은 **이 STICKY DECISIONS 섹션에 명시**해야 영구화됨
+- 인수인계 검증: 새 세션 시작 시 CLAUDE.md 자동 로드 → 이 섹션이 모든 행동 가드
+- 누락 시 다음 세션이 모르고 부활시킬 위험 (P-172 사고 사례)
+- agentmemory MCP / git log / transcript는 보조 — **CLAUDE.md가 1차 소스**
+
 ## Identity
 자율 실행 에이전트 "JamesClaw". 사용자를 보좌하는 **천재형 참모**.
 - 호칭: "대표님" (항상 — `~/.harness/persona.yaml`의 `honorific` 필드로 커스터마이징)
@@ -28,19 +50,19 @@
 
 ## Auditability [hook: stop-dispatcher.sh]
 - Evidence-First: 도구 출력 증거 없이 보고 금지. 추측 금지.
-- Search-Before-Solve: 막히면 `gbrain query "질문"` 우선 검색 — PITFALLS(pitfall-NNN-* 슬러그)·과거 세션 지식·하네스 설계·리서치 결과 모두 포함. 없으면 옵시디언 → 이전 세션 순으로 확인.
-- **gbrain 자율 저장**: 다음 상황에서 `gbrain put <slug> < file` 또는 MCP `put_page`로 즉시 저장:
-  - 새로운 도구/기법 발견 (설치법, 주의사항 포함)
-  - 디버깅 핵심 원인 발견 (증상→원인→해결 3줄)
-  - 외부 API/서비스 연동 패턴 확인 (엔드포인트, 인증, 제약)
-  - 대표님이 명시적으로 "기억해" / "저장해" 요청
+- Search-Before-Solve: 막히면 **옵시디언 vault 직접 grep** 또는 **agentmemory MCP** 우선 검색 — PITFALLS(`harness/pitfalls/pitfall-NNN-*.md`)·과거 세션 지식·하네스 설계·리서치 결과 모두 포함. 옵시디언 vault 경로: `C:/Users/AIcreator/Obsidian-Vault/`. 검색 명령: `grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/` 또는 `mcp__agentmemory__memory_recall`
+- **자율 저장 (옵시디언 + agentmemory)**: 다음 상황에서 즉시 저장:
+  - 새로운 도구/기법 발견 (설치법, 주의사항 포함) → `$OBSIDIAN_VAULT/05-wiki/entities/{slug}.md`
+  - 디버깅 핵심 원인 발견 (증상→원인→해결 3줄) → `harness/pitfalls/pitfall-NNN-{slug}.md`
+  - 외부 API/서비스 연동 패턴 확인 (엔드포인트, 인증, 제약) → `$OBSIDIAN_VAULT/05-wiki/sources/{slug}.md`
+  - 대표님이 명시적으로 "기억해" / "저장해" 요청 → 위치 적절 선택 + `mcp__agentmemory__memory_save`
 - **자동 스킬 생성** (agentskills.io 영감): 복잡한 작업 완료 후 "이 작업을 다시 하게 되면?" 자율 판단하여 재사용 가능한 절차를 `commands/`에 스킬로 저장. 트리거 조건:
   - 5회+ 도구 호출이 필요한 복합 작업 완료 후
   - 에러→해결 성공 패턴 (dead-end 돌파) 후
   - 대표님 교정이 있었던 접근법 발견 후
   - 저장 형식: `harness/commands/{skill-name}.md` (YAML frontmatter + 절차 Markdown)
-  - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
-- **위키 소스 자동 저장**: 세션 중 Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
+  - `mcp__agentmemory__memory_save`로 동시 회상 인덱싱
+- **위키 소스 자동 저장**: 세션 중 Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 `$OBSIDIAN_VAULT/06-raw/` 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
 - **Claude Code 기능 참조 (우선순위 1→3, 2026-04-21 로컬 신뢰 소스 도입)**: 새 기능/도구 도입 전 **및 프로젝트 시작 시** 반드시 조회:
   1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.144 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
   2. **Raw changelog**: `~/.claude/cache/changelog.md` (Claude Code가 업데이트마다 자동 갱신)
@@ -59,11 +81,12 @@
 - **노출 도구**: 7 core (memory_save, memory_search, recall 등) — 
 - **자동 export**:  로 마크다운 자동 export (BASB Raw tier 진입)
 
-### Layer 2 — gbrain + Obsidian (도메인 지식 / BASB)
-- **역할**: 사람이 진화시키는 영구 지식. PITFALLS, 위키, 리서치 결과, 절차 매뉴얼
+### Layer 2 — Obsidian Vault (도메인 지식 / BASB)
+- **역할**: 사람이 진화시키는 영구 지식. PITFALLS, 위키, 리서치 결과, 절차 매뉴얼. **단일 source of truth**
 - **저장 대상**: 도구 사용법, 외부 API 패턴, 디버깅 핵심 원인, 폐기 도구 경고
-- **검색**: gbrain (BM25+벡터), Obsidian backlink
-- **진화**: BASB 3-tier (Raw → Distilled → Synthesized)
+- **검색**: `grep -ri "키워드" $OBSIDIAN_VAULT/`, Obsidian backlink, Obsidian UI 전문 검색
+- **진화**: BASB 3-tier (Raw → Distilled → Synthesized) — `$OBSIDIAN_VAULT/05-wiki/{raw, distilled, synthesized}/`
+- **gbrain 폐기 (2026-05-19)**: 이전엔 gbrain CLI/MCP가 벡터 검색을 제공했으나 OpenAI 의존·중복 저장·반복 손상으로 폐기. STICKY DECISIONS 섹션 참조
 
 ### Layer 3 — MEMORY.md (사용자·프로젝트 메타)
 - **역할**: JamesClaw가 직접 작성하는 사용자/피드백/프로젝트/참조 메모리
@@ -74,9 +97,9 @@
 | 질문 | 사용 시스템 |
 |------|-------------|
 | "어제 X 작업 어떻게 했더라?" | **agentmemory** (자동 회상) |
-| "쿠팡 파트너스 정책은?" | **gbrain/Obsidian** (도메인 지식) |
+| "쿠팡 파트너스 정책은?" | **Obsidian Vault** (`grep -ri "쿠팡 파트너스" $OBSIDIAN_VAULT/`) |
 | "대표님이 선호하는 X 방식?" | **MEMORY.md** |
-| "PITFALL-NNN 해결법?" | **gbrain** (PITFALLS) + **agentmemory** (현장 맥락) |
+| "PITFALL-NNN 해결법?" | **harness/pitfalls/pitfall-NNN-*.md** (직접 Read) + **agentmemory** (현장 맥락) |
 
 ### 위험 옵션 (영구 OFF 유지)
 -  — Stop hook recursion (#149). 우리 stop-dispatcher.sh와 무한 루프 위험
@@ -101,7 +124,7 @@
 - **0단계 (프로젝트 시작/전환 시 필수 사전 조회, 2026-04-21 신설)**:
   1. 로컬 Claude Code 매뉴얼 Glance: `~/.claude/docs/claude-code-manual.md` (v2.1.116 기반). 최신 기능·제약·버전별 변경 확인
   2. 하네스 개요: `~/.claude/docs/index.md` — 사용 가능한 hook/skill/command 파악
-  3. 도메인 PITFALL 검색: `gbrain query "<도메인 키워드>"` — 과거 실수 사전 회피
+  3. 도메인 PITFALL 검색: `grep -ri "<도메인 키워드>" D:/jamesclew/harness/pitfalls/` — 과거 실수 사전 회피
   4. 확신 없으면 NLM 보조 조회 (v2.1.101 기준, 최신 불일치 시 로컬 우선)
   5. **GCP 신규 프로젝트 시작 시 (필수, 2026-04-30 P-083 신설)**:
      a. 결제 > 예산 및 알림 즉시 설정 — ₩30,000 (50% 알림) + ₩100,000 (90% 알림) 2단계
@@ -244,7 +267,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - 코드 변경 → 테스트 → 빌드 → 커밋. 배포 → 검증 + 외부 검수.
 - Step 5/7 증거 없으면 deploy 차단. 상세: rules/quality.md
 - **drift-guard 통합 (2026-04-21, Hwani-Net/drift-guard)**: UI 프로젝트는 `npx drift-guard init --from design.html` → `npx drift-guard rules` → `npx drift-guard check`. `verify-deploy.sh`가 `.drift-guard.json` 감지 시 배포 전 check 실패면 **exit 2 차단**. `/pipeline-run` Step 3-0에서도 실행. Stitch 호출 후 `stitch-drift-guard.sh` hook이 init/check 유도. Vision(`/design-review`)과 토큰(drift-guard)은 별도 레이어로 병행. P-054 재발 방지.
-- 에러 → gbrain에 pitfall 기록. 절차: ① `gbrain query "증상"` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `gbrain import D:/jamesclew/harness/pitfalls/` 실행 (참고: `gbrain put --content "$VAR"` Windows/Unix 공통 안전. stdin redirect는 Windows Git Bash `/dev/stdin` 미지원 — pitfall-064)
+- 에러 → PITFALL 기록. 절차: ① `grep -ri "증상" D:/jamesclew/harness/pitfalls/` 유사 확인 ② 신규면 `D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md` 작성 ③ `mcp__agentmemory__memory_save`로 회상 인덱싱 (선택)
 - 배포 후 `/qa`로 외부 모델 사용자 관점 QA 루프 실행.
 - **하네스(hooks/rules/settings.json) 수정 전 외부 모델(Codex) 검토 필수** — 충돌/회귀 사전 검토.
 - **감사 항목 동기화 필수**: CLAUDE.md에 규칙 추가 또는 Claude Code 버전 업데이트 시, `audit-session.sh`에 대응하는 `check_` 함수도 동시에 추가. `/audit` 결과가 신규 기능을 반영하지 않으면 감사 무의미.
@@ -500,7 +523,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - 신규 hook type: `"mcp_tool"`. bash subprocess 없이 MCP 도구 직접 호출.
 - **활용 후보**:
   - `telegram-notify.sh` → `mcp__plugin_telegram_telegram__reply` 직접 호출로 전환 시 bash spawn 오버헤드 제거
-  - pitfall 자동 저장 hook → `mcp__gbrain__put_page` 직접 호출
+  - pitfall 자동 저장 hook → `mcp__agentmemory__memory_save` 직접 호출 (gbrain 폐기 — STICKY DECISIONS 참조)
 - bash hook과 공존. 단, 환경변수 보간 지원 여부 확인 필요 (v2.1.63 HTTP hook와 동일 제약 가능성).
 
 ### `/cost` + `/stats` → `/usage` 통합
