@@ -157,6 +157,16 @@
         ]
       },
       {
+        "matcher": "mcp__agentmemory__memory_save",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/agentmemory-mirror-obsidian.sh",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
