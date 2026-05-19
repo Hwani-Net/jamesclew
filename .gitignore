@@ -53,3 +53,8 @@ harness/scripts/connect-ai-adapter.disabled-*/
 
 # Workflow scratch (cdp scripts, intermediate JSON)
 tmp/
+
+.vercel
+
+# External tools (separate git repos, managed independently)
+harness/tools/HydraTeams/
