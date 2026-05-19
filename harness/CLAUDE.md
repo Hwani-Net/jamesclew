@@ -32,6 +32,7 @@
 - `cdp-mark-fail.sh` (PostToolUse Bash) — cdp-*.js 실패 시 `~/.harness-state/cdp-last-fail` 기록 → 다음 ensure 트리거
 - `agentmemory-mirror-obsidian.sh` (PostToolUse mcp__agentmemory__memory_save) — saved ID + content를 `$OBSIDIAN_VAULT/06-raw/agentmemory/{YYYY-MM-DD}-{mem_id}.md` 자동 미러. Layer 1 ↔ Layer 2 BASB 통합
 - `pre-compact-snapshot.sh` (PreCompact) — compact 직전 git state + context milestone 옵시디언 스냅샷 (P-007)
+- `session-start-active-infra.sh` (SessionStart) — 활성 인프라 + 핵심 정책 additionalContext 주입 + `~/.harness-state/session-start-active-infra.log` 사후 검증 로그 기록
 
 #### 운영 라이브
 - **smartreview** (Firebase): `https://multi-blog-personal.web.app/` — 13페이지 가전·생활용품 비교. 소스: `D:/AI 비즈니스/smartreview/`. 배포: `cd "..." && firebase deploy --only hosting`
