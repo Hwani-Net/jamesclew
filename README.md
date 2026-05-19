@@ -36,3 +36,8 @@ bash harness/deploy.sh
 실제 키 파일은 `~/.claude/`에 직접 관리:
 - `~/.claude/tavily-keys.json`
 - `~/.claude/openrouter-keys.json`
+
+## 분리된 자산
+
+- 콘텐츠 (smartreview): `D:/AI 비즈니스/smartreview/`
+- 백업·실험 아카이브: `D:/_archive/jamesclew-cleanup-2026-05-19/`
