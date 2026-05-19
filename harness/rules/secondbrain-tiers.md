@@ -45,14 +45,15 @@ summary: "3줄 요약" (Distilled 이상)
 ---
 ```
 
-## gbrain 검색 가중치
+## 옵시디언 검색 가중치 (agentmemory 기반)
 
-- gbrain query 시 tier 기반 가중치 정렬:
-  - synthesized: 3.0
-  - distilled: 2.0
-  - raw: 1.0
-- 현재는 frontmatter 만으로 표시 (자동 가중치는 향후 gbrain 기능 확장 대기)
-- `gbrain tag <slug> tier:synthesized` 로 tag 도 병행 부여하면 태그 기반 필터 가능
+- `grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/` 검색 시 synthesized → distilled → raw 순으로 우선 확인
+- agentmemory `memory_recall`로 세션 기억 검색 시 tier 정보가 메타데이터로 포함됨
+- tier 기반 정렬 우선순위 (수동 탐색 기준):
+  - synthesized: 내 관점 통합 → 최우선 참조
+  - distilled: 구조화 요약 → 2순위
+  - raw: 원문 → 사실 확인 용도
+- 옵시디언 `tier:synthesized` 태그 검색: Obsidian UI에서 `#tier/synthesized` 태그 필터 활용
 
 ## 예시
 

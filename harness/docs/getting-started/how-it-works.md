@@ -113,5 +113,5 @@ PreCompact (컨텍스트 45%+)
 
 - **Ghost Mode**: 즉시 실행. 확인 질문 없음. 3회 재시도 후에만 보고.
 - **Evidence-First**: 모든 보고에는 도구 출력 증거가 필요합니다.
-- **Search-Before-Solve**: 막히면 `gbrain query` 먼저. 없으면 Tavily/Perplexity.
+- **Search-Before-Solve**: 막히면 `grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/` 또는 `mcp__agentmemory__memory_recall` 먼저. 없으면 Tavily/Perplexity.
 - **우선순위 공식**: `긴급도 + 수익영향 + 대표님대기 + ROI - 리스크` 점수 산정 후 정렬 실행.

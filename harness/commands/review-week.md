@@ -10,12 +10,13 @@ user_invocable: true
 
 ## 실행 절차
 
-### Step 1: gbrain 최근 페이지 수집
+### Step 1: 옵시디언 신규 파일 수집
 ```bash
-gbrain list -n 100
+VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
+# 7일 이내 수정된 파일 수집
+find "$VAULT/05-wiki/" -name "*.md" -newer "$(date -d '7 days ago' +%Y-%m-%d 2>/dev/null || date -v-7d +%Y-%m-%d)" 2>/dev/null | head -100
 ```
-출력 중 `updated_at` 또는 `created_at` 기준 오늘로부터 7일 이내 항목만 필터링.
-날짜 비교: `date -d "7 days ago" +%Y-%m-%d` 기준 이후 페이지만 대상.
+또는 agentmemory `memory_recall`로 7일 이내 기억 목록 조회.
 
 ### Step 2: type별 분류
 필터링된 페이지를 slug 접두사 기준으로 분류:
@@ -38,7 +39,7 @@ ls "$VAULT/06-raw/"*.md 2>/dev/null
 
 **Codex 호출 (1순위)**:
 ```bash
-bash harness/scripts/codex-rotate.sh "주간 지식 목록: ${GBRAIN_LIST}\n\nInbox: ${INBOX_LIST}\n\n핵심주제 3개, 연결 제안 5쌍, 삭제후보 3개, 리서치키워드 3개를 JSON으로 출력"
+bash harness/scripts/codex-rotate.sh "주간 지식 목록: ${WEEKLY_LIST}\n\nInbox: ${INBOX_LIST}\n\n핵심주제 3개, 연결 제안 5쌍, 삭제후보 3개, 리서치키워드 3개를 JSON으로 출력"
 ```
 
 ### Step 5: 결과 Obsidian 저장
@@ -59,8 +60,8 @@ cat > "$OUTPUT_FILE" <<MDEOF
 
 생성일: $(date +%Y-%m-%d)
 
-## gbrain 신규 페이지 (7일 이내)
-${GBRAIN_LIST}
+## 옵시디언 신규 파일 (7일 이내)
+${WEEKLY_LIST}
 
 ## Obsidian inbox (미분류)
 ${INBOX_LIST}
@@ -70,19 +71,16 @@ ${LLM_RESULT}
 MDEOF
 ```
 
-### Step 6: gbrain 동기화
-```bash
-YEAR=$(date +%Y)
-WEEK=$(date +%V)
-gbrain put "weekly-review-${YEAR}-W${WEEK}" < "$OUTPUT_FILE"
-```
-실패 시 3회 재시도 후 스킵 (저장 파일은 유지).
+### Step 6: agentmemory 인덱싱 (선택)
+회고 파일이 저장된 후:
+- (선택) `mcp__agentmemory__memory_save`로 회고 핵심 요약 저장
+- 옵시디언 파일 자체가 지식의 primary source — agentmemory는 보조 인덱스
 
 ### Step 7: 대표님 요약 출력
 다음 형식으로 5줄 이내 출력:
 ```
 [review-week 완료] YYYY W##
-- 신규 gbrain 페이지: N건 (pitfall X / skill X / source X / concept X)
+- 옵시디언 신규 파일: N건 (pitfall X / skill X / source X / concept X)
 - inbox 미분류: N건
 - 핵심 주제: {top_themes}
 - 다음주 리서치: {next_research}
@@ -90,11 +88,10 @@ gbrain put "weekly-review-${YEAR}-W${WEEK}" < "$OUTPUT_FILE"
 ```
 
 ## 전제 조건
-- gbrain CLI 설치 및 서버 실행 중 (`gbrain serve`)
 - `$OBSIDIAN_VAULT/01-jamesclaw/reviews/` 디렉토리 존재
 - Codex CLI 사용 가능 (gemma4 Ollama는 보조 의견 전용)
+- agentmemory MCP 사용 가능 (선택 — `memory_recall`로 기억 조회)
 
 ## 주의사항
 - 기존 weekly 파일 덮어쓰기 금지 — 충돌 시 `-YYYYMMDDHHMM` 접미사 자동 부여
 - LLM 결과가 JSON 파싱 실패 시 raw 텍스트 그대로 저장 (분석 생략 아님)
-- `gbrain list` 날짜 필드명이 버전마다 다를 수 있음 — `updated_at` 없으면 `created_at` 사용

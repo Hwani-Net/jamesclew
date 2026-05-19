@@ -334,4 +334,4 @@ Thumbs.db
 - 기존 프로젝트 폴더 덮어쓰기 금지 — Step 1에서 존재 확인 후 중단
 - `{PROJECT}` 자리 치환 누락 금지 — Write 호출 시 검증
 - 템플릿 작성 후 폴더 구조 ls로 검증 필수
-- gbrain 자동 import는 하지 않음 (프로젝트 시작 직후엔 인덱스 가치 낮음). Phase 1 진입 시 또는 첫 Phase 종료 시 수동 import.
+- 지식 저장은 agentmemory `memory_save` 또는 `$OBSIDIAN_VAULT/06-raw/`에 직접 작성 (프로젝트 시작 직후엔 가치 낮음 — Phase 1 진입 시 또는 첫 Phase 종료 시 수행).

@@ -185,9 +185,9 @@ curl -sI "{original_url}" | head -1
 ### Phase 5: PITFALLS 규칙 체크
 
 ```bash
-# gbrain에서 콘텐츠 관련 PITFALLS 검색
-gbrain query "blog content image lazy loading"
-gbrain query "pitfall 콘텐츠"
+# harness/pitfalls/에서 콘텐츠 관련 PITFALLS 검색
+grep -ri "blog content image lazy loading" D:/jamesclew/harness/pitfalls/
+grep -ri "pitfall 콘텐츠" D:/jamesclew/harness/pitfalls/
 ```
 각 P-NNN 규칙에 대해 초안 위반 여부 자동 검사:
 - P-001: loading="lazy" 사용 여부

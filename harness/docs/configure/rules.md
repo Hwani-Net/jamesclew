@@ -68,7 +68,7 @@ AI 클리셰 블랙리스트(보라+핑크 그라데이션, blur circle, 3-colum
 
 최소 2라운드 필수. 2라운드 연속 수정 0건이면 완료.
 
-PITFALLS 기록 절차: `gbrain query` → 신규 확인 → `pitfall-NNN-{slug}.md` 작성 → `gbrain import`.
+PITFALLS 기록 절차: `grep -ri "증상키워드" D:/jamesclew/harness/pitfalls/` → 신규 확인 → `pitfall-NNN-{slug}.md` 작성 → (선택) `mcp__agentmemory__memory_save` 인덱싱.
 
 ---
 

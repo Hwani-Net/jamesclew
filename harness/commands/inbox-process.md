@@ -50,7 +50,7 @@ head -c 200 "$FILE"
 목적지가 pitfall인 경우 이동 전 대표님 확인:
 - 파일 내용 요약 + "harness/pitfalls/pitfall-NNN-{slug}.md 로 변환을 권고합니다. 이동할까요?" 출력
 - **이동은 수동 승인 대기** — 자동 이동 금지
-- 승인 시: `D:/jamesclew/harness/pitfalls/` 로 복사 후 `gbrain import D:/jamesclew/harness/pitfalls/` 실행
+- 승인 시: `D:/jamesclew/harness/pitfalls/` 로 복사 후 (선택) `mcp__agentmemory__memory_save`로 회상 인덱싱
 
 #### 3d. 모호한 경우 AskUserQuestion
 위 룰로 판단 불가 시:
@@ -83,12 +83,10 @@ mv "$FILE" "$DEST_FILE"
 한국어 파일명은 큰따옴표로 감싸서 처리 (이미 변수 참조로 안전).
 이동 실패 시 해당 파일 건너뛰고 실패 목록에 기록 후 계속 진행.
 
-### Step 4: gbrain import 재실행
-```bash
-gbrain import "$VAULT/05-wiki/"
-```
-이동된 파일이 sources/ 또는 concepts/로 갔을 경우만 실행.
-실패 시 경고 출력 후 계속.
+### Step 4: agentmemory 인덱싱 (선택)
+이동된 파일이 sources/ 또는 concepts/로 갔을 경우:
+- (선택) `mcp__agentmemory__memory_save`로 핵심 내용 회상 인덱싱
+- 옵시디언 vault는 파일 이동만으로 자동 반영됨 (별도 import 불필요)
 
 ### Step 5: 처리 결과 요약 출력
 ```
@@ -106,11 +104,10 @@ gbrain import "$VAULT/05-wiki/"
 ## 전제 조건
 - `$OBSIDIAN_VAULT` 환경변수 설정 (미설정 시 `C:/Users/AIcreator/Obsidian-Vault` 기본값)
 - `00-inbox/`, `02-projects/`, `04-personal/`, `05-wiki/sources/`, `05-wiki/concepts/` 디렉토리 존재
-- gbrain CLI 실행 가능
 
 ## 주의사항
 - 기존 파일 덮어쓰기 금지 — 충돌 시 `-YYYYMMDDHHMM` 접미사 자동 부여
 - 한국어 파일명: 변수 참조 시 큰따옴표 필수 (`"$FILE"` 형태)
 - pitfall 변환은 반드시 수동 승인 대기 — 자동 이동하면 harness/pitfalls/ 넘버링 충돌 위험
 - `mv` 실패는 건너뜀 처리 (abort 금지). 실패 목록은 Step 5 요약에 포함
-- gbrain import는 이동 완료 후 1회만 실행 (파일별 반복 금지 — 성능 저하)
+- agentmemory memory_save는 이동 완료 후 핵심 항목만 선별 인덱싱 (전체 파일 반복 불필요)

@@ -47,10 +47,10 @@ korean-law: 온디맨드 (89도구, 33K토큰 — 상시 로드 금지). 필요 
 | 레이어 | 시스템 | 저장 주체 | 용도 |
 |--------|--------|----------|------|
 | Layer 1 | agentmemory MCP | 자동 (hook) | 세션 작업 기억, 에러→해결 흐름 |
-| Layer 2 | gbrain + Obsidian | 에이전트/수동 | 도메인 지식, PITFALLS, BASB |
+| Layer 2 | Obsidian Vault | 에이전트/수동 | 도메인 지식, PITFALLS, BASB |
 | Layer 3 | MEMORY.md | 수동 | 사용자 선호, 프로젝트 메타 |
 
-검색 우선순위: agentmemory (작업 맥락) → gbrain (도메인) → MEMORY.md (메타)
+검색 우선순위: agentmemory (작업 맥락) → Obsidian Vault grep (도메인) → MEMORY.md (메타)
 
 ## Hosting & Infrastructure
 모든 웹 프로젝트는 Firebase 기반으로 통일.

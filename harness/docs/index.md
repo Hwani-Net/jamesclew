@@ -56,7 +56,7 @@ harness/docs/
 │
 └── 레거시/특수 매뉴얼 (아카이브)
     ├── harness-manual.md             ← v1 단일 매뉴얼 (1024줄)
-    ├── gbrain-manual.md              ← gbrain 지식베이스 전용
+    ├── gbrain-manual.md              ← [DEPRECATED 2026-05-19] 역사 참조용 (P-172)
     ├── managed-agent-manual.md       ← Managed Agents API 전용
     ├── ralph-loop-manual.md          ← Ralph Loop 상세
     └── v2.1.*-upgrade-notes.md       ← 과거 버전 업그레이드 노트

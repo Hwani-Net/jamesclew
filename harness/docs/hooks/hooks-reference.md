@@ -18,7 +18,7 @@
 | **PostToolUse** | 도구 실행 직후 | verify-deploy, enforce-review, error-telegram, loop-detector (Bash) / post-edit-dispatcher, regression-autotest, enforce-cross-review, change-tracker, regression-guard, test-manipulation-guard (Write\|Edit) / read-once, sonnet-vision-delegate-guard (Read) / explore-router (Read\|Grep\|Glob\|Bash\|Edit\|Write) / log-filter, cost-tracker, watchdog-ralph (Bash) / wiki-raw-save (perplexity\|tavily) / quality-gate post-test (npm test) / loop-detector (WebFetch\|WebSearch) |
 | **SubagentStop** | 서브에이전트 종료 | verify-subagent |
 | **UserPromptSubmit** | 사용자 메시지 수신 | user-prompt (TS), user-prompt-declare-warn, capture-reset-times |
-| **PreCompact** | compact 직전 | pre-compact-snapshot, audit-session --compact, self-evolve --apply, curation (TS), gbrain sync |
+| **PreCompact** | compact 직전 | pre-compact-snapshot, audit-session --compact, self-evolve --apply, curation (TS) |
 | **PostCompact** | compact 직후 | telegram-notify compact, session-start (TS), post-compact-resume |
 | **Stop** | 에이전트 응답 완료 | stop-dispatcher, session-learning |
 | **StopFailure** | 에이전트 실패 종료 | telegram-notify stop-failure |
@@ -40,7 +40,7 @@
 | chrome-read-page-guard.sh | PreToolUse | chrome MCP | claude-in-chrome 호출 전 read_page 우선 순서 안내 | 경고 주입 | hooks/chrome-read-page-guard.sh |
 | Codex CLI / Ollama-autostart.sh | SessionStart | — | Codex CLI / Ollama 서버(port 4141) 자동 기동 확인 | 없음 | hooks/Codex CLI / Ollama-autostart.sh |
 | cost-tracker.sh | PostToolUse | perplexity\|tavily\|Bash | API 호출 비용 api_cost_log.jsonl 기록 | 없음 | hooks/cost-tracker.sh |
-| curation.ts | PreCompact | auto\|manual | 세션 지식 큐레이션·gbrain 저장 (TypeScript) | 없음 | hooks/curation.ts |
+| curation.ts | PreCompact | auto\|manual | 세션 지식 큐레이션·agentmemory 저장 (TypeScript) | 없음 | hooks/curation.ts |
 | enforce-build-transition.sh | PreToolUse | Write\|Edit | 빌드 요청 시 PRD→plan 선행 여부 검사 | exit 2 | hooks/enforce-build-transition.sh |
 | enforce-cross-review.sh | PostToolUse | Write\|Edit | 외부 모델 교차 검수 수행 촉구 | 경고 주입 | hooks/enforce-cross-review.sh |
 | enforce-execution.sh | — | — | 선언-미실행 패턴 감지·차단 | 경고 주입 | hooks/enforce-execution.sh |
@@ -59,7 +59,7 @@
 | read-once.sh | PostToolUse | Read | 5분 내 동일 파일 재읽기 감지·메모리 참조 권고 | 경고 주입 | hooks/read-once.sh |
 | regression-autotest.sh | PostToolUse | Write\|Edit | 파일 수정 후 관련 테스트 자동 실행 | 없음 | hooks/regression-autotest.sh |
 | regression-guard.sh | PostToolUse | Write\|Edit | 삭제량이 추가량 2배 초과 시 회귀 경고 | 경고 주입 | hooks/regression-guard.sh |
-| session-learning.sh | Stop | — | 세션 종료 시 패턴·교훈 gbrain 저장 | 없음 | hooks/session-learning.sh |
+| session-learning.sh | Stop | — | 세션 종료 시 패턴·교훈 agentmemory 저장 | 없음 | hooks/session-learning.sh |
 | session-start.ts | SessionStart / PostCompact | — | 세션 초기화·컨텍스트 복원 (TypeScript) | 없음 | hooks/session-start.ts |
 | sonnet-vision-delegate-guard.sh | PostToolUse | Read | 이미지 Read 시 Sonnet Vision 사용 감지·Opus 위임 권고 | 경고 주입 | hooks/sonnet-vision-delegate-guard.sh |
 | stop-dispatcher.sh | Stop | — | 작업 완료 텔레그램 알림·Ghost Mode 규칙 주입 | 없음 | hooks/stop-dispatcher.sh |
@@ -97,7 +97,7 @@ PreCompact(auto|manual) 시점에 옵시디언 세션 스냅샷 저장을 시도
 ## 5. 숨은 기능 5가지
 
 ### A. PreCompact 자기진화 파이프라인
-PreCompact는 단순 저장이 아닌 5단계 파이프라인을 순차 실행합니다. `pre-compact-snapshot`(옵시디언 저장) → `audit-session --compact`(감사 점검) → `self-evolve --apply`(규칙 자동 개선 적용) → `curation.ts`(세션 지식 큐레이션·gbrain 저장) → `gbrain sync`(리포 동기화). compact 한 번에 하네스가 스스로 진화하는 구조입니다.
+PreCompact는 단순 저장이 아닌 4단계 파이프라인을 순차 실행합니다. `pre-compact-snapshot`(옵시디언 저장) → `audit-session --compact`(감사 점검) → `self-evolve --apply`(규칙 자동 개선 적용) → `curation.ts`(세션 지식 큐레이션·agentmemory 저장). compact 한 번에 하네스가 스스로 진화하는 구조입니다.
 
 ### B. irreversible-alert.sh의 defer 메커니즘
 `deny`(완전 차단)가 아닌 `permissionDecision: "defer"`를 반환합니다. 비가역 Bash 명령(rm, format 계열)을 감지하면 실행을 일시정지시키고 사용자 확인을 요청합니다. 자동화 흐름을 끊지 않으면서도 위험 작업에 게이트를 삽입하는 v2.1.89+ 기능입니다.

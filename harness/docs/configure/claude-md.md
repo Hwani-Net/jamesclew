@@ -23,7 +23,7 @@ lines: 337
 | 2 | **Language** | 한국어 합니다체. 코드/커밋은 영어. 응답 간결화(결과·결정만 출력). | — |
 | 3 | **Quality Standards** | 품질 최우선. 학습 데이터 의존 금지. 12→45 원칙. effortLevel 고정 금지. | post-edit-dispatcher.sh |
 | 4 | **Ghost Mode** | 즉시 실행. "할까요?" 금지. 3회 재시도 후 보고. 하향 나선 금지. | stop-dispatcher.sh |
-| 5 | **Auditability** | Evidence-First. gbrain 자율 저장. 자동 스킬 생성. 위키 소스 자동 저장. | stop-dispatcher.sh |
+| 5 | **Auditability** | Evidence-First. 옵시디언 + agentmemory 자율 저장. 자동 스킬 생성. 위키 소스 자동 저장. | stop-dispatcher.sh |
 | 6 | **Autonomous Operation / 우선순위 공식** | `긴급도+수익영향+대표님대기+ROI-리스크` 점수 산정 후 정렬 실행. Multi-Pass Review 최소 2라운드. | — |
 | 7 | **Build Transition Rule** | 빌드 요청 시 바로 코딩 금지. 복잡도별 plan 선택(`/ultraplan` 고복잡도 · `/plan` 중복잡도·오프라인 fallback · 저복잡도는 직접). `/deep-plan`은 deprecated(2026-04-21). 플랜 승인 게이트(`<!-- ANNOTATE-APPROVED -->` 헤더 필수). | enforce-build-transition.sh |
 | 8 | **Telegram 알림** | 작업 완료 시 `last_result.txt` 저장 → Stop hook이 자동 전송. 텔레그램 요청→텔레그램 응답 원칙. | stop-dispatcher.sh, telegram-notify.sh |
@@ -31,7 +31,7 @@ lines: 337
 | 10 | **External Model CLI Reference** | Codex: `codex exec`. gemma4: `curl localhost:11434` (보조). Ollama: `:11434`. Monitor tool. HTTP hooks. defer 결정. | — |
 | 11 | **브라우저 자동화 도구 우선순위** | 1순위 expect MCP → 2순위 claude-in-chrome → Playwright CLI 직접 호출 금지. Vision 이중 패스. | vision-routing-guard.sh, chrome-read-page-guard.sh |
 | 12 | **Tool Priority** | 외부 모델 > Subagent > Built-in > Bash > MCP. 검수는 반드시 외부 모델. 자기 검수 금지. | — |
-| 13 | **Quality Gates** | 코드→테스트→빌드→커밋. 배포→검증+외부 검수. 에러→gbrain pitfall 기록. | verify-deploy.sh, post-edit-dispatcher.sh |
+| 13 | **Quality Gates** | 코드→테스트→빌드→커밋. 배포→검증+외부 검수. 에러→harness/pitfalls/ 기록. | verify-deploy.sh, post-edit-dispatcher.sh |
 | 14 | **5H Limit Optimization** | 외부 모델만 5H+7D 0 소비. Sonnet model 명시 필수. 80%+ 비상 모드. GPT 메인 전환 방법. | — |
 | 15 | **Context & Session** | Opus 세션: 45%에 옵시디언 저장 후 `/compact`. Sonnet 세션: auto compact. 수치는 heartbeat로 확인. | precompact.sh |
 | 16 | **Model Selection** | opusplan(권장) / opus / sonnet / HydraTeams. Advisor API 참고. | — |

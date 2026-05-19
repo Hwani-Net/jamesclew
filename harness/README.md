@@ -81,23 +81,16 @@ git clone <YOUR_REPO_URL> jamesclew; cd jamesclew; powershell -ExecutionPolicy B
 
 이미 폴더가 존재하면 건너뜀 (idempotent). 기존 데이터 삭제 없음.
 
-#### gbrain 지식 베이스
-gbrain이 설치된 경우 `harness/pitfalls/` + `harness/rules/`를 자동 임포트합니다.
+#### 지식 베이스
+PITFALLS는 `harness/pitfalls/`에 직접 파일로 관리됩니다. `grep -ri "키워드" harness/pitfalls/`로 검색하거나, agentmemory MCP (`mcp__agentmemory__memory_recall`)로 회상합니다.
 
-```bash
-# gbrain CLI 없으면 먼저 설치
-bun install -g gbrain
-
-# 수동 재실행
-bash harness/scripts/bootstrap-gbrain.sh
-```
+> ~~gbrain~~ [DEPRECATED 2026-05-19] — P-172로 폐기. `bootstrap-gbrain.sh`는 더 이상 실행하지 않습니다.
 
 ### 사전 요구사항
 - Node.js 20+
 - Git
 - [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) (`claude` 명령어)
-- (선택) `codex`, `ollama`, `ollama` — 인스톨러가 원하면 자동 설치
-- (선택) `gbrain` — `bun install -g gbrain` (지식 베이스 셋업 시 필요)
+- (선택) `codex`, `ollama` — 인스톨러가 원하면 자동 설치
 
 ### 재배포 / 업데이트
 소스 업데이트 후 같은 명령 재실행:

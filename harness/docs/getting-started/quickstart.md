@@ -49,7 +49,7 @@ pwsh harness/install.ps1
 | 단계 | 질문 | 입력 예시 |
 |------|------|----------|
 | 1. Persona | 호칭, 톤, 언어 등 | `대표님` / `witty` / `ko` |
-| 2. Modules | Telegram/gbrain/Codex 등 활성화 | `y` / `n` |
+| 2. Modules | Telegram/Codex 등 활성화 | `y` / `n` |
 | 3. MCP | Perplexity, Tavily 등 등록 | API 키 입력 |
 | 4. API 키 | `.claude.env` 에 저장 | `TELEGRAM_BOT_TOKEN=...` |
 | 5. 완료 | `~/.claude/` 배포 확인 | — |

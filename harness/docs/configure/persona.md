@@ -39,7 +39,7 @@ state_dir: "~/.harness-state" # hook 상태 파일 경로.
 modules:
   telegram_notify: false     # 작업 완료 텔레그램 알림
   obsidian_sync: false       # 세션→옵시디언 자동 저장
-  gbrain: false              # 영구 지식 베이스
+  gbrain: false              # [DEPRECATED 2026-05-19] 폐기됨 — 옵시디언 + agentmemory로 대체
   ollama: true               # Ollama 로컬 LLM (localhost:11434)
   codex_cli: false           # Codex CLI (6계정 로테이션)
   ollama_fallback: false     # Gemma 4 로컬 폴백 (localhost:11434)
@@ -93,7 +93,7 @@ bash harness/install.sh --non-interactive
 
 ## modules.yaml 역할
 
-`D:/jamesclew/harness/modules.yaml` 은 각 모듈(Telegram, gbrain, Codex 등)에 필요한 파일 목록과 환경변수를 정의합니다. `install.sh` 가 이 카탈로그를 읽어 `persona.yaml`의 `modules` 설정에 따라 선택적으로 복사합니다.
+`D:/jamesclew/harness/modules.yaml` 은 각 모듈(Telegram, Codex 등)에 필요한 파일 목록과 환경변수를 정의합니다. `install.sh` 가 이 카탈로그를 읽어 `persona.yaml`의 `modules` 설정에 따라 선택적으로 복사합니다.
 
 모듈을 추가하거나 비활성화하려면 `persona.yaml` 의 `modules` 섹션을 수정 후 재설치하십시오. `modules.yaml` 자체는 직접 편집하지 않습니다.
 

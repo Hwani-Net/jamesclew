@@ -11,7 +11,7 @@ argument-hint: "<프로젝트 목표 한 문장> [--ralph]"
 |---|---|---|
 | **R13 현실화** | **서브에이전트에서 TaskList/TaskUpdate/SendMessage 미동작 확인 (v2.1.112)**. teammate 프롬프트에서 이 도구 호출 시도는 무의미. **director가 모든 TaskUpdate 직접 호출**하는 "director override 모드"를 기본으로 명시. | V10-N1 (P-048) |
 | **R8 스캐폴드 보강** | TeamCreate 전 `ls ~/.claude/teams/` 확인 — 좀비 팀 있으면 `rm -rf ~/.claude/teams/{name}` 후 진행. | V10-N2 (P-049) |
-| **R16 신규** | MCP 경로 검증 — 세션 시작 시 `claude mcp get gbrain` 확인. Command에 `gbrain.cmd` 있으면 즉시 `~/.bun/bin/gbrain.exe`로 교체. `npm install -g gbrain` 금지. | V10-N3 (P-050) |
+| **R16 (폐기됨)** | ~~MCP 경로 검증 — gbrain~~ gbrain은 2026-05-19 폐기 (P-172). 이 규칙 불필요. | V10-N3 (P-050) |
 
 ## v10 변경 요약 (GAP-V9-N2/N3 대응)
 

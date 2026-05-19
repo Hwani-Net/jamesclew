@@ -1,5 +1,8 @@
 # GBrain 사용 매뉴얼
 
+> ⚠️ **[DEPRECATED 2026-05-19]** gbrain은 P-172 결정으로 폐기됨. 이 문서는 역사 참조용으로만 보존.
+> 대체: **옵시디언 직접 grep + agentmemory MCP**. CLAUDE.md STICKY DECISIONS 참조.
+
 > 버전: 0.9.0 | 출처: https://github.com/garrytan/gbrain | 작성일: 2026-04-12
 
 ---

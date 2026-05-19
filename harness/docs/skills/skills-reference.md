@@ -6,7 +6,7 @@
 
 ## 1. 개요
 
-슬래시 커맨드(스킬)는 복잡한 다단계 작업을 하나의 호출로 실행하는 재사용 절차입니다. 호출법은 `/{커맨드명}` 또는 `/{커맨드명} <인자>`이며, 각 파일은 YAML frontmatter(`description`, `argument-hint`, `allowed-tools`)와 Markdown 절차 본문으로 구성됩니다. 새 스킬은 `harness/commands/{skill-name}.md`에 저장하고 gbrain에도 동시 등록합니다.
+슬래시 커맨드(스킬)는 복잡한 다단계 작업을 하나의 호출로 실행하는 재사용 절차입니다. 호출법은 `/{커맨드명}` 또는 `/{커맨드명} <인자>`이며, 각 파일은 YAML frontmatter(`description`, `argument-hint`, `allowed-tools`)와 Markdown 절차 본문으로 구성됩니다. 새 스킬은 `harness/commands/{skill-name}.md`에 저장하고 (선택) `mcp__agentmemory__memory_save`로 회상 인덱싱합니다.
 
 ---
 
@@ -50,7 +50,7 @@ PRD 작성부터 플랜 승인까지 빌드 진입 전 단계를 담당합니다
 | `/blog-generate` | 키워드 → SEO → 초안 → 팩트 → 이미지 전 과정 자동화 |
 | `/blog-fix` | 품질게이트 실패 항목 자동 수정 |
 | `/blog-pipeline` | blog-generate → blog-review → blog-fix → blog-publish 전체 파이프라인 |
-| `/wiki-sync` | gbrain 지식과 Obsidian Wiki 양방향 동기화 |
+| `/wiki-sync` | [DEPRECATED 2026-05-19] gbrain 폐기로 사용 중단. `/inbox-process` 사용 권장 |
 
 ### 배포
 Firebase 자동 발행을 담당합니다.
@@ -94,7 +94,7 @@ Firebase 자동 발행을 담당합니다.
 | `/ralph-loop` | Ralph Loop 자율 개선 루프 시작 | — | 장기 자율 개선 | commands/ralph-loop.md | 17 |
 | `/reset-ping-setup` | 5H/7D 리셋 Remote Trigger 설정 (헬스체크 자동화) | — | 사용량 모니터링 설정 | commands/reset-ping-setup.md | 44 |
 | `/self-heal` | 3 에이전트 경쟁 수정으로 버그 자가 치유 | `<issue-description>` | 반복 버그 자동 해결 | commands/self-heal.md | 94 |
-| `/wiki-sync` | gbrain 지식 ↔ Obsidian Wiki 양방향 동기화 | — | 지식 베이스 최신 유지 | commands/wiki-sync.md | 58 |
+| `/wiki-sync` | [DEPRECATED 2026-05-19] gbrain 폐기로 사용 중단 | — | `/inbox-process` 사용 권장 | commands/wiki-sync.md | 58 |
 | `/저장` | 옵시디언 세션 저장 + /compact 실행 | — | compact 전 필수 저장 | commands/저장.md | 55 |
 
 ---

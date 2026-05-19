@@ -86,7 +86,7 @@
 - **저장 대상**: 도구 사용법, 외부 API 패턴, 디버깅 핵심 원인, 폐기 도구 경고
 - **검색**: `grep -ri "키워드" $OBSIDIAN_VAULT/`, Obsidian backlink, Obsidian UI 전문 검색
 - **진화**: BASB 3-tier (Raw → Distilled → Synthesized) — `$OBSIDIAN_VAULT/05-wiki/{raw, distilled, synthesized}/`
-- **gbrain 폐기 (2026-05-19)**: 이전엔 gbrain CLI/MCP가 벡터 검색을 제공했으나 OpenAI 의존·중복 저장·반복 손상으로 폐기. STICKY DECISIONS 섹션 참조
+- **[2026-05-19]**: gbrain CLI/MCP 폐기 → 이 레이어가 단독 도메인 지식 저장소. STICKY DECISIONS 참조
 
 ### Layer 3 — MEMORY.md (사용자·프로젝트 메타)
 - **역할**: JamesClaw가 직접 작성하는 사용자/피드백/프로젝트/참조 메모리

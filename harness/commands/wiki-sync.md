@@ -26,7 +26,10 @@ gbrain 시스템 폐기로 이 스킬은 더 이상 사용하지 않습니다. P
 
 ## 실행 절차
 
-### Phase 1: gbrain → Wiki (새 지식 → 위키 인제스트)
+> ⚠️ **이 절차는 gbrain 폐기(P-172)로 더 이상 동작하지 않습니다.** 역사 참조용으로만 보존.
+> 대체: `/inbox-process` + `grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/`
+
+### Phase 1: ~~gbrain → Wiki~~ (폐기됨)
 1. gbrain에서 최근 7일 내 저장된 페이지 목록 조회: `gbrain list -n 50`
 2. 각 페이지의 slug를 위키 index.md (`C:/Users/AIcreator/Obsidian-Vault/05-wiki/index.md`) 와 대조
 3. 위키에 없는 새 지식 → `C:/Users/AIcreator/Obsidian-Vault/06-raw/` 에 마크다운으로 저장
