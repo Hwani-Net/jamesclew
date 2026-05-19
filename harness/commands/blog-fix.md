@@ -10,12 +10,12 @@ description: "품질 게이트 실패 시 자동 수정 + 에스컬레이션 루
 
 ## 사용법
 - `/blog-fix` — `status.json`이 `failed`인 최신 초안 자동 선택
-- `/blog-fix MultiBlog/drafts/2026-04-11-keyword/` — 특정 초안 지정
+- `/blog-fix D:/AI 비즈니스/smartreview/drafts/2026-04-11-keyword/` — 특정 초안 지정
 
 ## 산출물
-- `MultiBlog/drafts/{slug}/draft.md` — 수정된 초안 (원본은 `draft.md.bak`으로 백업)
-- `MultiBlog/drafts/{slug}/fix-log.json` — 수정 이력 (회차, 모델, 변경 내용, 재검증 결과)
-- `MultiBlog/drafts/{slug}/status.json` — `ready` (수정 성공) 또는 `escalated` (3회 실패)
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md` — 수정된 초안 (원본은 `draft.md.bak`으로 백업)
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/fix-log.json` — 수정 이력 (회차, 모델, 변경 내용, 재검증 결과)
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/status.json` — `ready` (수정 성공) 또는 `escalated` (3회 실패)
 
 ## 실행 절차
 
@@ -32,7 +32,7 @@ quality-report.json에서 FAIL 항목 추출:
 
 **0-2. 원본 백업**
 ```bash
-cp "MultiBlog/drafts/{slug}/draft.md" "MultiBlog/drafts/{slug}/draft.md.bak"
+cp "D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md" "D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md.bak"
 ```
 
 **0-3. 수정 전략 결정 (Opus 판단)**
@@ -71,7 +71,7 @@ codex exec "다음 블로그 글의 품질 문제를 수정하라.
 전체 수정된 마크다운 출력.
 
 ---
-$(cat MultiBlog/drafts/{slug}/draft.md)"
+$(cat D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md)"
 ```
 - 결과를 `draft.md`에 저장 → `/blog-review` 재실행
 - PASS → 완료. FAIL → 라운드 3로.
@@ -79,7 +79,7 @@ $(cat MultiBlog/drafts/{slug}/draft.md)"
 
 **라운드 3 — Gemma 4 로컬 (보조 의견, 단독 PASS/FAIL 판정 금지)**
 ```bash
-CONTENT=$(cat MultiBlog/drafts/{slug}/draft.md)
+CONTENT=$(cat D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md)
 curl -s --max-time 30 http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
   -d "{\"model\":\"gemma4\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"다음 블로그 글의 품질 문제를 수정하라.\\n\\n실패 항목: {failedGates}\\n수정 지시: {수정 프롬프트}\\n이전 2회 수정이 실패한 이유: {라운드 1,2 실패 분析}\\n이번이 마지막 시도이므로 가장 보수적으로 수정하라.\\n\\n전체 수정된 마크다운 출력.\\n\\n---\\n$CONTENT\"}]}" \
@@ -108,7 +108,7 @@ curl -s http://localhost:11434/api/generate -d '{
   R2 (Codex): {결과 요약}
   R3 (gemma4): {결과 요약}
 🤔 필요 판단: {Opus의 분석 — 왜 자동 수정이 안 되는지, 대표님이 뭘 결정해야 하는지}
-📁 위치: MultiBlog/drafts/{slug}/
+📁 위치: D:/AI 비즈니스/smartreview/drafts/{slug}/
 ```
 
 **2-2. 텔레그램 발송**

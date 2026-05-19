@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# blog-publish.sh — draft.md → MultiBlog/public/{slug}/index.html + firebase deploy
-# Usage: bash harness/scripts/blog-publish.sh MultiBlog/drafts/{slug}/
+# blog-publish.sh — draft.md → D:/AI 비즈니스/smartreview/public/{slug}/index.html + firebase deploy
+# Usage: bash harness/scripts/blog-publish.sh "D:/AI 비즈니스/smartreview/drafts/"{slug}/
 set -euo pipefail
 
 SITE_URL="${SITE_URL:-https://multi-blog-personal.web.app}"

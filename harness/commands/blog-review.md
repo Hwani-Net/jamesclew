@@ -9,12 +9,12 @@ expect MCP 7단계 + 외부 모델 AI냄새 교차검수 + SEO 분석.
 
 ## 사용법
 - `/blog-review` — `status.json`이 `draft`인 최신 초안 자동 선택
-- `/blog-review MultiBlog/drafts/2026-04-11-keyword/` — 특정 초안 지정
+- `/blog-review D:/AI 비즈니스/smartreview/drafts/2026-04-11-keyword/` — 특정 초안 지정
 
 ## 산출물
-- `MultiBlog/drafts/{slug}/quality-report.json` — 검증 결과 전체
-- `MultiBlog/drafts/{slug}/status.json` — `ready` (통과) 또는 `failed` (실패)
-- `MultiBlog/reports/quality-summary.json` — 누적 통계 업데이트
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.json` — 검증 결과 전체
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/status.json` — `ready` (통과) 또는 `failed` (실패)
+- `D:/AI 비즈니스/smartreview/reports/quality-summary.json` — 누적 통계 업데이트
 
 ## 실행 절차
 
@@ -26,7 +26,7 @@ expect MCP 7단계 + 외부 모델 AI냄새 교차검수 + SEO 분석.
 ```bash
 # 초안을 프리뷰할 수 있는 환경 확인
 # 방법 A: Next.js 앱에 draft 주입 후 dev 서버
-cd MultiBlog/app/web && pnpm dev &
+cd "D:/AI 비즈니스/smartreview/"app/web && pnpm dev &
 # 방법 B: 마크다운을 HTML로 변환 후 간단 서버
 npx marked draft.md -o preview.html && npx serve .
 ```
@@ -60,7 +60,7 @@ expect MCP 7단계를 스킵하고 Phase 2~4만 실행. `quality-report.json`에
 
 **2-1. Codex AI냄새 검사 (1순위)**
 ```bash
-DRAFT=$(cat "MultiBlog/drafts/{slug}/draft.md")
+DRAFT=$(cat "D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md")
 bash harness/scripts/codex-rotate.sh "다음 블로그 글이 AI가 쓴 것처럼 느껴지는 부분을 지적하라. 각 부분에 대해 이유를 설명하고, 전체 AI 생성 확률을 0~100 점수로 평가하라. 점수만 마지막 줄에 'SCORE: NN' 형식으로 출력.
 
 ---
@@ -81,7 +81,7 @@ bash harness/scripts/codex-rotate.sh "아래 글A는 인간 블로거가 쓴 상
 {tavily_extract로 수집한 인간 블로그 본문}
 
 === 글C (평가 대상) ===
-$(cat MultiBlog/drafts/{slug}/draft.md)"
+$(cat D:/AI 비즈니스/smartreview/drafts/{slug}/draft.md)"
 ```
 출력에서 `SCORE: NN` 파싱 → `aiSmell.benchmark` 필드에 기록.
 **인간 블로그 수집 실패 시**: Tavily search → extract 재시도. 실패 시 단독 평가로 폴백.
@@ -166,7 +166,7 @@ fi
 **4-1. 이미지 파일 존재 + HTTP 확인**
 ```bash
 # 로컬 이미지 파일 존재 확인
-ls MultiBlog/drafts/{slug}/images/
+ls D:/AI 비즈니스/smartreview/drafts/{slug}/images/
 # 원본 URL HTTP 200 확인 (meta.json에서 URL 추출)
 curl -sI "{original_url}" | head -1
 ```
@@ -238,7 +238,7 @@ echo "blog-review: {slug} | overall={verdict} | aiSmell={score} | seo={pass}/{to
 
 ### Phase 7: 누적 통계 업데이트
 
-`MultiBlog/reports/quality-summary.json` 갱신:
+`D:/AI 비즈니스/smartreview/reports/quality-summary.json` 갱신:
 ```json
 {
   "totalReviewed": 15,
@@ -252,7 +252,7 @@ echo "blog-review: {slug} | overall={verdict} | aiSmell={score} | seo={pass}/{to
 
 ## 판정 임계값 (조정 가능)
 
-`MultiBlog/config/quality-thresholds.json`에서 로드:
+`D:/AI 비즈니스/smartreview/config/quality-thresholds.json`에서 로드:
 ```json
 {
   "aiSmell": { "pass": 30, "warn": 50 },

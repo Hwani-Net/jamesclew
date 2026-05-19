@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://multi-blog-personal.web.app/sitemap.xml

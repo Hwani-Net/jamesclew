@@ -13,10 +13,10 @@ Claude Max 구독 내 실행. 추가 인프라 비용 없음.
 - `/blog-generate "키워드" --tone casual` — 톤 지정 (기본: professional)
 
 ## 산출물
-- `MultiBlog/drafts/{date}-{slug}/draft.md` — 마크다운 초안
-- `MultiBlog/drafts/{date}-{slug}/meta.json` — SEO 메타, 이미지 URL, 생성 로그
-- `MultiBlog/drafts/{date}-{slug}/status.json` — 상태 (`draft` → `/blog-review`가 전환)
-- `MultiBlog/drafts/{date}-{slug}/images/` — 다운로드된 이미지
+- `D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/draft.md` — 마크다운 초안
+- `D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/meta.json` — SEO 메타, 이미지 URL, 생성 로그
+- `D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/status.json` — 상태 (`draft` → `/blog-review`가 전환)
+- `D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/images/` — 다운로드된 이미지
 
 ## 실행 절차
 
@@ -131,7 +131,7 @@ Opus가 초안에서 검증 가능한 주장을 추출:
 
 **4-3. 이미지 다운로드 + 삽입**
 ```bash
-curl -o "MultiBlog/drafts/{date}-{slug}/images/{n}.jpg" "{url}"
+curl -o "D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/images/{n}.jpg" "{url}"
 ```
 초안의 `[IMAGE:설명]`을 실제 마크다운 이미지 문법으로 교체:
 ```markdown
@@ -184,7 +184,7 @@ PARTNERS_COUNT=$(grep -cE 'link\.coupang\.com/a/[^p]' "$DRAFT_MD" 2>/dev/null ||
 
 **5-1. 파일 저장**
 ```
-MultiBlog/drafts/{date}-{slug}/
+D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/
 ├── draft.md          — 완성된 마크다운 초안
 ├── meta.json         — SEO 데이터, 생성 로그, 팩트 검증, 이미지 매핑
 ├── status.json       — { "status": "draft", "createdAt": "...", "generator": "..." }
@@ -199,7 +199,7 @@ MultiBlog/drafts/{date}-{slug}/
 🔍 SEO: 키워드 "{키워드}" 5회, FAQ 3개, 내부링크 2개
 🖼️ 이미지 4장 (검증 완료)
 ⚠️ 팩트 체크 미확인 1건: [내용]
-📁 MultiBlog/drafts/{date}-{slug}/
+📁 D:/AI 비즈니스/smartreview/drafts/{date}-{slug}/
 ➡️ 다음: /blog-review 로 품질 검증
 ```
 
