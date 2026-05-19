@@ -22,12 +22,19 @@ echo "   대상: $TARGET"
 # 핵심 설정 파일
 cp "$SCRIPT_DIR/CLAUDE.md" "$TARGET/CLAUDE.md"
 
+# settings.json template 사전 검증 (P-173 재발 방지)
+if ! jq -e . "$SCRIPT_DIR/settings.json" > /dev/null 2>&1; then
+  echo "❌ harness/settings.json invalid JSON. Aborting deploy to prevent overwriting valid ~/.claude/settings.json"
+  jq . "$SCRIPT_DIR/settings.json" 2>&1 | head -5
+  exit 1
+fi
+
 # settings.json — 사용자 /model 영구 설정 보존 (화이트리스트 외 legacy 값은 자동 청소)
 USER_MODEL=""
 if [ -f "$TARGET/settings.json" ]; then
   CURRENT_MODEL=$(jq -r '.model // empty' "$TARGET/settings.json" 2>/dev/null)
   case "$CURRENT_MODEL" in
-    opus|sonnet|haiku|default) USER_MODEL="$CURRENT_MODEL" ;;
+    opus|sonnet|haiku|opusplan|default) USER_MODEL="$CURRENT_MODEL" ;;
     "") : ;;
     *) echo "⚠️  legacy model '$CURRENT_MODEL' 자동 청소 (picker 옵션 아님)" ;;
   esac
