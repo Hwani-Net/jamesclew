@@ -562,6 +562,11 @@
           },
           {
             "type": "command",
+            "command": "bash $HOME/.claude/hooks/session-start-active-infra.sh",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
             "command": "bash $HOME/.claude/hooks/codex-expiry-check.sh",
             "timeout": 6000
           },

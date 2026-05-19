@@ -22,6 +22,41 @@
 - 누락 시 다음 세션이 모르고 부활시킬 위험 (P-172 사고 사례)
 - agentmemory MCP / git log / transcript는 보조 — **CLAUDE.md가 1차 소스**
 
+### 🟢 활성 자율 인프라 (다음 세션 자동 인지)
+
+> 신규 hook·운영 인프라·정책 채택 시 **이 섹션에 즉시 등록** (P-168 자율 결정 정책 + 인수인계 보장).
+> 미등록 시 다음 세션이 모르고 작업 → silent fail 또는 정책 위반 (이번 세션 gbrain 사례).
+
+#### Hook (PreToolUse / PostToolUse / PreCompact / SessionStart)
+- `cdp-auto-ensure.sh` (PreToolUse Bash) — Chrome CDP 9222 자율 보장 + busy/freeze 감지 + fail 흔적 강제 재시작 (P-169)
+- `cdp-mark-fail.sh` (PostToolUse Bash) — cdp-*.js 실패 시 `~/.harness-state/cdp-last-fail` 기록 → 다음 ensure 트리거
+- `agentmemory-mirror-obsidian.sh` (PostToolUse mcp__agentmemory__memory_save) — saved ID + content를 `$OBSIDIAN_VAULT/06-raw/agentmemory/{YYYY-MM-DD}-{mem_id}.md` 자동 미러. Layer 1 ↔ Layer 2 BASB 통합
+- `pre-compact-snapshot.sh` (PreCompact) — compact 직전 git state + context milestone 옵시디언 스냅샷 (P-007)
+
+#### 운영 라이브
+- **smartreview** (Firebase): `https://multi-blog-personal.web.app/` — 13페이지 가전·생활용품 비교. 소스: `D:/AI 비즈니스/smartreview/`. 배포: `cd "..." && firebase deploy --only hosting`
+- **gpt-korea.com/reviews** (Vercel rewrite 프록시): smartreview 13페이지를 같은 도메인 하위로 노출. 소스: `D:/AI 비즈니스/gpt-korea/`. 배포: vercel CLI direct deploy
+
+#### 자율 보조 스크립트
+- `harness/scripts/start-cdp-chrome.ps1` — Chrome 9222 모드 재시작 (cdp-auto-ensure가 호출)
+- `harness/scripts/codex-rotate.sh` — Codex 6계정 자동 로테이션 + gemma4 폴백
+
+#### 게이트 (배포 차단 게이트)
+- PARTNERS GATE 4-레이어 (A·B·C·D): placeholder·링크 0개·가격 일관성·카테고리 매치
+- `harness/scripts/blog-publish.sh` + `harness/scripts/gate_cd_check.py`
+
+#### 핵심 정책 (이번 세션 신설/강화)
+- **P-163** 로컬 모델(gemma4) 단독 검수 금지. Codex 1순위, 로컬은 보조 의견만
+- **P-167** 컨텍스트 추측 기반 작업 흐름 중단 금지 — 실제 % 확인 전엔 자율 진행
+- **P-168** 자율 결정 정책 — 결재 필수 5개(push / 비용 큰 작업 / 명시 요청 / 비가역 삭제 / 보안 위험) 외 자율 진행
+- **P-169** CDP 자율 재시작 — 대표님 호출 0회 자율 인프라
+
+#### 메인 자율 행동 규칙 (이번 세션 정착)
+1. 신규 hook 추가 시 → settings.json 등록 + 이 섹션에 한 줄 추가
+2. 신규 운영 라인 추가 시 → "운영 라이브"에 등록
+3. 결재 필수 5개 외 자율 진행 + 보고 (push 직전에만 결재 요청)
+4. memory_save 호출 시 agentmemory-mirror-obsidian이 자동 BASB Raw 미러 → 별도 Write 불필요
+
 ## Identity
 자율 실행 에이전트 "JamesClaw". 사용자를 보좌하는 **천재형 참모**.
 - 호칭: "대표님" (항상 — `~/.harness/persona.yaml`의 `honorific` 필드로 커스터마이징)
