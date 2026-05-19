@@ -42,7 +42,7 @@
   - gbrain에도 동시 저장 (`gbrain put skill-{name}`)하여 다음 세션에서 검색 가능
 - **위키 소스 자동 저장**: 세션 중 Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 gbrain 저장과 동시에 `$OBSIDIAN_VAULT/06-raw/`에도 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
 - **Claude Code 기능 참조 (우선순위 1→3, 2026-04-21 로컬 신뢰 소스 도입)**: 새 기능/도구 도입 전 **및 프로젝트 시작 시** 반드시 조회:
-  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.142 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
+  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.144 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
   2. **Raw changelog**: `~/.claude/cache/changelog.md` (Claude Code가 업데이트마다 자동 갱신)
   3. **NLM (보조, stale 가능)**: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` — v2.1.101 시점에 멈춘 상태. 로컬 매뉴얼과 불일치 시 **로컬 우선**
   - 하네스 설계 조회: `~/.claude/docs/index.md` (로컬) 또는 NLM `"fc9fcf38-0a88-4e76-b5ec-6e381693a7ae"` (Harness Blueprint)
@@ -296,6 +296,10 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - **HydraTeams** (localhost:3456): `ANTHROPIC_BASE_URL=http://localhost:3456`. 무료(multiplier 0). 오케스트레이터 부적합 — Agent Teams teammate 전용. 단독 판단 금지.
 - Sonnet 서브에이전트: Opus/opusplan 세션 내에서 `Agent(model: "sonnet")`으로 자동 사용.
 - **Advisor API** (참고): Messages API에서 `tools=[{"type":"advisor_20260301","model":"claude-opus-4-6"}]`로 Sonnet+Opus 자문 패턴 구현 가능. SWE-bench +2.7%, 비용 -11.9%.
+- ⚠️ **v2.1.144 정책 변화 — `/model`은 현재 세션만 변경**: 이전(v2.1.117~v2.1.143)엔 영구 지속이었으나, v2.1.144부터 단일 세션. **default 변경은 model picker에서 `d` 키**. opusplan 고정 운용 시:
+  - 한 번 `/model opusplan` 호출 → picker에서 `d` 눌러 default 지정 (재시작에도 유지)
+  - 또는 매 진입 시 `/model opusplan` 명시 호출
+  - `~/.claude/settings.json`의 `model` 필드도 default로 동작
 
 ## v2.1.112 신규 기능 (2026-04-17)
 ### 신규 슬래시 커맨드
@@ -363,6 +367,55 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - 기존 hook 모두 동작 유지. 신규 활용: `duration_ms`(P-119), `alwaysLoad`(P-121), `ultrareview` CLI(P-120)
 - `bash-tool-blocker.sh` + `irreversible-alert.sh` 독립 동작 유지 (P-026)
 - P-115/P-116 우회는 native fix(2.1.128) 후에도 유효 — 자동화 정책 보존
+
+---
+
+## v2.1.143~v2.1.144 신규 기능 (2026-05-16 ~ 2026-05-19)
+
+### 🔴 하네스 직접 영향
+- **2.1.143 — Stop hook 8 consecutive blocks 자동 종료**: `block` 응답이 8회 연속이면 turn 종료(warning). override: `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`. 우리 `enforce-execution.sh`/`evidence-first.sh` block 발행 가능 — Ghost Mode 3회 정책과 정합. native 안전망 역할
+- **2.1.144 — `/model` 단일 세션 변경 (정책 변화)**: 이전(v2.1.117)엔 영구 지속이었으나, 이번부터 **현재 세션만 변경**. default 변경은 model picker에서 `d` 키. opusplan 고정 운용은 default `d` 설정 권장
+- **2.1.144 — `/extra-usage` → `/usage-credits` 이름 변경**: 구 명칭 호환 유지. `commands/cost.md`는 독립 커스텀 명령이라 영향 없음
+- **2.1.144 — MCP paginated `tools/list` 응답 첫 페이지만 노출 fix**: 도구 많은 MCP(agentmemory 51개 등) 일부 도구 누락되던 버그 해소
+- **2.1.144 — MCP 미지원 MIME(SVG 등) 디스크 저장 fallback**: 이전엔 대화 깨짐 → 이제 파일 ref만 반환
+- **2.1.144 — Skill tool headless 권한 거부 fix** (v2.1.141 회귀): SDK/headless 자동화 스크립트 정상 동작
+- **2.1.144 — Skill 디렉토리 file descriptor 고갈 fix**: 빌드가 skill 디렉토리에서 실행될 때 non-`.md` 파일이 skill reload 발동 안 함
+- **2.1.144 — `head`/`tail` read-before-edit check 통과 + `egrep`/`fgrep`/`git grep`/`git diff` "no match" exit 1 정상 처리**: 잘못된 도구 에러 보고 감소
+- **2.1.144 — api.anthropic.com 접근 불가 시 시작 hang 75s → 15s timeout**: captive portal/VPN 환경에서 시작 안정성 ↑
+- **2.1.144 — 시작 후 IDE model picker / `applyFlagSettings` 모델 변경 미적용 fix**
+- **2.1.143 — `worktree.bgIsolation: "none"` 설정 신설**: 백그라운드 세션이 워킹 카피 직접 편집(EnterWorktree 우회). worktree 부적합 repo용
+- **2.1.143 — PowerShell tool 기본 활성 (Bedrock/Vertex/Foundry, Windows)**: `-ExecutionPolicy Bypass` 자동. opt-out: `CLAUDE_CODE_USE_POWERSHELL_TOOL=0`. 대표님 Pro 구독은 자동 활성 아님(인지만)
+- **2.1.143 — PowerShell `-ExecutionPolicy Bypass` 기본 적용**: 정책 존중 원하면 `CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY=1`
+- **2.1.143 — `/loop` Esc/Ctrl+C 취소 가능 (idle 사이 wakeup pending)**: R14 watchdog 보완
+- **2.1.143 — `/goal` evaluator background shell/subagent 실행 중 발동 안 함**: 자율 진화 루프 정합성 ↑
+- **2.1.143 — `NO_COLOR`/`FORCE_COLOR` settings env가 UI 색 깨뜨리던 회귀 fix**: 이제 subprocess에만 적용
+- **2.1.143 — 백그라운드 세션 model/effort 유지 (idle wake 후)**: 장기 background 안정성 ↑
+- **2.1.143 — Worktree cleanup `rm -rf` fallback 제거**: `git worktree remove` 실패 시 gitignored/in-progress 파일 손실 방지
+- **2.1.143 — `claude agents` 플래그 추가**: `--permission-mode`, `--model`, `--effort`, `--dangerously-skip-permissions` (v2.1.142 8개에 이어 dispatch 기본값 지정)
+
+### 🟢 신규 기능
+- **2.1.144 — `/resume` 백그라운드 세션 통합**: `--bg`/`claude agents` 세션이 인터랙티브와 함께 노출 (bg 마크). Agent View 가시성 ↑
+- **2.1.144 — 백그라운드 subagent 완료 알림에 elapsed duration**: "Agent completed · 3h 2m 5s" — 장기 작업 모니터링 개선
+- **2.1.144 — `/plugin` 마지막 업데이트 시각 표시**: marketplace에서 stale 플러그인 식별
+- **2.1.143 — Plugin dependency enforcement**: `claude plugin disable`이 의존 플러그인 있으면 거부. `enable`은 transitive deps 자동 활성
+- **2.1.143 — `/plugin` marketplace 토큰 추정 비용 표시** (per-turn / per-invocation)
+- **2.1.143 — `Shift+Tab` agents attached 세션에 auto mode 포함**
+- **2.1.143 — `/bg`/`←`-detach가 `--mcp-config`/`--settings`/`--add-dir`/`--plugin-dir`/`--strict-mcp-config`/`--fallback-model`/`--allow-dangerously-skip-permissions` 보존**
+- **2.1.143 — `claude agents --add-dir`/`--settings`/`--mcp-config`/`--plugin-dir`**: dispatch 세션 기본값 지정
+
+### 🟡 정책 변화 / 주의
+- **2.1.144 `/model` 단일 세션 변경**: 우리 "Model Selection" 섹션 정책 갱신 필요. opusplan 고정 → default 설정 (`/model` → `d` 키) 또는 매 진입 시 명시 호출
+- **2.1.143 PowerShell `-ExecutionPolicy Bypass`**: Bedrock/Vertex/Foundry 사용자만 직접 영향. Pro 구독은 변경 없음
+
+### 신규 ENV / Settings
+- **2.1.144**: (없음 — 모두 fix 위주)
+- **2.1.143**: `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` (Stop hook block 한도 override, 기본 8), `CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY=1` (PowerShell -ExecutionPolicy Bypass opt-out), `worktree.bgIsolation: "none"`
+
+### 영향 분석 — 하네스 규칙 대부분 유지
+- 기존 hook 모두 동작 유지. Stop hook 8-cap은 우리 Ghost Mode 3회 정책의 native 백업 — 충돌 없음
+- `enforce-execution.sh`/`evidence-first.sh` false-positive 반복 시 8회 후 native cap 발동 가능 — 모니터링 필요
+- `/model` 정책 갱신은 본 CLAUDE.md "Model Selection" 섹션 보강으로 처리 (별도 settings 변경 불필요)
+- `worktree.bgIsolation`/`bgIsolation: "none"`은 현재 백그라운드 세션 사용 빈도 낮아 보류 (필요 시 추후 적용)
 
 ---
 

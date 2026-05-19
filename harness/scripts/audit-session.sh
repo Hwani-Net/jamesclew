@@ -14,10 +14,10 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 52개 (2026-05-18)
-# 마지막 업데이트: 2026-05-18 (check_v122~check_v142 13개 추가
-#                               — Claude Code v2.1.122~v2.1.142 신기능 감사
-#                               — Issue #2 "침묵 의심 D+11" 해결)
+# 현재 체크 수: 56개 (2026-05-19)
+# 마지막 업데이트: 2026-05-19 (check_v143/check_v144 4개 추가
+#                               — Claude Code v2.1.143~v2.1.144 신기능 감사
+#                               — Stop hook 8-cap, /model 단일세션 정책 변화 등)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -72,9 +72,13 @@
 #  50 check_v141_terminal_sequence  — v2.1.141 Hook terminalSequence JSON output 활용
 #  51 check_v142_agents_flags       — v2.1.142 claude agents 8개 플래그 background dispatch
 #  52 check_v142_fast_mode_opus47   — v2.1.142 /fast 기본값 Opus 4.7 변경 인지
+#  53 check_v143_stop_hook_block_cap  — v2.1.143 Stop hook 8 consecutive blocks 자동 종료 (native 안전망)
+#  54 check_v143_powershell_policy    — v2.1.143 PowerShell -ExecutionPolicy Bypass 기본 적용 (Bedrock/Vertex/Foundry)
+#  55 check_v144_model_single_session — v2.1.144 /model 단일 세션 변경 정책 (default는 settings.json 또는 `d` 키)
+#  56 check_v144_mcp_paginated_tools  — v2.1.144 MCP paginated tools/list fix 인지 (agentmemory 등 도구 많은 MCP)
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# (없음 — 모든 TODO 구현 완료 2026-05-18)
+# (없음 — 모든 TODO 구현 완료 2026-05-19)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -951,6 +955,87 @@ check_v142_fast_mode_opus47() {
   fi
 }
 
+# ─── Check 53: v2.1.143 Stop hook 8 consecutive blocks cap ───
+# v2.1.143부터 Stop hook `block` 응답이 8회 연속이면 turn 종료(warning).
+# override: CLAUDE_CODE_STOP_HOOK_BLOCK_CAP. 우리 Ghost Mode 3회 정책과 정합 — 안전망 역할.
+# 우리 hook(enforce-execution.sh, evidence-first.sh)이 false-positive로 반복 block 시 cap 발동 가능.
+check_v143_stop_hook_block_cap() {
+  local cap_set=0
+  local settings_file="$HOME/.claude/settings.json"
+  for f in "$HOME/.claude/.env" "$HOME/.env" "$HOME/.harness-state/.env" "$settings_file"; do
+    if [ -f "$f" ] && grep -q "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP" "$f" 2>/dev/null; then
+      cap_set=1
+    fi
+  done
+  if [ "$cap_set" -eq 1 ]; then
+    echo "PASS|CLAUDE_CODE_STOP_HOOK_BLOCK_CAP 설정 — Stop hook block cap 명시"
+  else
+    echo "WARN|CLAUDE_CODE_STOP_HOOK_BLOCK_CAP 미설정 — v2.1.143 기본 8회 cap 적용 (Ghost Mode 3회 정책 위 native 안전망, 정상)"
+  fi
+}
+
+# ─── Check 54: v2.1.143 PowerShell -ExecutionPolicy Bypass 기본 ───
+# v2.1.143부터 Bedrock/Vertex/Foundry 환경에서 PowerShell tool 기본 활성 + -ExecutionPolicy Bypass.
+# Pro 구독(대표님 환경)은 자동 활성 아님 — 인지만 필요.
+# opt-out 필요 시 CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY=1.
+check_v143_powershell_policy() {
+  local respect_set=0
+  local disable_set=0
+  local settings_file="$HOME/.claude/settings.json"
+  for f in "$HOME/.claude/.env" "$HOME/.env" "$HOME/.harness-state/.env" "$settings_file"; do
+    if [ -f "$f" ]; then
+      grep -q "CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY" "$f" 2>/dev/null && respect_set=1
+      grep -q "CLAUDE_CODE_USE_POWERSHELL_TOOL=0" "$f" 2>/dev/null && disable_set=1
+    fi
+  done
+  if [ "$disable_set" -eq 1 ]; then
+    echo "PASS|CLAUDE_CODE_USE_POWERSHELL_TOOL=0 — PowerShell tool 비활성"
+  elif [ "$respect_set" -eq 1 ]; then
+    echo "PASS|CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY=1 — -ExecutionPolicy Bypass opt-out"
+  else
+    echo "WARN|PowerShell policy override 미설정 — v2.1.143+ Bedrock/Vertex/Foundry 환경만 자동 활성. Pro 구독은 변경 없음 (참고용)"
+  fi
+}
+
+# ─── Check 55: v2.1.144 /model 단일 세션 변경 정책 ───
+# v2.1.144부터 /model은 현재 세션만 변경 (이전 v2.1.117~v2.1.143 영구 지속).
+# default는 picker `d` 키 또는 settings.json `model` 필드.
+# opusplan 고정 운용 시 settings.json에 "model": "opusplan" 명시 권장.
+check_v144_model_single_session() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "WARN|settings.json 없음 — /model default 미지정. v2.1.144+ 매 진입마다 명시 호출 필요"
+    return
+  fi
+  if grep -qE '"model"[[:space:]]*:[[:space:]]*"(opus|sonnet|opusplan|haiku)"' "$settings_file" 2>/dev/null; then
+    local model_val
+    model_val=$(grep -oE '"model"[[:space:]]*:[[:space:]]*"[a-z]+"' "$settings_file" | head -1)
+    echo "PASS|settings.json에 ${model_val} default 명시 — v2.1.144 /model 단일세션 정책 호환"
+  else
+    echo "WARN|settings.json model 필드 미명시 — v2.1.144+ /model 단일세션. opusplan 고정 시 settings.json 또는 picker 'd' 키 default 설정 권장"
+  fi
+}
+
+# ─── Check 56: v2.1.144 MCP paginated tools/list fix 인지 ───
+# v2.1.144 fix 이전엔 MCP `tools/list` 응답 첫 페이지만 노출 — 51개 등 도구 많은 MCP 일부 누락 가능.
+# 현재 버전(2.1.144+) 사용 중이면 자동 해소. 확인용.
+check_v144_mcp_paginated_tools() {
+  local cur_ver
+  cur_ver=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  if [ -z "$cur_ver" ]; then
+    echo "WARN|claude --version 실패 — v2.1.144+ MCP paginated tools/list fix 적용 여부 확인 불가"
+    return
+  fi
+  # version comparison: 2.1.144+ has fix
+  local major minor patch
+  IFS='.' read -r major minor patch <<<"$cur_ver"
+  if [ "$major" -gt 2 ] || { [ "$major" -eq 2 ] && [ "$minor" -gt 1 ]; } || { [ "$major" -eq 2 ] && [ "$minor" -eq 1 ] && [ "$patch" -ge 144 ]; }; then
+    echo "PASS|v${cur_ver} 사용 중 — v2.1.144 MCP paginated tools/list fix 적용 (agentmemory 51 도구 등 정상 노출)"
+  else
+    echo "WARN|v${cur_ver} — v2.1.144 미만. MCP tools/list 첫 페이지만 노출 가능. claude update 권장"
+  fi
+}
+
 # ─── Check 39: v2.1.119 /config 설정 settings.json 영구 저장 ───
 # v2.1.119부터 /config 변경값이 ~/.claude/settings.json에 저장됨.
 # theme, editor mode, verbose 등이 재시작 후에도 유지되는지 점검.
@@ -1043,11 +1128,15 @@ R49=$(check_v139_hook_args_exec)
 R50=$(check_v141_terminal_sequence)
 R51=$(check_v142_agents_flags)
 R52=$(check_v142_fast_mode_opus47)
+R53=$(check_v143_stop_hook_block_cap)
+R54=$(check_v143_powershell_policy)
+R55=$(check_v144_model_single_session)
+R56=$(check_v144_mcp_paginated_tools)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56")
 
-TOTAL_CHECKS=52
+TOTAL_CHECKS=56
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0

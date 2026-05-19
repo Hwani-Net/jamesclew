@@ -4,11 +4,12 @@ description: "외부 API 비용 요약 (Tavily/OpenAI 등). Claude 구독은 /us
 
 # /cost — 외부 API 비용 요약
 
-> **역할 분리 (2026-05-16)**
+> **역할 분리 (2026-05-19 갱신)**
 > - **`/usage`** (Claude Code v2.1.118+ 네이티브) — Claude API 사용량/5H 7D 한도/구독 비용
+> - **`/usage-credits`** (v2.1.144+, 구 `/extra-usage`) — 추가 사용량 크레딧 정보
 > - **`/cost`** (본 스킬) — 외부 API 비용 누적 로그 (Tavily, OpenAI gpt-4o-mini, Codex 외 유료 호출 등)
 >
-> 두 영역은 겹치지 않음. Claude 비용 = `/usage`, 외부 = `/cost`.
+> 세 영역은 겹치지 않음. Claude 비용 = `/usage` + `/usage-credits`, 외부 = `/cost`.
 
 `~/.harness-state/api_cost_log.jsonl`에 기록된 외부 API 호출 비용을 집계합니다. 제한하지 않고 관찰만.
 
