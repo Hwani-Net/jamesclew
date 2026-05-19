@@ -39,9 +39,9 @@ SNAPSHOT_CONTENT=$(cat "$SNAPSHOT_FILE" | head -c 2000 | sed 's/"/\\"/g' | tr '\
 echo "{\"systemMessage\":\"[PRE-COMPACT SNAPSHOT] $SNAPSHOT_CONTENT\"}"
 
 # --- Pending Tasks Extraction (BEFORE auto-save overwrites latest) ---
-OBSIDIAN_VAULT="${OBSIDIAN_VAULT:-}"
+OBSIDIAN_VAULT="${OBSIDIAN_VAULT:-C:/Users/AIcreator/Obsidian-Vault}"
 PENDING_FILE="$STATE_DIR/pending_tasks.md"
-if [ -n "$OBSIDIAN_VAULT" ] && [ -d "$OBSIDIAN_VAULT/01-jamesclaw/harness" ]; then
+if [ -d "$OBSIDIAN_VAULT/01-jamesclaw/harness" ]; then
   BEST_SESSION=""
   BEST_LINES=0
   for f in $(ls -t "$OBSIDIAN_VAULT/01-jamesclaw/harness"/session-*.md 2>/dev/null); do
@@ -72,8 +72,8 @@ if [ -n "$OBSIDIAN_VAULT" ] && [ -d "$OBSIDIAN_VAULT/01-jamesclaw/harness" ]; th
 fi
 
 # --- Obsidian Session Summary (auto-save on compact) ---
-if [ -n "$OBSIDIAN_VAULT" ]; then
-  OBSIDIAN_DIR="$OBSIDIAN_VAULT/01-jamesclaw/harness"
+OBSIDIAN_DIR="$OBSIDIAN_VAULT/01-jamesclaw/harness"
+if [ -d "$OBSIDIAN_DIR" ] || mkdir -p "$OBSIDIAN_DIR" 2>/dev/null; then
   mkdir -p "$OBSIDIAN_DIR"
 
   # Topic from last commit's conventional commit prefix (e.g., feat(mcp) → mcp)
@@ -112,8 +112,8 @@ OBSEOF
 fi
 
 # Block compact if obsidian save was expected but failed
-if [ -n "$OBSIDIAN_VAULT" ] && [ ! -d "$OBSIDIAN_DIR" ]; then
-  echo '{"decision":"block","reason":"Obsidian vault not accessible. Run /저장 manually before compact."}'
+if [ ! -d "$OBSIDIAN_DIR" ]; then
+  echo '{"decision":"block","reason":"Obsidian vault not accessible. Check C:/Users/AIcreator/Obsidian-Vault path."}'
   exit 2
 fi
 
@@ -128,9 +128,9 @@ if [ -d "$MEMORY_SRC" ] && [ -d "$VAULT" ]; then
 fi
 
 # --- Wiki Ingest Queue (session discoveries → wiki pipeline) ---
-WIKI_RAW="${OBSIDIAN_VAULT:-}/06-raw"
-WIKI_QUEUE="${OBSIDIAN_VAULT:-}/06-raw/.ingest-queue"
-if [ -n "$OBSIDIAN_VAULT" ] && [ -d "$WIKI_RAW" ]; then
+WIKI_RAW="$OBSIDIAN_VAULT/06-raw"
+WIKI_QUEUE="$OBSIDIAN_VAULT/06-raw/.ingest-queue"
+if [ -d "$WIKI_RAW" ]; then
   # Copy session summary to raw for wiki ingest
   if [ -n "$SESSION_FILE" ] && [ -f "$SESSION_FILE" ]; then
     cp "$SESSION_FILE" "$WIKI_RAW/$(basename "$SESSION_FILE")" 2>/dev/null
