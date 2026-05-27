@@ -1,6 +1,6 @@
 ---
 title: "Sonnet Vision — 좌우 대칭 검수 누락 (Opus 직접 분석 필수)"
-slug: pitfall-135-sonnet-vision-symmetry-blindness
+slug: pitfall-181-sonnet-vision-symmetry-blindness
 date: 2026-05-19
 category: vision-routing
 tags: [vision, opus, sonnet, qa, symmetry]

@@ -1,6 +1,6 @@
 ---
 title: "Live Portrait — audio-driven 모드 미지원 (driving video 전용)"
-slug: pitfall-134-liveportrait-audio-unsupported
+slug: pitfall-180-liveportrait-audio-unsupported
 date: 2026-05-19
 category: video-production
 tags: [video, lipsync, liveportrait, audio]

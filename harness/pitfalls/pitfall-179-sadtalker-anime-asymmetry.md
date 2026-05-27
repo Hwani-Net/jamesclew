@@ -1,6 +1,6 @@
 ---
 title: "SadTalker — 애니/일러스트 캐릭터 입 비대칭 한계"
-slug: pitfall-133-sadtalker-anime-asymmetry
+slug: pitfall-179-sadtalker-anime-asymmetry
 date: 2026-05-19
 category: video-production
 tags: [video, lipsync, sadtalker, anime, character]

@@ -1,6 +1,6 @@
 ---
 title: "롱폼 영상 — 캐릭터 정적·재사용·자막 사이즈 트로이카 함정"
-slug: pitfall-132-character-static-overuse-subtitle-size
+slug: pitfall-178-character-static-overuse-subtitle-size
 date: 2026-05-19
 category: video-production
 tags: [video, longform, character, subtitle, lipsync]
