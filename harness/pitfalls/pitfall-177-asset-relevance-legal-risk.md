@@ -1,6 +1,6 @@
 ---
 title: "자료 자동 수집 — 사건 정체성 검증 누락으로 법적 위험"
-slug: pitfall-131-asset-relevance-legal-risk
+slug: pitfall-177-asset-relevance-legal-risk
 date: 2026-05-19
 category: legal-safety
 tags: [video, legal, defamation, automation, asset-verification]

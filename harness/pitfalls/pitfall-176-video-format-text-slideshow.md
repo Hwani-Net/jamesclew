@@ -1,6 +1,6 @@
 ---
 title: "롱폼 영상 자동화 — 텍스트 슬라이드쇼 형식의 함정"
-slug: pitfall-130-video-format-text-slideshow
+slug: pitfall-176-video-format-text-slideshow
 date: 2026-05-19
 category: video-production
 tags: [video, longform, youtube, benchmarking, ui]
