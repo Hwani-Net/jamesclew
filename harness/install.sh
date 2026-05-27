@@ -183,8 +183,10 @@ cp -r "$HARNESS_SRC/hooks/." "$CLAUDE_HOME/hooks/"
 cp -r "$HARNESS_SRC/scripts/." "$CLAUDE_HOME/scripts/"
 [ -d "$HARNESS_SRC/agents" ] && cp -r "$HARNESS_SRC/agents/." "$CLAUDE_HOME/agents/"
 [ -d "$HARNESS_SRC/commands" ] && cp -r "$HARNESS_SRC/commands/." "$CLAUDE_HOME/commands/"
-# PITFALLS.md — DEPRECATED (2026-04-17): gbrain으로 완전 마이그레이션됨.
-# 조회: gbrain query "키워드" / 기록: gbrain import D:/jamesclew/harness/pitfalls/
+# PITFALLS — harness/pitfalls/pitfall-NNN-{slug}.md 파일 시스템 직접 사용
+# 조회: grep -ri "키워드" D:/jamesclew/harness/pitfalls/
+# 기록: 파일 생성 + mcp__agentmemory__memory_save 인덱싱
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기
 # [ -f "$HARNESS_SRC/commands/PITFALLS.md" ] && cp "$HARNESS_SRC/commands/PITFALLS.md" "$CLAUDE_HOME/commands/PITFALLS.md"
 
 chmod +x "$CLAUDE_HOME/hooks/"*.sh 2>/dev/null || true
@@ -221,18 +223,10 @@ if [[ -n "$OBSIDIAN" ]]; then
   fi
 fi
 
-# ─── 8c. gbrain knowledge base setup ───
-echo ""
-MOD_GBRAIN=$(prompt_yesno "Set up gbrain knowledge base (requires gbrain CLI)" "y")
-if [[ "$MOD_GBRAIN" == "y" ]]; then
-  echo "🧠 Bootstrapping gbrain..."
-  if HARNESS_SRC="$HARNESS_SRC" bash "$HARNESS_SRC/scripts/bootstrap-gbrain.sh"; then
-    echo "✅ gbrain bootstrap complete"
-  else
-    echo "⚠ gbrain bootstrap failed — install gbrain with: bun install -g gbrain" >&2
-    echo "  Re-run after install: bash harness/scripts/bootstrap-gbrain.sh" >&2
-  fi
-fi
+# ─── 8c. gbrain knowledge base setup — DEPRECATED 2026-05-19 (P-172) ───
+# gbrain 폐기. agentmemory MCP + obsidian grep 대체.
+# bootstrap-gbrain.sh 실행 금지. 아카이브 참조: harness/scripts/bootstrap-gbrain.sh
+echo "ℹ gbrain setup skipped (폐기 P-172 — agentmemory MCP 사용)"
 
 # ─── 9. Install selected MCP servers ───
 echo ""

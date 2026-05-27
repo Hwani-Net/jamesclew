@@ -102,9 +102,10 @@ if [ -d "$SCRIPT_DIR/commands" ]; then
   echo "✅ commands/ ($(ls "$SCRIPT_DIR/commands/"*.md | wc -l)개)"
 fi
 
-# PITFALLS — DEPRECATED (2026-04-17): gbrain으로 마이그레이션됨
-# 신규 pitfall: gbrain put pitfall-NNN-{slug} --content "..."
+# PITFALLS — harness/pitfalls/pitfall-NNN-{slug}.md 파일 시스템 직접 사용
+# 신규 pitfall: 파일 생성 + mcp__agentmemory__memory_save 인덱싱
 # 아카이브: harness/archive/PITFALLS-2026-04-17.md (읽기 전용)
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기 — agentmemory MCP + obsidian grep 대체
 
 # ADR (설계 결정 기록)
 if [ -d "$SCRIPT_DIR/../docs/adr" ]; then
