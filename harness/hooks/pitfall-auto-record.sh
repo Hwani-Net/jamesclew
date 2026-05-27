@@ -13,9 +13,9 @@ set -euo pipefail
   if echo "$USER_MSG" | grep -qE '작업 정렬|큐 정렬|task sort'; then
     echo "[TEST] 작업 정렬 요청 감지: task_queue_sorted.json 마크다운 테이블 출력 시뮬레이션"
   elif echo "$USER_MSG" | grep -qE '다시는|하지마|하지 마|고쳐|문제|틀렸|잘못'; then
-    echo "[TEST] PITFALL 후보 감지: 지적 키워드 발견 (gbrain 호출 없음)"
+    echo "[TEST] PITFALL 후보 감지: 지적 키워드 발견 (agentmemory 호출 없음)"
   elif echo "$USER_MSG" | grep -qE '기억해|저장해'; then
-    echo "[TEST] 기억해/저장해 감지: gbrain query/put 시뮬레이션 (실제 호출 없음)"
+    echo "[TEST] 기억해/저장해 감지: agentmemory memory_save 시뮬레이션 (실제 호출 없음)"
   else
     echo "[TEST] 무관 대화 — hook 미발동"
   fi
@@ -63,13 +63,11 @@ if echo "$USER_MSG" | grep -qE '작업 정렬|큐 정렬|task sort'; then
 fi
 
 # --- 이벤트-2: 기억해/저장해 ---
+# DEPRECATED 2026-05-19 (P-172): gbrain query/put 제거. agentmemory MCP로 대체.
+# 실제 저장은 Claude Code가 mcp__agentmemory__memory_save 직접 호출.
 if echo "$USER_MSG" | grep -qE '기억해|저장해'; then
-  KEYWORD=$(echo "$USER_MSG" | grep -oE '\S{2,20}' | head -5 | tr '\n' ' ')
-  RESULT=$(gbrain query "$KEYWORD" 2>/dev/null | head -3 || echo "query failed")
-  echo "[PITFALL-HOOK] 기억해/저장해 감지 → gbrain query 완료: $RESULT"
   SUMMARY=$(echo "$USER_MSG" | head -c 200)
-  gbrain put --content "기억 요청: $SUMMARY" "memory-$(date -u +%Y%m%dT%H%M%SZ)" 2>/dev/null || true
-  echo "[PITFALL-HOOK] gbrain put 완료"
+  echo "[PITFALL-HOOK] 기억해/저장해 감지 — agentmemory memory_save 필요: ${SUMMARY}"
   exit 0
 fi
 

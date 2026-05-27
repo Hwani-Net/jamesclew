@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # timeline-logger.sh — PostToolUse hook
-# Adds gbrain timeline entries when:
-#   1. A pitfall file is written  → timeline-add pitfall-NNN date "pitfall recorded"
-#   2. A session-learning slug is stored → timeline-add <slug> today "session learning"
+# Logs pitfall writes and session-learning events to a local timeline file.
+#
+# DEPRECATED 2026-05-19 (P-172): gbrain timeline-add calls removed.
+# Now writes only to local log file for auditability.
 #
 # Input: Claude Code PostToolUse JSON on stdin
 # Output: silent (errors logged only)
@@ -43,17 +44,14 @@ except:
     print('$TODAY')
 " 2>/dev/null || echo "$TODAY")"
 
-  gbrain timeline-add "$SLUG" "$DATE" "pitfall recorded" >> "$LOG" 2>&1 || true
-  echo "[$(date +%Y-%m-%dT%H:%M:%S)] timeline-add $SLUG @ $DATE (pitfall)" >> "$LOG"
+  echo "[$(date +%Y-%m-%dT%H:%M:%S)] timeline-log $SLUG @ $DATE (pitfall)" >> "$LOG"
 fi
 
-# Case 2: session-learning slug (harness/scripts/session-learning.sh outputs slug to a state file)
-# Watch for write to ~/.harness-state/last_learning_slug
+# Case 2: session-learning slug stored
 if echo "$FILE_PATH" | grep -q 'last_learning_slug'; then
   SLUG="$(cat "$FILE_PATH" 2>/dev/null | tr -d '[:space:]')"
   if [[ -n "$SLUG" ]]; then
-    gbrain timeline-add "$SLUG" "$TODAY" "session learning" >> "$LOG" 2>&1 || true
-    echo "[$(date +%Y-%m-%dT%H:%M:%S)] timeline-add $SLUG @ $TODAY (session learning)" >> "$LOG"
+    echo "[$(date +%Y-%m-%dT%H:%M:%S)] timeline-log $SLUG @ $TODAY (session learning)" >> "$LOG"
   fi
 fi
 

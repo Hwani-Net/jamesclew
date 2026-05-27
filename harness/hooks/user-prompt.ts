@@ -131,7 +131,9 @@ async function main() {
         const toolInfo = fs.readFileSync(newToolFile, "utf8").trim();
         if (toolInfo) {
           isNewToolDiscovered = true;
-          try { fs.unlinkSync(newToolFile); } catch {}
+          try {
+            fs.unlinkSync(newToolFile);
+          } catch {}
         }
       }
     } catch {}
@@ -151,7 +153,10 @@ async function main() {
       /새로운?\s*(도구|패키지|라이브러리|API|서비스)\s*(발견|찾|알게)/,
       /처음\s*(쓰는|사용|알게|발견)/,
     ];
-    if (!isNewToolDiscovered && newToolTextPatterns.some((p) => p.test(prompt))) {
+    if (
+      !isNewToolDiscovered &&
+      newToolTextPatterns.some((p) => p.test(prompt))
+    ) {
       isNewToolDiscovered = true;
     }
 
@@ -169,9 +174,16 @@ async function main() {
     ];
 
     const patternNames = [
-      "skip_action", "skip_verify", "declare_no_execute", "skip_review",
-      "distrust", "false_pass", "broken_output", "repeated_mistake",
-      "forgot_record", "strong_feedback",
+      "skip_action",
+      "skip_verify",
+      "declare_no_execute",
+      "skip_review",
+      "distrust",
+      "false_pass",
+      "broken_output",
+      "repeated_mistake",
+      "forgot_record",
+      "strong_feedback",
     ];
     const matchedPatterns = feedbackPatterns
       .map((p, i) => (p.test(prompt) ? patternNames[i] : null))
@@ -188,26 +200,34 @@ async function main() {
         patterns: matchedPatterns,
         source,
       });
-      try { fs.appendFileSync(feedbackLog, entry + "\n"); } catch {}
+      try {
+        fs.appendFileSync(feedbackLog, entry + "\n");
+      } catch {}
     }
 
     let contextMilestone = false;
     let contextPct = 0;
     try {
       const statusInput = input as any;
-      const ctxSize = statusInput?.context_window?.context_window_size || 200000;
+      const ctxSize =
+        statusInput?.context_window?.context_window_size || 200000;
       const ctxUsage = statusInput?.context_window?.current_usage;
       if (ctxUsage) {
-        const totalTokens = (ctxUsage.input_tokens || 0) + (ctxUsage.output_tokens || 0);
+        const totalTokens =
+          (ctxUsage.input_tokens || 0) + (ctxUsage.output_tokens || 0);
         contextPct = Math.round((totalTokens / ctxSize) * 100);
         const fs = require("fs");
         try {
           fs.writeFileSync(`${STATE_DIR}/context_pct`, String(contextPct));
-          fs.writeFileSync(`${STATE_DIR}/context_tokens`, `${totalTokens}/${ctxSize}`);
+          fs.writeFileSync(
+            `${STATE_DIR}/context_tokens`,
+            `${totalTokens}/${ctxSize}`,
+          );
         } catch {}
       }
       const fs = require("fs");
-      const lastMilestone = parseInt(fs.readFileSync(CONTEXT_MILESTONE_FILE, "utf8").trim()) || 0;
+      const lastMilestone =
+        parseInt(fs.readFileSync(CONTEXT_MILESTONE_FILE, "utf8").trim()) || 0;
       const currentBucket = Math.floor(contextPct / 50) * 50;
       if (currentBucket > lastMilestone && currentBucket >= 50) {
         contextMilestone = true;
@@ -218,10 +238,16 @@ async function main() {
     let memoryContext = "";
     try {
       const result = await httpPost(`${MEMORY_API_URL}/memory/context`, {
-        session_id: sessionId, project_id: projectId, current_message: prompt, max_memories: 5,
+        session_id: sessionId,
+        project_id: projectId,
+        current_message: prompt,
+        max_memories: 5,
       });
       memoryContext = result.context_text || "";
-      await httpPost(`${MEMORY_API_URL}/memory/process`, { session_id: sessionId, project_id: projectId });
+      await httpPost(`${MEMORY_API_URL}/memory/process`, {
+        session_id: sessionId,
+        project_id: projectId,
+      });
     } catch {}
 
     const parts: string[] = [];
@@ -234,21 +260,29 @@ async function main() {
         const slug = fs.readFileSync(pendingFile, "utf8").trim();
         fs.unlinkSync(pendingFile);
         if (slug) {
-          parts.push(`[🏷️ AUTO RENAME SUGGEST] 이전 작업에서 PRD/PLAN이 작성된 디렉토리를 감지했습니다: "${slug}". 세션 식별성 향상을 위해 이번 응답 끝에 사용자에게 다음 한 줄을 안내하세요:\n\n  /rename ${slug}\n\n현재 세션명이 이미 동일하면 안내를 생략하세요.`);
+          parts.push(
+            `[🏷️ AUTO RENAME SUGGEST] 이전 작업에서 PRD/PLAN이 작성된 디렉토리를 감지했습니다: "${slug}". 세션 식별성 향상을 위해 이번 응답 끝에 사용자에게 다음 한 줄을 안내하세요:\n\n  /rename ${slug}\n\n현재 세션명이 이미 동일하면 안내를 생략하세요.`,
+          );
         }
       }
     } catch {}
 
     if (isStuck) {
-      parts.push(`[🔍 SEARCH-FIRST] 이전에 유사한 문제를 해결한 적이 있을 수 있습니다. 코드 수정 전에 반드시:\n1. gbrain query "관련 키워드" 로 먼저 검색\n2. gbrain query "pitfall 증상키워드" 로 PITFALLS 항목 검색\n3. 옵시디언 세션 노트 검색\n같은 접근법 반복 변형 금지 — 새 정보 없으면 대표님께 보고.`);
+      parts.push(
+        `[🔍 SEARCH-FIRST] 이전에 유사한 문제를 해결한 적이 있을 수 있습니다. 코드 수정 전에 반드시:\n1. grep -ri "관련 키워드" D:/jamesclew/harness/pitfalls/ 로 먼저 검색\n2. mcp__agentmemory__memory_recall 로 PITFALLS 항목 검색\n3. 옵시디언 세션 노트 검색\n같은 접근법 반복 변형 금지 — 새 정보 없으면 대표님께 보고.`,
+      );
     }
 
     if (isNewToolDiscovered) {
-      parts.push(`[💾 GBRAIN SAVE] 새로운 도구/기법을 발견했습니다. 작업 완료 후 즉시 저장하세요:\n  gbrain put <slug> <<EOF\n  # 도구명\n  설치: ...\n  용도: ...\n  주의: ...\n  EOF`);
+      parts.push(
+        `[💾 MEMORY SAVE] 새로운 도구/기법을 발견했습니다. 작업 완료 후 즉시 저장하세요:\n  mcp__agentmemory__memory_save 호출 + $OBSIDIAN_VAULT/05-wiki/entities/{slug}.md 작성`,
+      );
     }
 
     if (isFeedback) {
-      parts.push(`[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요.\n[📝 PITFALLS AUTO-RECORD] 이 지적이 타당하다고 동의하면:\n1. gbrain query "증상키워드" 로 유사 항목 확인\n2. 신규면:\n   a. D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md 파일 생성\n   b. gbrain import D:/jamesclew/harness/pitfalls/ 실행`);
+      parts.push(
+        `[⚠️ FEEDBACK DETECTED] 대표님이 문제를 지적했습니다. 추측하지 말고 검증하세요.\n[📝 PITFALLS AUTO-RECORD] 이 지적이 타당하다고 동의하면:\n1. grep -ri "증상키워드" D:/jamesclew/harness/pitfalls/ 로 유사 항목 확인\n2. 신규면:\n   a. D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md 파일 생성\n   b. mcp__agentmemory__memory_save 로 회상 인덱싱`,
+      );
     }
 
     const capabilityGapPatterns = [
@@ -257,9 +291,17 @@ async function main() {
       /MCP.*필요|서버.*필요|API.*필요/,
     ];
     const domainMcpPatterns = [
-      { pattern: /법령|법률|법원|판례|관세/, mcp: "korean-law-mcp", desc: "국가법령정보센터" },
+      {
+        pattern: /법령|법률|법원|판례|관세/,
+        mcp: "korean-law-mcp",
+        desc: "국가법령정보센터",
+      },
       { pattern: /특허|상표|지식재산/, mcp: "patent mcp", desc: "특허 검색" },
-      { pattern: /주식|증권|코스피|코스닥/, mcp: "stock mcp korea", desc: "주식 정보" },
+      {
+        pattern: /주식|증권|코스피|코스닥/,
+        mcp: "stock mcp korea",
+        desc: "주식 정보",
+      },
       { pattern: /날씨|기상|Weather/, mcp: "weather mcp", desc: "날씨 정보" },
       { pattern: /지도|좌표|geocod/, mcp: "maps mcp", desc: "지도/위치" },
     ];
@@ -275,7 +317,8 @@ async function main() {
       parts.push(mcpMsg);
     }
 
-    const buildPatterns = /만들어줘|만들려고|구현해|개발해|페이지로|앱으로|만들어\s*볼|만들자|빌드해/;
+    const buildPatterns =
+      /만들어줘|만들려고|구현해|개발해|페이지로|앱으로|만들어\s*볼|만들자|빌드해/;
     const isBuildRequest = buildPatterns.test(prompt);
     if (isBuildRequest) {
       const fs = require("fs");
@@ -284,8 +327,10 @@ async function main() {
 
       if (!prdDone || !pipelineDone) {
         let buildMsg = `[🚨 BUILD REQUEST DETECTED] 빌드 요청 감지. Build Transition Rule 강제:`;
-        if (!prdDone) buildMsg += `\n1. /prd 먼저 실행하세요. 완료 후: echo done > ${STATE_DIR}/prd_done`;
-        if (!pipelineDone) buildMsg += `\n${!prdDone ? "2" : "1"}. /pipeline-install 실행하세요. 완료 후: echo done > ${STATE_DIR}/pipeline_done`;
+        if (!prdDone)
+          buildMsg += `\n1. /prd 먼저 실행하세요. 완료 후: echo done > ${STATE_DIR}/prd_done`;
+        if (!pipelineDone)
+          buildMsg += `\n${!prdDone ? "2" : "1"}. /pipeline-install 실행하세요. 완료 후: echo done > ${STATE_DIR}/pipeline_done`;
         buildMsg += `\n그 다음 /plan 진입 → 승인 → 코드 작성.`;
         parts.push(buildMsg);
       }
@@ -312,9 +357,18 @@ async function main() {
         fs.writeFileSync(titleDoneFile, new Date().toISOString());
         type CategoryRule = { pattern: RegExp; prefix: string };
         const categoryRules: CategoryRule[] = [
-          { pattern: /블로그|포스트|글\s*작성|콘텐츠|키워드/, prefix: "블로그" },
-          { pattern: /하네스|hook|설정|config|rules|settings/, prefix: "하네스" },
-          { pattern: /버그|에러|오류|fix|수정.*안\s*되|고쳐|안\s*돼/, prefix: "버그 수정" },
+          {
+            pattern: /블로그|포스트|글\s*작성|콘텐츠|키워드/,
+            prefix: "블로그",
+          },
+          {
+            pattern: /하네스|hook|설정|config|rules|settings/,
+            prefix: "하네스",
+          },
+          {
+            pattern: /버그|에러|오류|fix|수정.*안\s*되|고쳐|안\s*돼/,
+            prefix: "버그 수정",
+          },
           { pattern: /배포|deploy|firebase|빌드|build/, prefix: "배포" },
           { pattern: /진단|audit|감사|점검|체크/, prefix: "진단" },
           { pattern: /설계|PRD|계획|plan|아키텍처/, prefix: "설계" },
@@ -325,11 +379,72 @@ async function main() {
         ];
         let prefix = "";
         for (const rule of categoryRules) {
-          if (rule.pattern.test(prompt)) { prefix = rule.prefix; break; }
+          if (rule.pattern.test(prompt)) {
+            prefix = rule.prefix;
+            break;
+          }
         }
-        const stopWords = new Set(["해줘","진행해","주세요","부탁","알려줘","보여줘","확인해","실행해","해주세요","좀","그냥","이제","일단","먼저","빨리","바로","해","줘","하고","싶어","싶다","있어","있다","없어","없다","인데","인지","것을","것이","것은","것도","대해","위해","관련","사용","이용","처리","완료","진행","실행","작업","현재","지금","다시","새로","모든","전체","각각"]);
-        const rawWords = prompt.replace(/[<>[\]{}()「」『』【】《》""''`]/g, " ").replace(/[.!?。，、:;]/g, " ").split(/\s+/).map((w: string) => w.replace(/^[^가-힣a-zA-Z0-9]+|[^가-힣a-zA-Z0-9]+$/g, "")).filter((w: string) => w.length >= 2 && !stopWords.has(w));
-        const keywords = rawWords.filter((w: string) => w.length >= 2).slice(0, 6);
+        const stopWords = new Set([
+          "해줘",
+          "진행해",
+          "주세요",
+          "부탁",
+          "알려줘",
+          "보여줘",
+          "확인해",
+          "실행해",
+          "해주세요",
+          "좀",
+          "그냥",
+          "이제",
+          "일단",
+          "먼저",
+          "빨리",
+          "바로",
+          "해",
+          "줘",
+          "하고",
+          "싶어",
+          "싶다",
+          "있어",
+          "있다",
+          "없어",
+          "없다",
+          "인데",
+          "인지",
+          "것을",
+          "것이",
+          "것은",
+          "것도",
+          "대해",
+          "위해",
+          "관련",
+          "사용",
+          "이용",
+          "처리",
+          "완료",
+          "진행",
+          "실행",
+          "작업",
+          "현재",
+          "지금",
+          "다시",
+          "새로",
+          "모든",
+          "전체",
+          "각각",
+        ]);
+        const rawWords = prompt
+          .replace(/[<>[\]{}()「」『』【】《》""''`]/g, " ")
+          .replace(/[.!?。，、:;]/g, " ")
+          .split(/\s+/)
+          .map((w: string) =>
+            w.replace(/^[^가-힣a-zA-Z0-9]+|[^가-힣a-zA-Z0-9]+$/g, ""),
+          )
+          .filter((w: string) => w.length >= 2 && !stopWords.has(w));
+        const keywords = rawWords
+          .filter((w: string) => w.length >= 2)
+          .slice(0, 6);
         let title = "";
         if (prefix && keywords.length > 0) {
           title = `${prefix} — ${keywords.slice(0, 3).join(" ")}`;
@@ -356,7 +471,10 @@ async function main() {
   } catch (e: any) {
     try {
       const fs = require("fs");
-      fs.appendFileSync(`${STATE_DIR}/user-prompt-errors.log`, `[${new Date().toISOString()}] ${e?.message || e}\n`);
+      fs.appendFileSync(
+        `${STATE_DIR}/user-prompt-errors.log`,
+        `[${new Date().toISOString()}] ${e?.message || e}\n`,
+      );
     } catch {}
   }
 }

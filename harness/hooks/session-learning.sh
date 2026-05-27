@@ -1,16 +1,16 @@
 #!/bin/bash
 # ============================================================================
 # SESSION LEARNING HOOK
-# Stop 이벤트 트리거 — 세션 종료 시 학습 내용을 gbrain에 누적 저장.
+# Stop 이벤트 트리거 — 세션 종료 시 학습 내용을 로컬에 백업.
 #
 # 저장 내용:
 #   1. PITFALLS 신규 기록 (마지막 저장 이후 추가된 P-NNN 항목)
 #   2. 외부 LLM 검수 결과 요약 (regression-failed.log 등)
 #   3. 대표님 교정 패턴 (user-prompt hook이 기록한 feedback 이벤트)
 #
-# 다음 세션 recall:
-#   SessionStart hook 또는 세션 시작 시 수동으로:
-#   gbrain query "session-$(date -d '7 days ago' +%Y-%m-%d)" 으로 최근 학습 조회
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 로컬 백업 파일만 생성.
+# 다음 세션 recall: agentmemory MCP (memory_recall) 또는
+#   grep -ri "키워드" $OBSIDIAN_VAULT/05-wiki/
 # ============================================================================
 
 set -euo pipefail
@@ -24,19 +24,16 @@ LAST_LEARNING_FILE="$STATE_DIR/last_learning_slug"
 FEEDBACK_LOG="$STATE_DIR/session_feedback.log"
 REGRESSION_LOG="$STATE_DIR/regression-failed.log"
 
-# ── 1. PITFALLS 신규 기록 추출 (incremental, last-processed-slug 기반) ───
-# 2026-05-04 fix: 기존 ISO 날짜 grep("2026-05-04")이 gbrain list 출력 형식("Mon May 04")
-# 과 불일치하여 매번 매칭 실패 → 어떤 pitfall도 자동 적재 안 됨. 이를 last-slug 기반
-# incremental 추출로 교체. Codex 검수 통과.
+# ── 1. PITFALLS 신규 기록 추출 (파일 시스템 기반) ────────────────────────
 NEW_PITFALLS=""
 LAST_PITFALL_FILE="$STATE_DIR/last_processed_pitfall_slug"
-PITFALL_LIST_LIMIT=50
-if command -v gbrain >/dev/null 2>&1; then
-  ALL_PITFALLS=$(gbrain list --limit "$PITFALL_LIST_LIMIT" 2>/dev/null | awk -F'\t' '$1 ~ /^pitfall-/ { print $1 }' || true)
-  if [ -z "$ALL_PITFALLS" ]; then
-    echo "[session-learning] gbrain list 출력 0건 — 포맷 변경 가능성 점검 필요" >&2
-  else
-    LAST_PROCESSED=$(cat "$LAST_PITFALL_FILE" 2>/dev/null || echo "")
+PITFALLS_DIR="D:/jamesclew/harness/pitfalls"
+
+if [ -d "$PITFALLS_DIR" ]; then
+  LAST_PROCESSED=$(cat "$LAST_PITFALL_FILE" 2>/dev/null || echo "")
+  # List pitfall files sorted by modification time (newest first), limit 5
+  ALL_PITFALLS=$(ls -t "$PITFALLS_DIR"/pitfall-*.md 2>/dev/null | xargs -I{} basename {} .md | head -10 || true)
+  if [ -n "$ALL_PITFALLS" ]; then
     if [ -n "$LAST_PROCESSED" ] && echo "$ALL_PITFALLS" | grep -q "^${LAST_PROCESSED}$"; then
       NEW_PITFALLS=$(echo "$ALL_PITFALLS" | awk -v stop="$LAST_PROCESSED" '$0 == stop { exit } { print }')
     else
@@ -48,7 +45,6 @@ fi
 # ── 2. 회귀 테스트 실패 수집 ──────────────────────────────────────────────
 REGRESSION_SUMMARY=""
 if [ -f "$REGRESSION_LOG" ]; then
-  # 오늘 날짜 항목만
   TODAY=$(date +%Y-%m-%d)
   REGRESSION_SUMMARY=$(grep "$TODAY" "$REGRESSION_LOG" 2>/dev/null || true)
 fi
@@ -66,10 +62,9 @@ if [ -z "$NEW_PITFALLS" ] && [ -z "$REGRESSION_SUMMARY" ] && [ -z "$FEEDBACK_SUM
   exit 0
 fi
 
-# ── 5. 파일 백업 + gbrain put ───────────────────────────────────────────
-# pitfall-064: Windows Git Bash 에서는 `gbrain put < file` 이 `/dev/stdin` 미지원으로 실패.
-# 실증 결과 `gbrain put --content "$VAR"` 방식이 multi-line (줄바꿈·백틱·따옴표) 모두 무결하게 저장됨.
-# 따라서 Windows 기본은 --content 방식을 사용. Unix 계열에서도 동일 동작.
+# ── 5. 로컬 파일 백업 ────────────────────────────────────────────────────
+# DEPRECATED 2026-05-19 (P-172): gbrain put 제거. 로컬 백업만 유지.
+# Recall: agentmemory MCP 또는 Obsidian vault grep
 BACKUP_FILE="$STATE_DIR/learning-${SLUG}.md"
 
 cat > "$BACKUP_FILE" << LEARNING_EOF
@@ -86,23 +81,12 @@ ${FEEDBACK_SUMMARY:-"(없음)"}
 
 ## 다음 세션 recall 방법
 \`\`\`bash
-gbrain query "session 학습 $(date +%Y-%m-%d)"
+grep -ri "키워드" "\$OBSIDIAN_VAULT/05-wiki/"
+# 또는 agentmemory: mcp__agentmemory__memory_recall
 \`\`\`
 LEARNING_EOF
 
 echo "[session-learning] 로컬 백업 저장: $BACKUP_FILE"
-
-# gbrain CLI 로 저장 (--content 방식, Windows 호환)
-if command -v gbrain >/dev/null 2>&1; then
-  CONTENT=$(cat "$BACKUP_FILE")
-  if gbrain put "$SLUG" --content "$CONTENT" 2>/dev/null >/dev/null; then
-    echo "[session-learning] gbrain 저장 완료: $SLUG"
-  else
-    echo "[session-learning] gbrain put 실패 — 로컬 백업만 유지"
-  fi
-else
-  echo "[session-learning] gbrain CLI 없음 — 로컬 백업만 유지"
-fi
 
 # 마지막 슬러그 기록
 echo "$SLUG" > "$LAST_LEARNING_FILE"
