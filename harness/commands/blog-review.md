@@ -13,6 +13,7 @@ expect MCP 7단계 + 외부 모델 AI냄새 교차검수 + SEO 분석.
 
 ## 산출물
 - `D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.json` — 검증 결과 전체
+- `D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.html` — **HTML 시각화 리포트** (브라우저 확인용, color-coded)
 - `D:/AI 비즈니스/smartreview/drafts/{slug}/status.json` — `ready` (통과) 또는 `failed` (실패)
 - `D:/AI 비즈니스/smartreview/reports/quality-summary.json` — 누적 통계 업데이트
 
@@ -209,6 +210,16 @@ grep -ri "pitfall 콘텐츠" D:/jamesclew/harness/pitfalls/
 }
 ```
 
+**6-1-b. HTML 리포트 생성**
+quality-report.json → color-coded HTML 변환 (PASS=초록/FAIL=빨강/WARN=노랑):
+```bash
+python3 "$HOME/.claude/scripts/gen-html-report.py" \
+  "D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.json" \
+  "D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.html" \
+  --type blog-review
+```
+실패 시 스킵 (HTML은 선택적 산출물, JSON이 판정 기준).
+
 **6-2. 상태 전환**
 - 전체 PASS → `status.json`을 `{ "status": "ready" }`로 업데이트
 - 1개라도 FAIL → `status.json`을 `{ "status": "failed", "failedGates": [...] }`로 업데이트
@@ -220,6 +231,7 @@ grep -ri "pitfall 콘텐츠" D:/jamesclew/harness/pitfalls/
 🤖 AI냄새: 22/100 (PASS) — Codex 25, gemma4 20 (보조)
 🔍 SEO: 6/7 통과 — 키워드 5회, FAQ 3개
 🖼️ 이미지: 4/4 검증 완료
+📊 HTML 리포트: D:/AI 비즈니스/smartreview/drafts/{slug}/quality-report.html
 ➡️ 다음: /blog-publish 로 발행
 
 또는

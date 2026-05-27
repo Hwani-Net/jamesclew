@@ -122,6 +122,15 @@ bash $HOME/.claude/scripts/evaluator.sh https://PROJECT.web.app/
 - 최종 외부 모델 평가 점수
 - 최종 라이브 스크린샷 (데스크톱+모바일)
 - `echo "QA 완료 — 로컬 N라운드, 배포 M회, 외부 모델 ALL PASS" > ~/.harness-state/last_result.txt`
+- HTML QA 리포트 생성:
+  ```bash
+  python3 "$HOME/.claude/scripts/gen-html-report.py" \
+    ~/.harness-state/qa_review.txt \
+    ~/.harness-state/qa-report.html \
+    --type qa
+  echo "📊 HTML 리포트: ~/.harness-state/qa-report.html"
+  ```
+  실패 시 스킵 (선택적 산출물).
 
 ### Phase 5: 대표님 최종 확인 (선택)
 대표님이 추가 지적 시 로컬 수정 → 재배포 (외부 모델 재평가 불필요).
