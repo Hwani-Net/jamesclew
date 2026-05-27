@@ -76,6 +76,25 @@ $(cat /tmp/design-description.txt)"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### Step 3-b: HTML 리포트 저장
+Codex 평가 결과(JSON)를 HTML로 변환하여 저장:
+```bash
+# Codex 결과가 JSON이면 직접 변환
+python3 "$HOME/.claude/scripts/gen-html-report.py" \
+  ~/.harness-state/design_review_codex.json \
+  ~/.harness-state/design-review-report.html \
+  --type design-review
+
+# 텍스트 결과인 경우
+python3 "$HOME/.claude/scripts/gen-html-report.py" \
+  ~/.harness-state/design_review_codex.log \
+  ~/.harness-state/design-review-report.html \
+  --type design-review
+
+echo "📊 Design Review HTML: ~/.harness-state/design-review-report.html"
+```
+실패 시 스킵 (선택적 산출물).
+
 ### Step 4: Stitch에 반영 (대표님 승인 후)
 
 대표님이 승인한 항목만 Stitch MCP `edit_screens`로 적용:

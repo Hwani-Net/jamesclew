@@ -219,6 +219,13 @@ PRD 작성 전 반드시 시장 조사를 실행:
 
 ## 5. 결과 저장
 - `PRD.md` → 프로젝트 루트
+- `PRD.html` → 프로젝트 루트 (목차 사이드바 + 섹션별 카드 레이아웃, 브라우저 확인용)
+  ```bash
+  python3 "$HOME/.claude/scripts/gen-html-report.py" \
+    PRD.md PRD.html --type prd
+  echo "📊 PRD HTML: $(pwd)/PRD.html"
+  ```
+  실패 시 스킵 (선택적 산출물, .md가 기준).
 - CLAUDE.md에 PRD 요약 섹션 추가 (있으면)
 - 옵시디언에 사본 저장: `$OBSIDIAN_VAULT/02-projects/[프로젝트명]/PRD.md`
 

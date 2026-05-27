@@ -173,6 +173,15 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 
   wait
   ```
+- HTML 대시보드 생성:
+  ```bash
+  python3 "$HOME/.claude/scripts/gen-html-report.py" \
+    ~/.harness-state/pipeline_final_codex.log \
+    ~/.harness-state/pipeline-report.html \
+    --type pipeline
+  echo "📊 HTML 대시보드: ~/.harness-state/pipeline-report.html"
+  ```
+  실패 시 스킵 (선택적 산출물).
 - UI 프로젝트: Step 3 스크린샷 재촬영 (라이브 URL 기준)
   ```
   mcp__expect__open(url: "<라이브 URL>")
