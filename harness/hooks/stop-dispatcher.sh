@@ -164,7 +164,7 @@ check_skill_candidate() {
   count=$(grep -c "|${session_id}|" "$tool_log" 2>/dev/null || echo 0)
 
   if [ "$count" -ge 20 ]; then
-    printf '{"systemMessage":"이번 세션에서 복합 작업을 수행했습니다. 재사용 가능한 절차가 있다면 commands/에 스킬로 저장하고 gbrain put으로 동시 기록하세요.","continue":true}\n'
+    printf '{"systemMessage":"이번 세션에서 복합 작업을 수행했습니다. 재사용 가능한 절차가 있다면 commands/에 스킬로 저장하고 mcp__agentmemory__memory_save로 동시 인덱싱하세요.","continue":true}\n'
   fi
 }
 

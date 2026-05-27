@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # wiki-sync-scheduler.sh — SessionStart auto-trigger for 06-raw → 05-wiki sync
-# Runs Phase 1-3 of /wiki-sync if 24h have passed since last run.
+# Runs Phase 2 only (file move) if 24h have passed since last run.
 # Silent on error — never blocks SessionStart.
+#
+# DEPRECATED 2026-05-19 (P-172): gbrain import/sync phases removed.
+# Phase 1 (gbrain list) and Phase 3 (gbrain import/sync) are no-ops.
+# Replace: /inbox-process skill for manual wiki sync.
 
 set -euo pipefail
 
@@ -32,17 +36,10 @@ if [ "$ELAPSED" -lt 86400 ]; then
   exit 0
 fi
 
-log "START — last sync ${ELAPSED}s ago, running Phase 1-3"
+log "START — last sync ${ELAPSED}s ago, running Phase 2 (file move only)"
 
 # Record start time immediately to prevent concurrent runs
 echo "$NOW" > "$LAST_SYNC_FILE"
-
-# --- Phase 1: gbrain list (informational) ---
-{
-  GBRAIN_LIST=$(gbrain list --type source -n 50 2>/dev/null || true)
-  GBRAIN_COUNT=$(echo "$GBRAIN_LIST" | grep -c "slug" 2>/dev/null || echo "?")
-  log "Phase1: gbrain list returned ~${GBRAIN_COUNT} source entries"
-} || log "Phase1: gbrain list failed (non-fatal)"
 
 # --- Phase 2: Move 06-raw → 05-wiki subdirectory ---
 MOVED=0
@@ -80,16 +77,7 @@ if [ -d "$RAW_DIR" ]; then
 fi
 log "Phase2: total moved = $MOVED"
 
-# --- Phase 3: gbrain reimport + sync ---
-{
-  gbrain import "$WIKI_DIR" 2>/dev/null && log "Phase3: gbrain import OK"
-} || log "Phase3: gbrain import failed (non-fatal)"
-
-{
-  gbrain sync --reset-anchor 2>/dev/null && log "Phase3: gbrain sync --reset-anchor OK"
-} || log "Phase3: gbrain sync failed (non-fatal)"
-
-log "DONE — moved=${MOVED} files"
+log "DONE — moved=${MOVED} files (gbrain phases skipped, P-172)"
 
 # Update timestamp to completion time
 date +%s > "$LAST_SYNC_FILE"

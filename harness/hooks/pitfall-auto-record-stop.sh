@@ -80,7 +80,7 @@ if [ -z "$AGREE_MATCH" ]; then
 fi
 
 # 매치 → 다음 턴에 PITFALL 자동 기록 권고 주입
-INSTRUCTION="[PITFALL-AUTO 검증 통과] critique '$CRITIQUE_KW' + agree '$AGREE_MATCH' 매치. 다음 응답에서 다음을 즉시 실행: (1) gbrain query로 유사 항목 확인 (2) 신규면 D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md 작성 (3) gbrain import 실행. 사용자 메시지 요약: ${USER_MSG:0:200}"
+INSTRUCTION="[PITFALL-AUTO 검증 통과] critique '$CRITIQUE_KW' + agree '$AGREE_MATCH' 매치. 다음 응답에서 다음을 즉시 실행: (1) grep -ri '증상키워드' D:/jamesclew/harness/pitfalls/ 로 유사 항목 확인 (2) 신규면 D:/jamesclew/harness/pitfalls/pitfall-NNN-{slug}.md 작성 (3) mcp__agentmemory__memory_save 로 회상 인덱싱. 사용자 메시지 요약: ${USER_MSG:0:200}"
 
 # Stop hook output JSON (Claude Code spec)
 python3 - "$INSTRUCTION" 2>/dev/null <<'PYEOF' || true

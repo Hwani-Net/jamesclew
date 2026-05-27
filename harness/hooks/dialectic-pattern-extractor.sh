@@ -2,7 +2,8 @@
 # dialectic-pattern-extractor.sh — Stop hook (2026-05-04 신설)
 #
 # Honcho(Plastic Labs)의 dialectic reasoning 개념을 자체 구현.
-# 매 Stop event마다 transcript 마지막 N턴 → gemma4 (보조) 패턴 추출 → gbrain 적재.
+# 매 Stop event마다 transcript 마지막 N턴 → gemma4 (보조) 패턴 추출 → 로컬 백업 저장.
+# DEPRECATED 2026-05-19 (P-172): gbrain 적재 제거. ~/.harness-state/ 로컬 파일만 생성.
 # 외부 의존 0 (Ollama 로컬), AGPL 0, 비용 0.
 #
 # 외부 검수(Codex 1순위 + gemma4 보조) REWORK 4건 반영:
@@ -174,7 +175,7 @@ if [ -z "$FILTERED" ]; then
   exit 0
 fi
 
-# ── 8. gbrain 적재 ─────────────────────────────────────────────────────
+# ── 8. 로컬 백업 저장 (gbrain 폐기 P-172 → ~/.harness-state/ 파일) ─────
 SLUG="dialectic-pattern-$(date +%Y%m%d-%H%M)"
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -195,10 +196,12 @@ $FILTERED
 - session-learning.sh와 보완 관계 (구조화 사실 vs 암묵적 패턴)
 - 외부 검수: Codex (1순위) + gemma4 (보조) (4/5 일치 + 3 REWORK 반영)"
 
-if timeout 20 gbrain put "$SLUG" --content "$CONTENT" >/dev/null 2>&1; then
-  echo "[dialectic] $SLUG 적재 완료"
+# DEPRECATED 2026-05-19 (P-172): gbrain put 제거. 로컬 백업으로 대체.
+BACKUP_FILE="$HOME/.harness-state/${SLUG}.md"
+if echo "$CONTENT" > "$BACKUP_FILE" 2>/dev/null; then
+  echo "[dialectic] $SLUG 로컬 백업 완료: $BACKUP_FILE"
 else
-  echo "[dialectic] gbrain put 실패" >&2
+  echo "[dialectic] 로컬 백업 실패" >&2
 fi
 
 # 마커 갱신

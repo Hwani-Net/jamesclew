@@ -28,9 +28,9 @@ echo "$INPUT" | bash "$HOME/.claude/hooks/change-tracker.sh" 2>/dev/null
 echo "$INPUT" | bash "$HOME/.claude/hooks/test-manipulation-guard.sh" 2>/dev/null
 
 # 6. PITFALLS.md auto-sync — DEPRECATED (2026-04-17)
-# PITFALLS.md는 gbrain으로 완전 마이그레이션됨.
-# 신규 pitfall 추가 시: gbrain put pitfall-NNN-{slug} --content "..."
-# 기존 파일: harness/archive/PITFALLS-2026-04-17.md (읽기 전용)
+# PITFALLS.md → harness/pitfalls/pitfall-NNN-{slug}.md 파일 시스템 직접 사용.
+# 신규 pitfall: 파일 생성 + mcp__agentmemory__memory_save 인덱싱
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 기존 파일: harness/archive/PITFALLS-2026-04-17.md (읽기 전용)
 
 # 7. Harness file change → auto-sync docs to Obsidian + warning
 if [ -n "$FILE" ]; then
