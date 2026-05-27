@@ -1,4 +1,5 @@
 #!/bin/bash
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 이 스크립트는 실행하지 마십시오. 역사 참조용 보존.
 # 일회성 헬퍼: .env-keys → gbrain config (키 노출 차단)
 # 사용 후 삭제 권장. 단독 실행만, 다른 hook 의존성 없음.
 set -e

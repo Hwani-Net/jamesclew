@@ -1,4 +1,5 @@
 #!/bin/bash
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 이 스크립트는 실행하지 마십시오. 역사 참조용 보존.
 # bootstrap-gbrain.sh — gbrain knowledge base initializer (idempotent)
 # Usage:
 #   bash bootstrap-gbrain.sh

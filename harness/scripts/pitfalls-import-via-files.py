@@ -1,3 +1,4 @@
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 이 스크립트는 실행하지 마십시오. 역사 참조용 보존.
 """
 Re-import all 38 PITFALL pages via `gbrain import <dir>`.
 Workaround for `gbrain put --content` newline truncation on Windows.
