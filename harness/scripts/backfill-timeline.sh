@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# DEPRECATED 2026-05-19 (P-172): gbrain 폐기. 이 스크립트는 실행하지 마십시오. 역사 참조용 보존.
 # backfill-timeline.sh
 # One-shot: add gbrain timeline entries for all existing pitfalls
 # Run once from D:/jamesclew: bash harness/scripts/backfill-timeline.sh

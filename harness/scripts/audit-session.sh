@@ -44,7 +44,7 @@
 #  22 check_screenshot_verify   — 배포 후 스크린샷 검증
 #  23 check_pipeline_loop       — Pipeline Loop (11단계 FAIL→수정→재실행)
 #  24 check_no_antigravity      — Antigravity(opencode) 잔존 체크
-#  25 check_gbrain_usage        — gbrain 검색/저장 사용
+#  25 check_agentmemory_usage   — agentmemory MCP 검색/저장 사용 (gbrain 폐기 P-172 → agentmemory 대체)
 #  26 check_agent_teams_cleanup — Agent Teams 생성/삭제 균형
 #  27 check_rule_impl_gap       — 규칙 파일 참조 hook/script 실제 존재 여부 (P-012)
 #  28 check_precompact_block    — PreCompact hook exit 2 차단 로직 존재 여부
@@ -364,7 +364,7 @@ check_error_retry() {
 # ─── Check 18: 외부 모델 실제 호출 (Claude 자기 검수 금지) ───
 check_external_model_calls() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  local gpt41=$(safe_count "grep -c 'localhost:4141' "$TRANSCRIPT"") # deprecated: copilot-api 2026-05 차단|local gpt41=$(safe_count "grep -c 'localhost:4141' "$TRANSCRIPT"") # deprecated: copilot-api 2026-05 차단
+  local gpt41=0 # copilot-api localhost:4141 DEPRECATED 2026-05 (GitHub 차단) — 체크 제거
   local codex=$(safe_count "grep -c 'codex exec\|codex ' \"$TRANSCRIPT\"")
   local gemini=$(safe_count "grep -c 'gemini ' \"$TRANSCRIPT\"")
   local total=$((gpt41 + codex + gemini))
@@ -450,14 +450,15 @@ check_no_antigravity() {
   fi
 }
 
-# ─── Check 25: gbrain 자율 저장/검색 ───
-check_gbrain_usage() {
-  local gbrain_query=$(grep -ci "gbrain query\|gbrain search\|mcp__gbrain__query\|mcp__gbrain__search" "$TRANSCRIPT" 2>/dev/null || echo "0")
-  local gbrain_put=$(grep -ci "gbrain put\|mcp__gbrain__put_page" "$TRANSCRIPT" 2>/dev/null || echo "0")
-  if [ "$gbrain_query" -gt 0 ] || [ "$gbrain_put" -gt 0 ]; then
-    echo "PASS|검색 ${gbrain_query}건, 저장 ${gbrain_put}건"
+# ─── Check 25: agentmemory 자율 저장/검색 (gbrain 폐기 P-172 → agentmemory 대체) ───
+check_agentmemory_usage() {
+  local mem_recall=$(grep -ci "memory_recall\|memory_save\|memory_smart_search\|mcp__agentmemory__" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  local obsidian_grep=$(grep -ci "OBSIDIAN_VAULT\|05-wiki\|grep.*pitfall" "$TRANSCRIPT" 2>/dev/null || echo "0")
+  local total=$((mem_recall + obsidian_grep))
+  if [ "$total" -gt 0 ]; then
+    echo "PASS|agentmemory ${mem_recall}건, obsidian grep ${obsidian_grep}건"
   else
-    echo "WARN|gbrain 사용 0건 — Search-Before-Solve에서 gbrain query 미사용"
+    echo "WARN|agentmemory/obsidian 사용 0건 — Search-Before-Solve에서 memory_recall 또는 obsidian grep 미사용"
   fi
 }
 
@@ -649,7 +650,7 @@ check_v121_post_tool_output() {
 }
 
 # ─── Check 37: v2.1.121 MCP alwaysLoad 옵션 적용 여부 ───
-# alwaysLoad: true 설정 시 ToolSearch 우회 → 고정 사용 MCP(gbrain, telegram 등) 응답 속도 향상.
+# alwaysLoad: true 설정 시 ToolSearch 우회 → 고정 사용 MCP(agentmemory, telegram 등) 응답 속도 향상.
 check_v121_mcp_always_load() {
   local settings_file="$HOME/.claude/settings.json"
   if [ ! -f "$settings_file" ]; then
@@ -661,7 +662,7 @@ check_v121_mcp_always_load() {
   if [ "$always_load" -gt 0 ]; then
     echo "PASS|alwaysLoad 설정 ${always_load}건 — ToolSearch 우회 활성"
   else
-    echo "WARN|alwaysLoad 미설정 — v2.1.121 신기능. gbrain/telegram 등 고정 MCP에 적용 시 속도 향상 가능"
+    echo "WARN|alwaysLoad 미설정 — v2.1.121 신기능. agentmemory/telegram 등 고정 MCP에 적용 시 속도 향상 가능"
   fi
 }
 
@@ -1100,7 +1101,7 @@ R21=$(check_search_before_solve)
 R22=$(check_screenshot_verify)
 R23=$(check_pipeline_loop)
 R24=$(check_no_antigravity)
-R25=$(check_gbrain_usage)
+R25=$(check_agentmemory_usage)
 R26=$(check_agent_teams_cleanup)
 R27=$(check_rule_impl_gap)
 R28=$(check_precompact_block)
@@ -1133,7 +1134,7 @@ R54=$(check_v143_powershell_policy)
 R55=$(check_v144_model_single_session)
 R56=$(check_v144_mcp_paginated_tools)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "gbrain Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "agentmemory Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated")
 RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56")
 
 TOTAL_CHECKS=56
