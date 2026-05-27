@@ -7,7 +7,7 @@
 # stdin은 한 번만 읽어 변수에 저장
 STDIN_DATA="$(cat)"
 
-MSG="[ACTIVE INFRA] hook: cdp-auto-ensure(v2)+cdp-mark-fail / agentmemory-mirror-obsidian / pre-compact-snapshot. LIVE: multi-blog-personal.web.app (13p, source: D:/AI 비즈니스/smartreview) + gpt-korea.com/reviews (rewrite proxy). 핵심 정책: P-163(로컬 보조전용) / P-167(흐름 중단 금지) / P-168(자율 결정·결재 5건만) / P-169(CDP 자율). CLAUDE.md 'STICKY DECISIONS > 활성 자율 인프라' 섹션이 1차 소스 — 신규 hook/인프라 추가 시 그 섹션 동시 등록 필수."
+MSG="[ACTIVE INFRA] hook: cdp-auto-ensure(v2)+cdp-mark-fail / agentmemory-mirror-obsidian / pre-compact-snapshot. LIVE: multi-blog-personal.web.app (13p, source: D:/AI 비즈니스/smartreview) + gpt-korea.com/reviews (rewrite proxy). 핵심 정책: P-163(로컬 보조전용) / P-167(흐름 중단 금지) / P-168(자율 결정·결재 5건만) / P-169(CDP 자율) / P-218(sub-agent 위임 시 OpenClaw 작업은 WSL2 절대 경로 /home/creator/... 또는 wsl -d Ubuntu -e bash -c '...' 명시 강제, Windows 경로 C:/, /mnt/c/ 사용 금지). CLAUDE.md 'STICKY DECISIONS > 활성 자율 인프라' 섹션이 1차 소스 — 신규 hook/인프라 추가 시 그 섹션 동시 등록 필수."
 
 # stdout JSON for additionalContext injection (기존 동작 보존)
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$MSG"

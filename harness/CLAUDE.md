@@ -36,7 +36,15 @@
 
 #### 운영 라이브
 - **smartreview** (Firebase): `https://multi-blog-personal.web.app/` — 13페이지 가전·생활용품 비교. 소스: `D:/AI 비즈니스/smartreview/`. 배포: `cd "..." && firebase deploy --only hosting`
-- **gpt-korea.com/reviews** (Vercel rewrite 프록시): smartreview 13페이지를 같은 도메인 하위로 노출. 소스: `D:/AI 비즈니스/gpt-korea/`. 배포: vercel CLI direct deploy
+- **gpt-korea.com/reviews** (Vercel rewrite 프록시): smartreview 13페이지를 같은 도메인 하위로 노출. 소스: `D:/gpt-korea/` (2026-05-24 정정 — `D:/AI 비즈니스/gpt-korea/`는 LIVE 아닌 구버전이라 archive로 이동됨). 배포: vercel CLI direct deploy
+- **OpenClaw 영상 패턴 7채널 운영** (2026-05-25 적용): nyongjong + jamesclaw-cc + codex claw + ollama claw 4봇 + 채널 7개 (#공지사항/#작업-요청/#작업-진행중/#작업-완료/#리뷰-요청/#리뷰-완료/#자료실). guild_id=1506254036310167635. defaultTo 봇별 매핑 + requireMention 비대칭 + cross-allowlist. 원본: UsT1-E1Txyo 33:46 다이어그램. PITFALL-196 참조. **WSL2 환경 — gateway는 user unit 단독 운영** (system unit 중복 시 무한 SIGTERM 루프, PITFALL-197 참조). **P-201 채널 라우팅 95% 작동 검증 완료 (2026-05-25)**: 5채널 시간순 흐름 (작업-요청 진입 → 작업-진행중 위임 → 리뷰-요청 검수 → 작업-완료 요약 → 작업-요청 사용자 답신) 실측. 3개 AGENTS.md(workspace/workspace-claude/workspace-codex)에 §"Channel Routing P-201" 추가. 미흡: thread 분리·#자료실 attach 미사용 (fallback 채널 본문). 멀티봇 위임 시 **"받은 후" 키워드 사용 필수** (P-200 사전 시뮬레이션 차단). Discord MCP 사용 시 `~/.claude/channels/discord/access.json`에 7채널 ID 모두 등록 필요. allowlist 미등록 시 reply/fetch 실패.
+- **OpenClaw cron 신뢰성 차단** (2026-05-26 P-206 적용): one-shot cron 발화 1회 error 시 OpenClaw가 자동 `enabled: false` 전환 + 후속 0 — 정공법은 `workspace/AGENTS.md §"Self-driven Evolution (P-206)"` 메시지 stream trigger. Day-N 다중 cron 등록 안티패턴. 신규 cron 등록 시 발화 검증 강제 (`scripts/openclaw-p206-cron-agentturn-diagnose.js` + `openclaw-p206-cron-policy-audit.js`). PITFALL-206 참조.
+- **P-206 codex 임의 분리 채택** (2026-05-26): `cron-fire-verify-gate.js` 단일 파일 지시 → codex가 `openclaw-p206-cron-agentturn-diagnose.js` + `openclaw-p206-cron-policy-audit.js` 2개로 임의 분리. 대표님 결정: 그대로 유지 (진단/감사 분리가 기능적으로 합리적). workspace/AGENTS.md §"Self-driven Evolution (P-206)" 본문에 두 파일명 명시. 향후 명령 이탈 사례 발생 시 동일 패턴(기능 분리 합리성 검토 후 채택) 적용 가능.
+- **P-219 #결재-필요 채널 분리** (2026-05-26): 결재 5건 + P-213 사용자 결정 분기 + P-214 야간 자율 결과 승인 모두 #결재-필요 채널 (id: `1508626494711140444`)로 분리. 대표님 알림 우선순위 모니터링. nyongjong 자율 push 책임 (worker 직접 push 금지). access.json + workspace AGENTS.md 3개 (P-218 WSL2 경로) + #공지사항 pinned 인덱스 갱신 완료. PITFALL-219 참조.
+- **P-220 벤치마킹 명목만 차용 안티패턴** (2026-05-26): "Wirecutter 수준", "○○ 스타일" 등 벤치마크 키워드 사용 시 **반드시 실제 페이지 Tavily fetch + 구조 항목별 체크리스트 (사진 위치/링크/하위 섹션/CTA/표 구조/장기 데이터) 대조**. P-204 7대 기준은 텍스트만 검증해서 구조 격차 감지 못 함 — critic 3봇이 모두 "통과" 판정한 사례 확정. PITFALL-220 참조. P-221 (벤치마크 fetch 게이트) 후속 영구화 예정.
+- **P-222 Hybrid Sync 아키텍처** (2026-05-26): OpenClaw(WSL2 source-of-truth) ↔ Windows smartreview(publish 대상) 단방향 자동 미러. WSL2 `/home/creator/openclaw-smartreview/public/` → Windows `D:/AI 비즈니스/smartreview/public/`. systemd user path unit (inotify 즉시 감지) + 5분 timer fallback. `--delete` 없음 (Windows측 manual 파일 보존). 초기 import 31개 항목 완료. **nyongjong/codex/claude 봇은 WSL2 source만 편집, Windows publish 폴더 직접 편집 금지** (P-218 + P-222 동일 룰). **Firebase deploy는 main 세션이 Windows에서 직접** (firebase CLI 인증). 3개 AGENTS.md(workspace/workspace-codex/workspace-claude) §"Hybrid Sync P-222" 추가. PITFALL-222 참조. sync 로그: `~/.harness-state/smartreview-sync.log`
+- **P-222-A Discord 피드백 루프 보강** (2026-05-26): main 세션(Claude Code Windows + WSL2)이 다음 작업 완료 시 **반드시 Discord #작업-요청 채널(1508275532851183727)에 결과 push**. nyongjong이 보고 받기 전까지 작업 미완료로 판정. 트리거 5건: ①Firebase deploy / vercel deploy 성공 ②신규 글 publish (smartreview/gpt-korea) ③인프라 변경 (P-2xx 룰, sync 데몬, hook, AGENTS.md/CLAUDE.md 영구 정책 추가) ④대표님 명시 지시 작업 완료 ⑤대형 콘텐츠 변경 (홈 디자인, 다수 글 갱신). 포맷 표준: `[Task: <키워드>] <작업명>` + 산출물 경로 + 라이브 URL (해당 시) + 다음 nyongjong 조치 (검증 / 인덱스 정정 / hot-fix 위임 / 답변 대기). 자유 텍스트 금지 — 측정값 + 경로 + URL 위주. 미회송 시 P-194 변형 (premature_conclusion) 누적 위험. PITFALL-194 family 참조. 자동화 hook 후속 검토 (PostToolUse on Bash with `firebase deploy` keyword 또는 Stop hook 진단).
+- **P-223 WSL2 vmIdleTimeout 무한 + OpenClaw boot autostart** (2026-05-27): WSL2 기본 `vmIdleTimeout=60s` 때문에 OpenClaw gateway가 살아도 WSL2 instance 자체가 1분 idle 시 자동 종료 → 4봇 동시 사망 + 무한 boot/shutdown 루프 (3분에 4회 측정). 해결: `C:/Users/AIcreator/.wslconfig` `[wsl2]` 섹션에 `vmIdleTimeout=-1` 추가 (idle 종료 비활성) + `systemctl --user enable openclaw-gateway.service smartreview-sync.path smartreview-sync.timer` (boot autostart) + `loginctl show-user creator | grep Linger=yes` 확인 (logout 후 user services 유지). 적용 후 WSL2 boot → 21.9s 만에 gateway ready → 4봇 (claude/codex/default-nyongjong/ollama) 모두 자동 connect. 봇 다운 증상 발견 시 1차 진단 `systemctl --user is-active openclaw-gateway.service` + `wsl -d Ubuntu uptime` 둘 다 확인 — uptime 짧으면 WSL2 자체 종료 의심. PITFALL-223 후속 작성 예정.
 
 #### 자율 보조 스크립트
 - `harness/scripts/start-cdp-chrome.ps1` — Chrome 9222 모드 재시작 (cdp-auto-ensure가 호출)
@@ -51,6 +59,12 @@
 - **P-167** 컨텍스트 추측 기반 작업 흐름 중단 금지 — 실제 % 확인 전엔 자율 진행
 - **P-168** 자율 결정 정책 — 결재 필수 5개(push / 비용 큰 작업 / 명시 요청 / 비가역 삭제 / 보안 위험) 외 자율 진행
 - **P-169** CDP 자율 재시작 — 대표님 호출 0회 자율 인프라
+- **P-217 AskUserQuestion 영구화** (2026-05-26): 대표님께 다중 선택지 제시 시 표/리스트로 자유 입력 받지 말고 **반드시 `AskUserQuestion` 도구**로 직접 선택 UI 제공. 옵션은 라벨 + 설명으로 명확화. 자유 입력은 "Other" 자동 옵션이 있으므로 추가 X. 단일 결정 1Q + 단일 결정 1Q는 멀티 question으로 묶기 (1회 prompt 최대 4Q). PITFALL-217 참조.
+- **P-213 사용자 결정 분기** (2026-05-26): OpenClaw 봇 자율 결정 vs 사용자 결정 명시 분기. 결재 5건(push/비용 큰 작업/명시 요청/비가역 삭제/보안 위험) 외 + **취향·미적·전략 선택**(톤, 디자인 시안 A/B/C, 카피, 슬로건 등) = 사용자 결정. nyongjong이 후보 추출 + `[Project: ...] 사용자 결정 필요: A) ... B) ... C) ...` 발송. PITFALL-213 참조.
+- **P-214 자율 지속 프롬프트 전면 채택** (2026-05-26): 대표님 부재 중 "완성까지/끝까지/5H 안에 마무리" 등 명시 키워드 시, nyongjong이 codex/jamesclaw-cc/ollama 사이클 자율 무한 반복(결재 5건 도달 시만 멈춤). 매 사이클마다 산출물 mtime/size 검증 + 거짓 "완성" 보고 차단 + P-194/P-200/P-208 적용 강제. PITFALL-214 참조.
+- **P-215 산출물 파일 attach 강제** (2026-05-26): thread 안 응답에 `files: [절대경로]` 사용. 형식 `📄 <filename> (산출물 v<N>) - [내용 요약 1줄]`. #자료실 추가 attach는 발행 가능 판정 시만 (P-205 보완). PITFALL-215 참조.
+- **P-216 thread 컨텍스트 리프레시** (2026-05-26): thread 작업 길어지면 사용자가 마스터 #작업-요청에서 "thread 세션 리프레시"/"요약하고 새 세션"/"컨텍스트 청소" 명령. nyongjong이 thread 작업 상태/로그 요약 → 새 세션 spawn + 요약 주입 + thread 안 공지. cron 자동화는 보류(P-206 위험). PITFALL-216 참조.
+- **P-218 Sub-agent WSL2 경로 명시 강제** (2026-05-26): Opus가 sub-agent 위임 시 OpenClaw 관련 작업은 **반드시 WSL2 절대 경로** (`/home/creator/...`) 또는 `wsl -d Ubuntu -e bash -c "..."` 명시. Windows 경로 (`C:/Users/...`, `/mnt/c/...`) 사용 시 sub-agent가 추측 오류로 별개 파일 수정 → 실제 OpenClaw 영향 0. PITFALL-218 참조. 영상 패턴 외 우리 인프라 안전 규칙.
 
 #### 메인 자율 행동 규칙 (이번 세션 정착)
 1. 신규 hook 추가 시 → settings.json 등록 + 이 섹션에 한 줄 추가
@@ -188,25 +202,28 @@
 ### 실행 모델 풀
 | 모델 | 호출 | 강점 | 용도 |
 |------|------|------|------|
-| Sonnet 서브에이전트 | `Agent(model: sonnet)` | 풀 도구 접근, 파일 편집 | 코딩, 탐색, 배포 |
+| Sonnet 서브에이전트 | `Agent(model: sonnet)` | 풀 도구 접근, 파일 편집 | 탐색, 리서치, 배포 (코드 작성은 Codex 1순위 — 옵션 A) |
 | Codex CLI | `codex exec "..."` (6계정 로테이션) | 독립적 코드 관점 | 코드 리뷰, 설계 평가 |
 | gemma4 (Ollama, 보조 전용) | `ollama run gemma4` 또는 `curl -s http://localhost:11434/api/chat` | 보조 의견, 폴백 | 콘텐츠 보조 의견, 단독 판단 금지 |
 | Gemma 4 로컬 | Ollama API (localhost:11434) | 무제한, 오프라인 | 벌크 작업, 최종 폴백 |
 | GLM-5.1 클라우드 | Ollama `glm-5.1:cloud` (localhost:11434) | 무료, 고성능 | 수동 호출만 (cloud=과금 리스크). `ollama run glm-5.1:cloud` |
 
 ### 작업→모델 라우팅 (가이드, hook 강제 아님)
+
+> **2026-05-24 옵션 A 적용**: 영상 패턴(codex-main + codex-critic 분리) + 우리 cross-family 정책 결합. Sonnet은 코드 1순위에서 빠지고 탐색/리서치/배포 전용으로 좁힘.
+
 | 작업 유형 | 1순위 | 교차 검증 |
 |-----------|-------|----------|
-| 코드 작성/수정 | Sonnet 서브에이전트 | Codex 리뷰 |
-| 코드 리뷰 | Codex (1순위) + gemma4 (보조 의견) | 의견 불일치 시 Opus 판단 |
+| 코드 작성/수정 | **Codex (codex-main, 협조적)** | `codex-critic` (공격적 review, /codex-critic) + gemma4 보조 |
+| 코드 리뷰 (공격적 critic) | **`codex-critic`** (same model, adversarial persona) | gemma4 보조 (cross-family) → 의견 불일치 시 Opus 판단 |
 | 콘텐츠(블로그) 리뷰 | Codex (1순위), gemma4 (보조) | — |
 | AI냄새 검사 | Codex (1순위), gemma4·exaone3.5 (보조) | — |
 | 웹 리서치 | Sonnet(researcher) | — |
 | 탐색/검색 | Sonnet(Explore) | — |
-| 배포/빌드 | Sonnet(general-purpose) | — |
+| 배포/빌드 | Sonnet(general-purpose) (도구 권한 필요) | — |
 | 설계 평가 | Codex (1순위), gemma4 (보조) | Opus 최종 판단 |
 | 벌크/반복 작업 | Gemma 4 로컬 | — |
-| **Vision 분석 (스크린샷/이미지)** | **Opus 4.6 (직접 Read)** | — (Sonnet Vision 금지) |
+| **Vision 분석 (스크린샷/이미지)** | **Opus 4.7 (직접 Read)** 1차 | **`codex-vision` (`codex exec -i image`) 2차 cross-family** — `/codex-vision` skill |
 
 ### Vision 라우팅 규칙 (중요)
 Sonnet/opusplan 실행 중 이미지 분석이 필요하면 **반드시 Opus로 라우팅**. Sonnet Vision은 디테일 누락률이 20~30%로 Opus 대비 현저히 낮음.
@@ -314,7 +331,7 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 **외부 모델(Codex/Gemma4-보조)만이 5H + 7D 양쪽 모두 0 소비.** model: sonnet 명시 필수 (미지정 시 Opus 풀 차감).
 
 ### 일반 규칙
-- **Opus는 판단만**: 1-3줄 결정/지시. 긴 분석·코딩·탐색은 반드시 Sonnet 서브에이전트 위임
+- **Opus는 판단만**: 1-3줄 결정/지시. 긴 분석·탐색은 Sonnet 서브에이전트 위임. **코드 작성은 Codex CLI 위임 (codex-main)**
 - **서브에이전트 출력 간결화**: 200단어 이내 요약 요청. 긴 결과는 파일 저장 후 경로만 반환
 - **model: sonnet 명시 필수**: Agent() 호출 시 model 생략하면 Opus 풀 차감
 - **compact 적극 활용**: contextCompactionThreshold 80% 자동 compact 활성화
@@ -326,7 +343,8 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
   - 반복/벌크 코딩: **Codex 단독** (5H 0, 7D 0)
   - 외부 검수: **Codex + Gemma4** (5H 0, 7D 0)
   - 리서치: **Tavily** MCP 직접 (5H 0)
-  - 코딩 (도구 필요): Sonnet 서브에이전트 (5H 소비, 7D Sonnet 풀)
+  - 단순 코딩: **Codex (codex-main, 5H 0, 7D 0)** — 옵션 A 1순위
+  - 도구 다회 호출 섞인 코딩 (탐색+편집+테스트 루프): Sonnet 서브에이전트 (5H 소비, 7D Sonnet 풀)
   - 탐색 3회+: Sonnet(Explore) (5H 소비, 7D Sonnet 풀)
   - 단일 파일/판단: Opus 직접 (5H 소비 큼, 7D Opus 풀)
 
@@ -349,7 +367,10 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - 컨텍스트 수치는 `telegram-notify.sh heartbeat`로 확인. 추측 금지.
 
 ## Model Selection
-- **opusplan** (권장 기본): `/model opusplan` — Plan(설계)=Opus, 실행=Sonnet 자동 분리. Opus 7D 풀 보존 + Sonnet이 코딩/배포 수행. Ralph Loop, 장기 작업에 최적.
+
+> **2026-05-24 옵션 A 적용 영향**: 코드 1순위가 Sonnet → Codex로 변경됨. opusplan의 "실행=Sonnet"은 **탐색/리서치/배포** 한정으로 의미 좁아짐. 코드 작성은 Sonnet teammate에서도 Codex CLI 호출로 위임이 정석. Opus 7D 풀 보존 효과는 그대로 유지 (Opus는 orchestrator/판정만).
+
+- **opusplan** (권장 기본): `/model opusplan` — Plan(설계)=Opus, 실행=Sonnet 자동 분리. Opus 7D 풀 보존 + Sonnet이 **탐색/리서치/배포** 수행. **코드 작성은 Codex CLI 위임 (codex-main)**. Ralph Loop, 장기 작업에 최적.
 - **Opus 오케스트레이터**: `/model opus` — 모든 것을 Opus가 직접. 짧은 대화·판단·커밋에 적합. 5H 소비 큼.
 - **Sonnet 메인**: `/model sonnet` — 단순 단일 작업 전용. Opus advisor 없음.
 - **HydraTeams** (localhost:3456): `ANTHROPIC_BASE_URL=http://localhost:3456`. 무료(multiplier 0). 오케스트레이터 부적합 — Agent Teams teammate 전용. 단독 판단 금지.
