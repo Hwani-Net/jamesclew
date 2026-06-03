@@ -44,7 +44,12 @@
 - **P-220 벤치마킹 명목만 차용 안티패턴** (2026-05-26): "Wirecutter 수준", "○○ 스타일" 등 벤치마크 키워드 사용 시 **반드시 실제 페이지 Tavily fetch + 구조 항목별 체크리스트 (사진 위치/링크/하위 섹션/CTA/표 구조/장기 데이터) 대조**. P-204 7대 기준은 텍스트만 검증해서 구조 격차 감지 못 함 — critic 3봇이 모두 "통과" 판정한 사례 확정. PITFALL-220 참조. P-221 (벤치마크 fetch 게이트) 후속 영구화 예정.
 - **P-222 Hybrid Sync 아키텍처** (2026-05-26): OpenClaw(WSL2 source-of-truth) ↔ Windows smartreview(publish 대상) 단방향 자동 미러. WSL2 `/home/creator/openclaw-smartreview/public/` → Windows `D:/AI 비즈니스/smartreview/public/`. systemd user path unit (inotify 즉시 감지) + 5분 timer fallback. `--delete` 없음 (Windows측 manual 파일 보존). 초기 import 31개 항목 완료. **nyongjong/codex/claude 봇은 WSL2 source만 편집, Windows publish 폴더 직접 편집 금지** (P-218 + P-222 동일 룰). **Firebase deploy는 main 세션이 Windows에서 직접** (firebase CLI 인증). 3개 AGENTS.md(workspace/workspace-codex/workspace-claude) §"Hybrid Sync P-222" 추가. PITFALL-222 참조. sync 로그: `~/.harness-state/smartreview-sync.log`
 - **P-222-A Discord 피드백 루프 보강** (2026-05-26): main 세션(Claude Code Windows + WSL2)이 다음 작업 완료 시 **반드시 Discord #작업-요청 채널(1508275532851183727)에 결과 push**. nyongjong이 보고 받기 전까지 작업 미완료로 판정. 트리거 5건: ①Firebase deploy / vercel deploy 성공 ②신규 글 publish (smartreview/gpt-korea) ③인프라 변경 (P-2xx 룰, sync 데몬, hook, AGENTS.md/CLAUDE.md 영구 정책 추가) ④대표님 명시 지시 작업 완료 ⑤대형 콘텐츠 변경 (홈 디자인, 다수 글 갱신). 포맷 표준: `[Task: <키워드>] <작업명>` + 산출물 경로 + 라이브 URL (해당 시) + 다음 nyongjong 조치 (검증 / 인덱스 정정 / hot-fix 위임 / 답변 대기). 자유 텍스트 금지 — 측정값 + 경로 + URL 위주. 미회송 시 P-194 변형 (premature_conclusion) 누적 위험. PITFALL-194 family 참조. 자동화 hook 후속 검토 (PostToolUse on Bash with `firebase deploy` keyword 또는 Stop hook 진단).
-- **P-223 WSL2 vmIdleTimeout 무한 + OpenClaw boot autostart** (2026-05-27): WSL2 기본 `vmIdleTimeout=60s` 때문에 OpenClaw gateway가 살아도 WSL2 instance 자체가 1분 idle 시 자동 종료 → 4봇 동시 사망 + 무한 boot/shutdown 루프 (3분에 4회 측정). 해결: `C:/Users/AIcreator/.wslconfig` `[wsl2]` 섹션에 `vmIdleTimeout=-1` 추가 (idle 종료 비활성) + `systemctl --user enable openclaw-gateway.service smartreview-sync.path smartreview-sync.timer` (boot autostart) + `loginctl show-user creator | grep Linger=yes` 확인 (logout 후 user services 유지). 적용 후 WSL2 boot → 21.9s 만에 gateway ready → 4봇 (claude/codex/default-nyongjong/ollama) 모두 자동 connect. 봇 다운 증상 발견 시 1차 진단 `systemctl --user is-active openclaw-gateway.service` + `wsl -d Ubuntu uptime` 둘 다 확인 — uptime 짧으면 WSL2 자체 종료 의심. PITFALL-223 후속 작성 예정.
+- **P-223 WSL2 vmIdleTimeout 무한 + OpenClaw boot autostart** (2026-05-27): WSL2 기본 `vmIdleTimeout=60s` 때문에 OpenClaw gateway가 살아도 WSL2 instance 자체가 1분 idle 시 자동 종료 → 4봇 동시 사망 + 무한 boot/shutdown 루프 (3분에 4회 측정). 해결: `C:/Users/AIcreator/.wslconfig` `[wsl2]` 섹션에 `vmIdleTimeout=-1` 추가 (idle 종료 비활성) + `systemctl --user enable openclaw-gateway.service smartreview-sync.path smartreview-sync.timer` (boot autostart) + `loginctl show-user creator | grep Linger=yes` 확인 (logout 후 user services 유지). 적용 후 WSL2 boot → 21.9s 만에 gateway ready → 4봇 (claude/codex/default-nyongjong/ollama) 모두 자동 connect. 봇 다운 증상 발견 시 1차 진단 `systemctl --user is-active openclaw-gateway.service` + `wsl -d Ubuntu uptime` 둘 다 확인 — uptime 짧으면 WSL2 자체 종료 의심. PITFALL-223 참조.
+- **P-224 WSL2 instanceIdleTimeout keepalive (P-223 보강)** (2026-05-29): vmIdleTimeout=-1만으론 부족 — WSL2엔 타이머 2개(instanceIdleTimeout 8초=instance 종료, vmIdleTimeout 60초=VM 종료). `instanceIdleTimeout` 키는 이 빌드에서 무시됨(MS 미지원, 경고 출력). 해결: **`C:/Users/AIcreator/.harness/KeepWSLAlive.vbs`** (hidden 루프로 `wsl --exec sleep 3600` 영구 세션 유지). **[2026-06-03 업그레이드] 자동시작을 Startup 폴더 → Scheduled Task `WSL-KeepAlive`(onlogon 트리거, RunLevel Limited, ExecutionTimeLimit 0)로 전환** — Startup 폴더가 윈도우 업데이트 재부팅 시 가끔 건너뛰는 문제 해결. 등록은 admin 단발 상승(`Start-Process -Verb RunAs` + `Register-ScheduledTask`; 계정이 Administrators 멤버라 UAC ConsentPrompt=0이면 자동 상승). Startup 폴더 .vbs는 중복 제거(휴지통). 검증: 90초 idle 후 gateway active+NRestarts=0, `schtasks /query /tn WSL-KeepAlive` Status Ready. 봇 사망 시 `powershell "Get-Process wscript"`로 keepalive 생존 확인. PITFALL-224 참조.
+- **P-229 OpenClaw 5.22 claude-cli harness 버그 → 5.27 복구** (2026-05-30): OpenClaw 자동 업데이트(5/25 5.22 설치)가 claude-cli agentHarness 미등록 버그 → JARVIS(opus-4-8)·EVE(sonnet-4-6) Discord 응답 완전 불가 (`MissingAgentHarnessError`). gpt-5.5 봇은 정상. **복구**: ①`npm i -g openclaw@2026.5.27` ②5.27 신규 의무 — `models.providers.anthropic.models[]`에 사용 모델 등록 (`api:"anthropic-messages"`, name 필수, 풀필드) ③gw2 top-level `channels.discord.token`/`applicationId`/`defaultTo` 제거(5.27이 default account로 처리→크래시) ④`systemctl --user reset-failed` 후 start(5회 실패 시 포기). **교훈**: OpenClaw 자동 업데이트=시한폭탄, 버전 업 후 claude 봇 Discord 실측 필수(heartbeat 성공에 속지 말 것), 봇 무응답 진단은 로그 정확 문구 확인 후 타겟 수정(재시작 난사=하향나선). EVE typing 노이즈는 표시버그(기능영향0, 무시결정). PITFALL-229 참조.
+- **⚠️ P-226 [2026-06-02 폐지] gw2 중단 → gw1 단독 9봇 운영**: 실측 확정 — gw1 config에 9봇 전부 정의·`channels status` **9 connected**(default/claude/codex/ollama/javis/javis_claw/kitt/c3po/joi) + **kitt/c3po/joi 토큰이 gw1·gw2 양쪽 동일**(secrets 지문 일치)=중복 IDENTIFY 충돌원(P-246 awaiting readiness 유력 원인). javis(FRIDAY)≠javis_claw(TRON) 다른 토큰(안전). → 대표님 결정으로 **gw2(`openclaw-gateway-pro.service`) stop+disable** 완료(18790 닫힘, boot 자동시작 해제). gw1 단독 9봇 유지(중단 전후 9→9 connected 검증, gw1 18789 생존). event-loop 부하(원 P-226 우려) 모니터 필요. **다음 세션 gw2 부활 금지 — 부활 시 토큰 중복 재발.** ↓아래는 폐지된 원 설계(이력 보존):\n- **(이력) P-226 OpenClaw 네이티브 2-gateway 분리** (2026-05-29): 8봇 단일 gateway event-loop 과부하(pre-warm 103s, eventLoopMax 44s, 재시작마다 ~2분 dead-window) 해결. **gw1**(default,:18789)=JARVIS/EVE/TARS/Data(코어4), **gw2**(`openclaw --profile pro gateway --port 18790`, `~/.openclaw-pro`)=FRIDAY/KITT/C3PO/Joi(전문4). systemd `openclaw-gateway-pro.service`. 인증(`~/.codex`,`~/.claude`) home 공유. **결정적 함정**: ①`~/.openclaw-pro/npm` 심링크→`~/.openclaw/npm` 필수(non-bundled discord/codex 플러그인 위치, 안 하면 봇 0연결) ②main config에서 전문4 제거(토큰전쟁 방지) ③`plugins.allow` 축소 금지(discord 로딩 깨짐), browser는 `entries.browser.enabled=false`로 18791 충돌 회피 ④profile별 secrets.local.json. 검증: gw2 pre-warm 17s(103→17), starvation 0. 봇 추가 시 한 gateway에만 등록. PITFALL-226 참조.
+- **P-225 OpenClaw 6봇 영화 캐릭터명 정비** (2026-05-29): 영상 'The 12 AI Agents' 레퍼런스(NotebookLM id `6f97bd69-e0ca-4f0b-b887-6f9fa2036334`)에 맞춰 6봇 매핑: J.A.R.V.I.S.(뇽/main,opus,대장)·TARS(codex,gpt5.5,엔지니어)·EVE(claude,sonnet,리서치/문서/리뷰)·F.R.I.D.A.Y.(javis/hermes,gpt5.5,PM)·Data(ollama,gemma4,데이터/검증)·TRON(javis_claw/openclaw,Windows sonnet,보안/감시). openclaw.json identity + 각 IDENTITY.md + ORCHESTRATION/AGENTS 갱신 완료(raw ID 보존). 미충원(신규봇 필요): KITT(법무)·C3PO(마케터)·Joi(디자이너). To/CC standby는 requireMention 비대칭+ignoreOtherMentions로 이미 구현. **채널 구조(`_개인진무실`+`prj_프로젝트`)는 Discord 채널 생성 도구 부재로 미적용 — 대표님 수동 생성 또는 봇 Manage Channels 권한 필요**. PITFALL-225 후속.
+- **P-230 블로그 발행 이미지 Firebase URL 파이프라인** (2026-05-30): 티스토리/네이버 등 외부 발행처에 글 발행 시 이미지를 **Firebase Hosting 절대 URL**로 호스팅 후 HTML `<img src>`에 박는 방식 표준화. **이유**: claude-in-chrome `file_upload`는 보안상 "세션 공유 폴더"만 허용(Temp·worktree 거부) → UI 업로드 자동화 불가. Firebase URL이면 업로드 단계 자체가 사라져 **완전 자동 + 모든 발행처 공통**. **절차**: ①이미지 → `D:/AI 비즈니스/smartreview/public/assets/{slug}/` ②`firebase deploy --only hosting` (Windows 메인 세션 직접) ③`multi-blog-personal.web.app/assets/{slug}/` HTTP 200 ④글 HTML `<img src>` 절대 URL ⑤발행처엔 텍스트 HTML만 HTML모드 붙여넣기. **첫 실증**: 제습기 비교글 https://stayicon.tistory.com/86 (이미지 4종 naturalWidth>0). **티스토리 함정**: HTML 모드 전환 시 네이티브 JS confirm이 백그라운드 탭이면 CDP freeze → Windows-MCP로 탭 활성화 후 "확인" 클릭. cowork 브라우저=네이버 웨일. ORCHESTRATION.md §14 + PITFALL-230 참조.
 
 #### 자율 보조 스크립트
 - `harness/scripts/start-cdp-chrome.ps1` — Chrome 9222 모드 재시작 (cdp-auto-ensure가 호출)
@@ -65,6 +70,7 @@
 - **P-215 산출물 파일 attach 강제** (2026-05-26): thread 안 응답에 `files: [절대경로]` 사용. 형식 `📄 <filename> (산출물 v<N>) - [내용 요약 1줄]`. #자료실 추가 attach는 발행 가능 판정 시만 (P-205 보완). PITFALL-215 참조.
 - **P-216 thread 컨텍스트 리프레시** (2026-05-26): thread 작업 길어지면 사용자가 마스터 #작업-요청에서 "thread 세션 리프레시"/"요약하고 새 세션"/"컨텍스트 청소" 명령. nyongjong이 thread 작업 상태/로그 요약 → 새 세션 spawn + 요약 주입 + thread 안 공지. cron 자동화는 보류(P-206 위험). PITFALL-216 참조.
 - **P-218 Sub-agent WSL2 경로 명시 강제** (2026-05-26): Opus가 sub-agent 위임 시 OpenClaw 관련 작업은 **반드시 WSL2 절대 경로** (`/home/creator/...`) 또는 `wsl -d Ubuntu -e bash -c "..."` 명시. Windows 경로 (`C:/Users/...`, `/mnt/c/...`) 사용 시 sub-agent가 추측 오류로 별개 파일 수정 → 실제 OpenClaw 영향 0. PITFALL-218 참조. 영상 패턴 외 우리 인프라 안전 규칙.
+- **P-254 사람 검토용 산출물 HTML 의무** (2026-06-03, 대표님 승인): 기획서·PRD·제안서·보고서 등 **사람이 보고 판단·결재하는 산출물은 반드시 HTML로 제작**(브라우저 렌더링 + 인쇄/PDF 변환 용이, 표·다이어그램 가독성). `.md`는 작업·중간본 한정. 표준 변환: python-markdown(`extensions=[tables,fenced_code,nl2br]`) + 인쇄 친화 CSS(A4 `@page`, Pretendard). 과거 구두 지시였으나 미영구화로 .md 생성 누락 발생 → STICKY 등록으로 재발 차단. 변환기: `D:/AI 비즈니스/공모해커톤/_md2html.py`. PITFALL-254 참조.
 
 #### 메인 자율 행동 규칙 (이번 세션 정착)
 1. 신규 hook 추가 시 → settings.json 등록 + 이 섹션에 한 줄 추가
@@ -94,6 +100,7 @@
 
 ## Ghost Mode [hook: stop-dispatcher.sh]
 - 즉시 실행. "할까요?" 금지. 선언-미실행 금지. 사과 금지.
+- **자율진행 멈춤 금지 (P-236)**: 백그라운드 작업(codex/agent) 후 "완료 알림을 기다립니다 / 완료되면 ~하겠습니다"로 응답 종료 금지. 결재 5건(push·배포·발행/큰비용/명시요청/비가역삭제/보안) 게이트 외엔 멈추지 않는다. 짧은 작업(~4분)은 foreground `timeout`으로 결과 받아 즉시 다음 단계, 긴 작업은 백그라운드 완료 알림 오면 즉시 결과 확인 + 다음 실행. 봇에 자율 시키며 자신은 대기 = 모순.
 - "안 됩니다" 금지 → npm search MCP → 웹 검색 → 3회 시도 후에만 불가 보고.
 - 에러 시 3회 재시도 후 보고. **4번째 시도 = 같은 접근법 변형 금지, 대표님 보고.**
 - **하향 나선 금지**: 재시도 후 상태가 이전보다 악화되면 즉시 중단 + 재설계. 변형 반복 금지.
@@ -114,7 +121,7 @@
   - `mcp__agentmemory__memory_save`로 동시 회상 인덱싱
 - **위키 소스 자동 저장**: 세션 중 Tavily로 수집한 핵심 소스(논문, 기사, 기술 문서)는 `$OBSIDIAN_VAULT/06-raw/` 마크다운으로 저장. 파일명: `{YYYY-MM-DD}-{slug}.md`. 위키 인제스트 파이프라인의 입력이 됨.
 - **Claude Code 기능 참조 (우선순위 1→3, 2026-04-21 로컬 신뢰 소스 도입)**: 새 기능/도구 도입 전 **및 프로젝트 시작 시** 반드시 조회:
-  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.144 반영, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
+  1. **로컬 매뉴얼 (1차 소스)**: `~/.claude/docs/claude-code-manual.md` (v2.1.158 반영, 현재 메인 모델 Opus 4.8, git 관리). 옵시디언 미러 `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`
   2. **Raw changelog**: `~/.claude/cache/changelog.md` (Claude Code가 업데이트마다 자동 갱신)
   3. **NLM (보조, stale 가능)**: `PYTHONUTF8=1 nlm notebook query "f5fcbaf9-1605-4e90-90ef-34a06acde407" "질문"` — v2.1.101 시점에 멈춘 상태. 로컬 매뉴얼과 불일치 시 **로컬 우선**
   - 하네스 설계 조회: `~/.claude/docs/index.md` (로컬) 또는 NLM `"fc9fcf38-0a88-4e76-b5ec-6e381693a7ae"` (Harness Blueprint)
@@ -172,7 +179,7 @@
 ## Build Transition Rule [hook: enforce-build-transition.sh]
 - 빌드 요청 감지 시 바로 코딩 금지.
 - **0단계 (프로젝트 시작/전환 시 필수 사전 조회, 2026-04-21 신설)**:
-  1. 로컬 Claude Code 매뉴얼 Glance: `~/.claude/docs/claude-code-manual.md` (v2.1.116 기반). 최신 기능·제약·버전별 변경 확인
+  1. 로컬 Claude Code 매뉴얼 Glance: `~/.claude/docs/claude-code-manual.md` (v2.1.158 기반). 최신 기능·제약·버전별 변경 확인
   2. 하네스 개요: `~/.claude/docs/index.md` — 사용 가능한 hook/skill/command 파악
   3. 도메인 PITFALL 검색: `grep -ri "<도메인 키워드>" D:/jamesclew/harness/pitfalls/` — 과거 실수 사전 회피
   4. 확신 없으면 NLM 보조 조회 (v2.1.101 기준, 최신 불일치 시 로컬 우선)
@@ -348,6 +355,24 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
   - 탐색 3회+: Sonnet(Explore) (5H 소비, 7D Sonnet 풀)
   - 단일 파일/판단: Opus 직접 (5H 소비 큼, 7D Opus 풀)
 
+### 🚫 서브에이전트 위임 금지 영역 (P-224 정밀 UI 자동화)
+2026-05-27 신설. **다음 작업은 메인 모델(Opus) 직접 수행. 서브에이전트 위임 절대 금지:**
+1. **영상 생성 사이트 자동화** — Flow / Veo / Pika / Runway / Synthesia 등의 UI 자동화 (생성 폴링·다운로드·갤러리 검증 등 다중 위치 확인 필요)
+2. **claude-in-chrome MCP를 통한 정밀 UI 조작** — 좌표/DOM 변화에 즉각 적응 필요
+3. **computer-use MCP를 통한 데스크탑 앱 자동화** (CapCut export, 인증 GUI 등)
+4. **다단계 OAuth flow** (Codex 재인증 등 다중 탭/콜백 처리)
+5. **UI 상태 진단** (생성 완료 여부 판단, 갤러리 vs editor vs 다운로드 폴더 다중 검증)
+
+**근거 (재발 방지):**
+- Sub-agent의 구조적 한계: 단편적 검증 (edit URL의 video src만 확인하고 메인 갤러리 미확인), Loop detector 조기 종료, 추측 보고 ("서버 큐 문제일 것"), 다중 옵션 미시도
+- 2026-05-27 G2 사례: Sub-agent 33분+ 폴링 + 240K 토큰 낭비 → 메인 확인 시 영상은 이미 정상 생성됨
+- Hook의 "[🚨 CONTEXT WASTE] 50회 직접 작업" 메시지는 **이 영역 작업 시 무시 가능**
+
+**위임 가능 작업 (영역 분리):**
+- 순수 코드 작성, 리서치, 파일 분석 (UI 무관) — 서브에이전트 OK
+- E2E 파이프라인의 비-UI 코드 부분 (Python 스크립트 작성 등) — 서브에이전트 OK
+- UI 조작·검증·OAuth — Opus 직접
+
 ### 80%+ 비상 모드 (5H rate limit 기준)
 5H 사용량 80%+ 감지 시 (heartbeat 또는 수동 확인):
 1. Opus 응답을 **최대 2문장**으로 제한
@@ -372,14 +397,14 @@ Sonnet teammate가 스크린샷을 /tmp/screenshot.png에 저장 → Opus 메인
 - **HydraTeams** (localhost:3456): `ANTHROPIC_BASE_URL=http://localhost:3456`. 무료(multiplier 0). 오케스트레이터 부적합 — Agent Teams teammate 전용. 단독 판단 금지.
 - Sonnet 서브에이전트: Opus/opusplan 세션 내에서 `Agent(model: "sonnet")`으로 자동 사용.
 - **Advisor API** (참고): Messages API에서 `tools=[{"type":"advisor_20260301","model":"claude-opus-4-6"}]`로 Sonnet+Opus 자문 패턴 구현 가능. SWE-bench +2.7%, 비용 -11.9%.
-- ⚠️ **v2.1.144 정책 변화 — `/model`은 현재 세션만 변경**: 이전(v2.1.117~v2.1.143)엔 영구 지속이었으나, v2.1.144부터 단일 세션. **default 변경은 model picker에서 `d` 키**. opusplan 고정 운용 시:
-  - 한 번 `/model opusplan` 호출 → picker에서 `d` 눌러 default 지정 (재시작에도 유지)
-  - 또는 매 진입 시 `/model opusplan` 명시 호출
+- ⚠️ **`/model` default 정책 (v2.1.153 현행, v2.1.144 → v2.1.153 재변경)**: `/model` 호출 시 선택이 **새 세션 default로 자동 저장**됨 (IDE와 일치). v2.1.144에서 잠깐 "현재 세션만"으로 바뀌었다가 **v2.1.153에서 원복**. **현재 세션만 바꾸려면 picker에서 `s` 키**. opusplan 고정 운용:
+  - `/model opusplan` 한 번 호출 → 자동으로 새 세션 default 유지 (별도 `d` 키 불필요 — `d` 액션은 v2.1.153에서 제거됨)
+  - keybinding 커스텀했다면 `modelPicker:setAsDefault` → `modelPicker:thisSessionOnly`로 rename (`keybindings.json`)
   - `~/.claude/settings.json`의 `model` 필드도 default로 동작
 
 ## Claude Code 버전별 변경사항
 
-버전별 신규 기능·하네스 영향은 1차 소스 매뉴얼을 참조: `~/.claude/docs/claude-code-manual.md` (v2.1.144 반영, git 관리). 옵시디언 미러: `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`. CLAUDE.md 본문 changelog는 토큰 절감을 위해 2026-05-27 일괄 슬림다운됨.
+버전별 신규 기능·하네스 영향은 1차 소스 매뉴얼을 참조: `~/.claude/docs/claude-code-manual.md` (v2.1.158 반영, 현재 메인 모델 Opus 4.8, git 관리). 옵시디언 미러: `$OBSIDIAN_VAULT/01-jamesclaw/harness/docs/claude-code-manual.md`. CLAUDE.md 본문 changelog는 토큰 절감을 위해 2026-05-27 일괄 슬림다운됨. **v2.1.154 신규**: Opus 4.8(default high effort, 최난도 `/effort xhigh`) + Dynamic Workflows(`/workflows` — 수십~수백 에이전트 백그라운드 오케스트레이션, opt-in 시).
 
 ## Prerequisites (다른 프로젝트에서도 동작하려면)
 - `~/.claude/` 에 hooks, rules, scripts, commands 배포됨 (`bash harness/deploy.sh`)
