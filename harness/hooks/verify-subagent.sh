@@ -17,12 +17,20 @@ LOG_FILE="$STATE_DIR/hallucination-check.log"
 # Pattern 1: github.com/owner/repo
 REPOS_URL=$(echo "$LAST_MSG" | grep -oE 'github\.com/[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+' | sed 's|github.com/||' | sort -u)
 # Pattern 2: plain text owner/repo mentions (e.g., "seanshin0214/persona-mcp")
-# Match word/word patterns that look like GitHub repos, filter out file paths
-REPOS_TEXT=$(echo "$LAST_MSG" | grep -oE '[a-zA-Z][a-zA-Z0-9_-]*/[a-zA-Z][a-zA-Z0-9_.-]{2,}' \
+# Pre-strip WSL2/Unix absolute paths (/home/..., /root/...) before pattern matching to prevent
+# path segments like "home/creator", "openclaw/workspace", "user/foo.service" from being
+# extracted as false-positive GitHub repo slugs. (Fix: WSL2 path false positives)
+LAST_MSG_NORMED=$(echo "$LAST_MSG" \
+  | sed 's|/home/[^[:space:]"'"'"'`,;)<>]*||g' \
+  | sed 's|/root/[^[:space:]"'"'"'`,;)<>]*||g')
+REPOS_TEXT=$(echo "$LAST_MSG_NORMED" | grep -oE '[a-zA-Z][a-zA-Z0-9_-]*/[a-zA-Z][a-zA-Z0-9_.-]{2,}' \
   | grep -vE '^(src|dist|lib|bin|test|docs|node_modules|\.claude|config|public|assets|com|org|net|io|dev|ai|www|Users|AppData|Program)/' \
   | grep -vE '\.(js|ts|md|json|sh|py|css|html|yaml|yml|txt|log|exe|dll|mjs|cjs)$' \
   | grep -vE '^(C|D|E):/|^/[a-z]+/' \
   | grep -vE '^v[0-9]' \
+  | grep -vE '^(home|root|var|etc|usr|tmp|opt|proc|sys|mnt|run|boot|srv|user|creator|openclaw|harness|jamesclew|smartreview|workspace|scripts|plugins|hooks|commands|rules|memory|pitfalls|agentmemory|obsidian)/' \
+  | grep -vE '\.(service|timer|socket|target|path|mount|device|scope|slice|swap)$' \
+  | grep -viE '^(passed|pass|failed|fail|todo|done|true|false|yes|no|on|off|ok|error|success|warn|warning|info|debug|skip|skipped|pending|running|blocked|enabled|disabled|active|inactive|input|output|request|response|req|res|read|write|get|set|push|pull|start|stop|begin|end|open|close|before|after|prev|next|first|last|new|old|add|remove|enable|disable|accept|reject|allow|deny|cancel|retry|and|or|in|out|up|down|min|max|more|less|higher|lower|either|neither)/' \
   | sort -u || true)
 # Combine and deduplicate
 REPOS=$(echo -e "${REPOS_URL}\n${REPOS_TEXT}" | sort -u | sed '/^$/d')

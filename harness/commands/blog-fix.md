@@ -21,13 +21,14 @@ description: "품질 게이트 실패 시 자동 수정 + 에스컬레이션 루
 
 ### Phase 0: 사전 준비
 
-**0-1. 실패 항목 파악**
+**0-1. 실패 항목 파악 (P-256 국소화 — 수렴 핵심)**
 ```
-quality-report.json에서 FAIL 항목 추출:
-- aiSmell.verdict === "FAIL" → AI냄새 수정 필요
-- seo.verdict === "FAIL" → SEO 보강 필요
-- images.verdict === "FAIL" → 이미지 교체 필요
-- expectGates[].pass === false → 렌더링/성능 수정 필요
+quality-report.json에서 FAIL 항목 + 정확한 위치/수치 추출 (모호 금지):
+- aiSmell.verdict === "FAIL" → flagged 문장 목록 (정확한 인용문 + 단락 위치)
+- seo.verdict === "FAIL"     → 키워드 현재밀도 vs 목표, 누락 FAQ 개수, 내부링크 현재/목표
+- images.verdict === "FAIL"  → 깨진 이미지 인덱스 + naturalWidth + src 경로
+- expectGates[].pass === false → 실패 게이트명 + 실패 assert 내용
+→ 각 라운드 프롬프트엔 이 국소 사실을 그대로 전달. 점수만 반환하면 Opus가 점수→국소 사실로 변환.
 ```
 
 **0-2. 원본 백업**
@@ -162,6 +163,8 @@ echo "blog-fix: {slug} | rounds={n} | final={status} | $(date)" >> ~/.harness-st
 3. **10분 하드 타임아웃** — 전체 루프가 10분 초과 시 즉시 에스컬레이션
 4. **원본 보존** — `draft.md.bak`은 절대 삭제하지 않음
 5. **수정 내용 구체적 기록** — "수정함"이 아니라 "AI냄새 표현 12개 교체" 수준
+6. **결정론적 피드백 계약 (P-256, 수렴 핵심)** — 각 라운드 수정 프롬프트의 실패 피드백은 반드시 **국소화된 사실**(정확한 문장/위치, 깨진 이미지 인덱스+naturalWidth, 부족한 FAQ 개수, 키워드 현재밀도 vs 목표). 모호한 의견("AI냄새 남음/SEO 부족")만 주면 과잉교정으로 악화·미수렴(P-255 근본 원인). rules/quality.md "결정론적 피드백 계약" 참조.
+7. **완료 판정은 기계 게이트** — `/blog-review` PASS만 ready 판정. 모델의 "수정 완료" 자기 선언은 판정 근거 아님 (P-256 래칫).
 
 ## 에러 처리
 - 라운드 중 CLI 타임아웃 → 해당 라운드 스킵, 다음 모델로 즉시 전환

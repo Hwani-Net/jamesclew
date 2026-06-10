@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하네스 레거시 감사 리포트 — 2026-06-05</title>
+<style>
+  @page { size: A4; margin: 18mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Pretendard', -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+         line-height: 1.6; color: #1a1a1a; max-width: 1080px; margin: 0 auto; padding: 32px 24px; background: #fff; }
+  h1 { font-size: 1.7rem; border-bottom: 3px solid #2563eb; padding-bottom: 10px; margin-bottom: 4px; }
+  h2 { font-size: 1.25rem; margin-top: 34px; padding: 6px 12px; background: #f1f5f9; border-left: 5px solid #2563eb; }
+  h3 { font-size: 1.05rem; margin-top: 22px; color: #1e40af; }
+  .meta { color: #64748b; font-size: 0.85rem; margin-bottom: 8px; }
+  .lead { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.82rem; }
+  th, td { border: 1px solid #cbd5e1; padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: #1e293b; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.82em; color: #be123c; word-break: break-all; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; color: #fff; white-space: nowrap; }
+  .KEEP { background: #16a34a; } .SHRINK { background: #d97706; } .MOVE { background: #2563eb; }
+  .SPLIT { background: #7c3aed; } .CONVERT { background: #0891b2; } .DELETE { background: #dc2626; }
+  .HIGH { color: #dc2626; font-weight: 700; } .MEDIUM { color: #d97706; font-weight: 600; } .LOW { color: #16a34a; }
+  .PRESERVE { background: #16a34a; } .CONDITIONAL { background: #d97706; } .PROCEED { background: #2563eb; }
+  .warn { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .warn h3 { margin-top: 0; color: #b91c1c; }
+  ul { margin: 8px 0; padding-left: 22px; } li { margin: 4px 0; }
+  .prompt-box { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 8px; font-family: 'Consolas', monospace;
+                font-size: 0.78rem; white-space: pre-wrap; line-height: 1.5; overflow-x: auto; }
+  .stat { display: inline-block; background: #1e293b; color: #fff; padding: 8px 14px; border-radius: 8px; margin: 4px 6px 4px 0; font-size: 0.85rem; }
+  .stat b { font-size: 1.15rem; color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<h1>하네스 레거시 감사 리포트</h1>
+<div class="meta">harness-legacy-scan · 읽기 전용 (파일 무수정) · 2026-06-05 · 7관점 에이전트 (분석 5병렬 → Refactor Planner → Adversarial Reviewer) · 638초 / 806K 토큰</div>
+
+<div>
+  <span class="stat">분석 findings <b>50</b>건</span>
+  <span class="stat">병합 후 <b>26</b>항목</span>
+  <span class="stat">전역 컨텍스트 <b>~1595</b>줄/세션</span>
+  <span class="stat">절감 잠재 <b>40–50%</b></span>
+  <span class="stat">최대 부채 gstack <b>1.4GB</b></span>
+  <span class="stat">즉시 무조건 처리 가능 <b>1</b>건</span>
+</div>
+
+<h2>1. 전체 요약</h2>
+<div class="lead">
+하네스는 "반복 실수를 막는 살아있는 가드"는 견고하나, <b>과거 습관·운영 이력·외부 번들·작업 한정 참조</b>가 전역 컨텍스트에 상시 적재되어 매 세션 비용으로 누적되고 있습니다. 핵심 3대 부채:
+<ul>
+<li><b>① 최대 부채 — <code>~/.claude/skills/gstack</code> 외부 벤더 번들</b>: 1.4GB(node_modules 722MB), 465개 SKILL.md / 48,591줄. 우리가 P-172로 폐기한 <b>gbrain 의존 자산(setup-gbrain/sync-gbrain + USING_GBRAIN_WITH_GSTACK.md)이 살아있어 STICKY DECISIONS와 직접 충돌</b>(부활 위험 현실).</li>
+<li><b>② 전역 컨텍스트 세금</b>: CLAUDE.md 429줄 + rules 1166줄 ≈ 1595줄 중 절반 이상이 디자인 전용(599줄)·OpenClaw 운영로그(P-201~P-255)·BASB 중복·hook 설계명세라 작업 한정. 조건부 로드로 옮기면 전역 주입 40~50% 절감.</li>
+<li><b>③ 제품 기능 중복</b>: ralph-loop(네이티브 /loop·/ralph-loop 완전 중복), codex-vision/critic(codex 플러그인 + /code-review), reset-ping(/schedule), self-evolve/task-queue hook(네이티브 compaction·TodoWrite).</li>
+</ul>
+<b>안전 경고</b>: <code>defaultMode=bypassPermissions</code> + <code>skipDangerousModePermissionPrompt=true</code> 환경에서 deny 9개·hook 가드가 유일 방어선인데, <b>deny가 작업 루트 D: 드라이브를 전혀 보호하지 않는 현존 구멍</b>이 실측 확인됐습니다. 따라서 hook 슬림은 "기능 무손실"이 절대 전제이며, deny 보강이 그보다 먼저여야 합니다.
+</div>
+
+<h2>2. 유지해야 할 항목 (KEEP)</h2>
+<table>
+<tr><th>경로</th><th>유지 근거</th><th>위험도</th></tr>
+<tr><td><code>rules/security.md</code> (9줄)</td><td>모든 세션 적용 핵심 안전규칙, 9줄로 비용 미미 — 전역 주입 정당</td><td class="LOW">LOW</td></tr>
+<tr><td><code>CLAUDE.md:82-107</code> Identity/Language/Quality/Ghost Mode/Auditability</td><td>stop-dispatcher hook 직결 상시 페르소나·행동 핵심</td><td class="LOW">LOW</td></tr>
+<tr><td><code>settings.json:51</code> Write|Edit 인라인 시크릿 차단</td><td>.env/.pem/.key 보호 — 양호한 이중방어</td><td class="LOW">LOW</td></tr>
+<tr><td><code>commands/blog-review.md</code> (336줄)</td><td>description 좁아 오발동 낮음, expect MCP 7단계 인라인 유지 가치</td><td class="LOW">LOW</td></tr>
+<tr><td><code>commands/design-review.md</code></td><td>'Stitch' 한정어로 오발동 억제됨</td><td class="LOW">LOW</td></tr>
+<tr><td><code>commands/self-heal.md</code></td><td>3-way worktree 경쟁 토너먼트 = 고유 가치 (루프 지속만 /goal 위임 권장)</td><td class="LOW">LOW</td></tr>
+<tr><td><b>(Adversarial 추가 보존)</b> regression-guard / test-manipulation-guard / verify-deploy / change-tracker / pitfall-auto-record</td><td>"반복 실수를 막는 살아있는 가드" — 회귀·테스트조작·배포검증·스코프크리프·PITFALL 학습루프. <b>hook 슬림 시 휩쓸리면 안 됨</b></td><td class="HIGH">PRESERVE</td></tr>
+<tr><td><b>(Adversarial)</b> CLAUDE.md gbrain/copilot-api 폐기도구 경고표</td><td>단순 changelog 아닌 <b>안티-부활 가드</b>. P-172 사고 자체가 "명시 누락으로 부활"이었음. 근거(P-172 링크·폐기일)까지 압축 금지</td><td class="HIGH">PRESERVE</td></tr>
+</table>
+
+<h2>3. 줄여야 할 항목 (SHRINK)</h2>
+<table>
+<tr><th>경로</th><th>문제</th><th>조치</th><th>위험</th></tr>
+<tr><td><code>CLAUDE.md:206-318</code> Multi-Model/Vision/Computer Use/Agent Teams (~113줄)</td><td>architecture.md '외부 모델 매핑'·'Vision 라우팅'과 중복 재서술</td><td>3줄 요약 + architecture.md 단일 source 위임</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>CLAUDE.md:131-166</code> Memory Layers</td><td>architecture.md·secondbrain-tiers.md와 3중 중복. 깨진 백틱 항목(139/152/163) 손상</td><td>표 1개 압축 + 백틱 정리</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>CLAUDE.md:319-325</code> Tool Priority</td><td>이미 'rules/architecture.md 참조' 위임 선언했는데 6줄 본문 중복</td><td>2줄로 축약</td><td class="LOW">LOW</td></tr>
+<tr><td><code>CLAUDE.md</code> '/model default 정책' + 버전별 changelog</td><td>제품이 처리하는 picker 동작을 버전 변천사까지 중복 기술 → 빠르게 stale</td><td>'opusplan 고정' 1줄만 <span class="tag" style="background:#0891b2">diet</span></td><td class="LOW">LOW</td></tr>
+<tr><td><code>rules/architecture.md</code> (150줄)</td><td>CLAUDE.md와 Memory/Tool Priority 중복표 + 'Native Orchestration' 버전표(매뉴얼과 중복)</td><td>상세만 보유, 중복표 단일화</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>rules/quality.md</code> (137줄)</td><td>블로그 Multi-Pass 6패스·이미지검증 10항(쿠팡 썸네일)이 블로그 전용인데 전역</td><td>보편규칙만 전역, 블로그분은 blog-fix Skill로</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>commands/codex-vision.md</code> (113줄)</td><td>codex 플러그인 + CLAUDE.md + architecture.md 삼중 중복</td><td><code>codex exec -i</code> 핵심 1줄만</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>commands/codex-critic.md</code> (122줄)</td><td>네이티브 /code-review(--comment/--fix)가 동일 적대 리뷰 제공</td><td>codex-rotate 호출부만, 평가기준은 /code-review 위임</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>commands/video-reference-init.md</code> (337줄)</td><td>Phase0 체크리스트·PITFALL 인라인, ROOT=E:/AI_Programing 하드코딩</td><td>체크리스트 분리, 스캐폴드 절차만</td><td class="LOW">LOW</td></tr>
+<tr><td><code>commands/pipeline-run.md</code> (218줄)</td><td>루프/카운터/promise 골격이 네이티브 /goal·/loop 재구현</td><td>골격은 /goal 위임, 7단계 도메인만 유지</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>rules/autonomous-evolution.md</code> P3 task-queue + P5 self-evolve</td><td>네이티브 TodoWrite·compaction과 중복, 우선순위 공식 CLAUDE.md 중복</td><td>공식 1곳만, hook은 네이티브 위임</td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>settings.json</code> PostToolUse 27개 (Write|Edit 7-hook 체인)</td><td>regression-autotest 편집마다 65초 timeout, loop-detector 중복(L193+L349), matcher * / .* 전수발화</td><td>post-edit-dispatcher 단일통합 + timeout 하향 <b>(기능 무손실 전제)</b></td><td class="MEDIUM">MED</td></tr>
+<tr><td><code>settings.json:11-30</code> allow 18개</td><td><code>mcp__lazy-mcp__*</code> 유령 allow(미등록 MCP), windows-mcp 대소문자 불일치</td><td>유령 제거, 대소문자 정정 <span class="tag" style="background:#0891b2">diet</span></td><td class="LOW">LOW</td></tr>
+<tr><td><code>skills/gstack</code> 전체 번들</td><td>1.4GB / 465 SKILL.md 외부 노출 (SPLIT/격리로 처리 — §7)</td><td>외부 격리 (승인 필요)</td><td class="MEDIUM">MED</td></tr>
+</table>
+
+<h2>4. 전역 지침 → Skill / 조건부 로드로 옮길 항목 (MOVE)</h2>
+<table>
+<tr><th>경로</th><th>현재 문제</th><th>이동 위치</th><th>diet</th></tr>
+<tr><td><code>rules/stitch-design-reference.md</code> (311줄)</td><td>디자인 작업 시에만 필요한 최대 rules 파일이 매 세션 주입 (코드/블로그 세션 0% 사용)</td><td>design-review Skill 리소스</td><td>✅</td></tr>
+<tr><td><code>rules/claude-design-reference.md</code> (176줄)</td><td>마감 폴리시 전용 ("마감 단계 전용" 자가 명시)</td><td>design-review Skill / Obsidian 위키</td><td>✅</td></tr>
+<tr><td><code>rules/design_rubric.md</code> (112줄)</td><td>/qa·/design-review가 이미 <code>cat</code>으로 on-demand 로드 중 → 전역 주입은 이중 비용</td><td>위치 유지, 자동주입 목록에서만 제외</td><td>✅</td></tr>
+<tr><td><code>rules/autonomous-evolution.md</code> (178줄)</td><td>hook 설계명세 + R9 테스트벡터 = 런타임 행동지침 아님</td><td>harness/docs (단 Adversarial: 포인터 남길 것)</td><td>⚠️</td></tr>
+<tr><td><code>rules/secondbrain-tiers.md</code> (93줄) + quality.md BASB</td><td>BASB 3계층이 3곳 반복, 위키 정리 작업 전용 (저빈도)</td><td>/inbox-process·/review-week 조건부 로드, 1줄 포인터만</td><td>—</td></tr>
+<tr><td><code>CLAUDE.md:25-53</code> 활성 자율 인프라 운영로그 (P-201~P-255, ~55줄)</td><td>OpenClaw/blog 운영 디버그 로그가 행동 규칙 자리에 적재. 99% 세션과 무관, P-255 한 줄 ~900자</td><td><code>docs/active-infra-log.md</code> + session-start hook 조건부 주입. CLAUDE.md엔 1줄 인덱스</td><td>—</td></tr>
+<tr><td><code>CLAUDE.md:359-375</code> 서브에이전트 위임금지 5영역 + GCP/Veo 비용게이트</td><td>영상생성·GCP 작업 진입 시에만 적용</td><td>video Skill 조건부, CLAUDE.md엔 'UI 정밀조작 Opus직접' 1줄</td><td>—</td></tr>
+</table>
+
+<h2>5. Skill에서 reference / changelog로 분리할 항목 (SPLIT)</h2>
+<table>
+<tr><th>경로</th><th>문제</th><th>분리 방안</th></tr>
+<tr><td><code>commands/agent-team.md</code> (979줄, commands 최대·2위의 3배)</td><td>v5~v11 변경이력 테이블이 본문 절반 점유. 폐기된 R16(gbrain) 라인 잔존</td><td>R0~R15 규칙 본체만 본문 유지 → v5~v11 이력을 <code>agent-team.changelog.md</code>로 분리, R16(gbrain) 라인 삭제, description 단순화</td></tr>
+<tr><td><code>CLAUDE.md:63-74</code> 핵심정책 P-2xx 목록</td><td>P-213/214/215/216/218은 OpenClaw nyongjong/thread/WSL2 전용</td><td>보편(P-217 AskUserQuestion / P-254 HTML 산출물)만 CLAUDE.md 유지 → OpenClaw 전용은 active-infra-log.md로 분리</td></tr>
+</table>
+
+<h2>6. 삭제 후보 (DELETE)</h2>
+<table>
+<tr><th>경로</th><th>근거</th><th>Adversarial 권고</th></tr>
+<tr><td><code>commands/wiki-sync.md</code> (77줄)</td><td>status:deprecated / [DEPRECATED 2026-05-19] / user_invocable:false. gbrain CLI 호출(폐기). /inbox-process 대체, PITFALL-172로 충분</td><td><span class="tag PROCEED">삭제 OK</span> (git 백업)</td></tr>
+<tr><td><code>commands/ralph-loop.md</code> (17줄)</td><td>네이티브 /ralph-loop 플러그인 + /loop·/goal과 동명충돌 얇은 래퍼</td><td><span class="tag CONDITIONAL">CONDITIONAL</span> watchdog-ralph.sh 연계 확인 후 삭제</td></tr>
+<tr><td><code>hooks/copilot-api-autostart.sh</code></td><td>copilot-api 2026-05 폐기도구 참조, SessionStart 미등록</td><td><span class="tag CONDITIONAL">CONDITIONAL</span> dietAuto 과함 — 폐기표에 'hook 제거됨' 기록 후 삭제</td></tr>
+<tr><td><code>hooks/distress-queue-loader.sh.bak-surrogate-20260515-223725</code></td><td>surrogate 백업 잔재, settings.json 미참조</td><td><span class="tag PROCEED">PROCEED</span> 무조건 삭제 가능한 유일 항목</td></tr>
+</table>
+
+<h2>7. 사람이 직접 승인해야 하는 위험한 변경 (HUMAN APPROVAL)</h2>
+<table>
+<tr><th>항목</th><th>위험</th><th>Adversarial 핵심 반박</th></tr>
+<tr><td><b>gstack 내 gbrain 의존분</b> (setup-gbrain/sync-gbrain + USING_GBRAIN_WITH_GSTACK.md)</td><td>P-172 폐기 gbrain 부활 위험 (실재 확인)</td><td>.agents/.cursor/.factory/.gbrain 등 <b>다수 벤더 디렉토리에 산재</b>. 외부 git repo라 개별삭제 시 .git 더럽힘 → <b>번들 전체 격리가 더 안전한 1차 조치</b></td></tr>
+<tr><td><b>gstack 번들 외부 반출</b> (D:/tools/gstack-vendor/ 등)</td><td>.git 포함 1.4GB 비가역 이동, 대표님 사용여부 불명</td><td>gpt-image-2는 <b>별개 디렉토리</b>라 영향 없을 가능성 — 이동 전 gpt-image-2의 gstack/bin 의존 확인 + 이동 후 동작 검증 필수</td></tr>
+<tr><td><b>hooks/wiki-sync-scheduler.sh + settings.json:572</b></td><td>P-172 self-deprecated인데 SessionStart 60초 timeout 활성</td><td class="HIGH"><b>⚠️ 통째 삭제 금지</b> — gbrain Phase만 죽었고 <b>Phase 2 (06-raw→05-wiki 24h 자동분류, BASB Organize)는 살아있음</b>. 삭제 시 파일 무한 적체 회귀. <b>timeout 60→10초 + gbrain 주석정리로 충분</b></td></tr>
+<tr><td><b>settings.json:31-41 deny 9개 보강</b></td><td>작업 루트 D: 미보호 (rm -rf D:/jamesclew 무방비), C:만 차단, fork폭탄·bash&lt;(curl) 누락</td><td class="HIGH"><b>SHRINK 아니라 강화 대상</b>. bypassPermissions 환경의 유일 방어선. <code>Bash(*rm -rf D:*)</code> <code>Bash(*rm -rf /home*)</code> 추가 + irreversible-alert.sh 정규식 차단(현재 알림만, 비차단)</td></tr>
+<tr><td><b>.claude.json MCP 상시로드</b> (korean-law/stitch/dropshipping/perplexity)</td><td>architecture.md 온디맨드 정책 위반, Tool Budget 50개 압박(korean-law 단독 89도구), dropshipping 외부 URL 데이터 노출</td><td>온디맨드 전환 권장. duckduckgo/wikipedia도 tavily와 중복 검토</td></tr>
+<tr><td><b>settings.json:42 + :628</b> bypassPermissions + skipDangerousModePermissionPrompt</td><td>전 도구 무프롬프트 실행</td><td class="HIGH"><b>KEEP 불가피하나 순서 강제</b>: deny 보강(D: 보호)이 hook 슬림보다 <b>먼저</b>여야 함. 안 그러면 bypassPermissions가 더 위험해짐</td></tr>
+</table>
+
+<div class="warn">
+<h3>⚠️ Adversarial Reviewer 총평 — dietAuto 자동처리 위험 경고</h3>
+"Planner의 26개 정리 방향은 토큰 절감상 합리적이나, <b>'죽은 코드/저위험'으로 분류한 일부가 실제로는 살아있는 안전망이거나 안티-부활 가드</b>라 무승인 자동처리(dietAuto)는 위험합니다. 무조건 PROCEED 가능한 것은 <b>.bak-surrogate 백업잔재 1건뿐</b>. 나머지 삭제·이동은 git 백업 + 흔적 기록(폐기표/포인터)을 남겨 망각형 회귀를 차단해야 합니다."
+<ul>
+<li><b>① wiki-sync-scheduler</b> — gbrain만 죽고 BASB 자동분류는 살아있음 → 삭제 아닌 timeout 조정</li>
+<li><b>② CLAUDE.md 폐기도구 경고</b> — 안티-부활 가드, 근거까지 압축 금지 (PRESERVE)</li>
+<li><b>③ 안전망 hook 6종</b> — irreversible-alert/deny/regression-guard/test-manipulation-guard/verify-deploy/pitfall-auto-record는 bypassPermissions 환경의 유일 방어선, 슬림은 기능 무손실 전제</li>
+</ul>
+</div>
+
+<h2>8. /harness-diet로 넘겨도 되는 low-risk 변경 (dietAuto)</h2>
+<div class="lead">
+<b>Adversarial 보정 후</b> — 아래 중 무조건 자동 가능은 <code>.bak-surrogate 삭제</code> 1건. 나머지는 git 백업 + 흔적 기록 조건부 권장:
+</div>
+<ul>
+<li>✅ <b>(무조건 PROCEED)</b> <code>hooks/distress-queue-loader.sh.bak-surrogate-20260515-223725</code> 삭제</li>
+<li>⚠️ <code>commands/wiki-sync.md</code> 삭제 (git 백업)</li>
+<li>⚠️ <code>commands/ralph-loop.md</code> 삭제 (watchdog-ralph.sh 연계 확인 후)</li>
+<li>⚠️ <code>hooks/copilot-api-autostart.sh</code> 삭제 (폐기표에 'hook 제거됨' 기록 후)</li>
+<li>✅ <code>rules/stitch-design-reference.md</code> 전역주입 제외 → design Skill</li>
+<li>✅ <code>rules/claude-design-reference.md</code> 전역주입 제외 → design Skill</li>
+<li>✅ <code>rules/design_rubric.md</code> 자동주입 목록에서만 제외 (이미 cat 로드)</li>
+<li>⚠️ <code>rules/autonomous-evolution.md</code> → harness/docs (포인터 남길 것)</li>
+<li>✅ <code>commands/codex-refresh.md</code> description 축약</li>
+<li>✅ settings.json allow <code>mcp__lazy-mcp__*</code> 유령 제거 + windows-mcp 대소문자 정정</li>
+<li>✅ CLAUDE.md '/model default 정책' 버전별 변천 삭제 → opusplan 1줄</li>
+</ul>
+
+<h2>9. /harness-diet 실행용 추천 프롬프트</h2>
+<div class="prompt-box">/harness-diet 를 다음 3-PHASE 범위로 실행하라. 모든 변경 전 git 커밋 백업. 각 항목 처리 후 settings.json·CLAUDE.md·rules 파싱 정상 검증. hook/settings/MCP/권한/gbrain 관련은 절대 자동처리 금지 — AskUserQuestion으로 대표님 승인.
+
+[PHASE 1 — 저위험 자동 처리]
+1. 죽은 파일 삭제(git 백업 후): commands/wiki-sync.md, hooks/distress-queue-loader.sh.bak-surrogate-20260515-223725, hooks/copilot-api-autostart.sh(폐기표에 'hook 제거' 기록), commands/ralph-loop.md(watchdog-ralph.sh 연계 확인 후)
+2. 전역주입 제외 → design-review Skill 참조전환: rules/stitch-design-reference.md(311), claude-design-reference.md(176), design_rubric.md(112, 이미 cat 로드 — 자동주입만 제외)
+3. rules/autonomous-evolution.md(178) → harness/docs로 MOVE + CLAUDE.md에 'hook 명세 참조' 포인터
+4. commands/codex-refresh.md description 축약
+5. settings.json allow의 mcp__lazy-mcp__*(유령) 제거 + windows-mcp 대소문자 정정
+6. CLAUDE.md '/model default 정책' 버전 변천 삭제 → 'opusplan 고정' 1줄
+
+[PHASE 2 — SHRINK/SPLIT (Codex 교차검토 후)]
+7. agent-team.md(979) SPLIT: R0~R15 본체만, v5~v11 이력 → agent-team.changelog.md, 폐기 R16(gbrain) 라인 삭제
+8. CLAUDE.md 중복 단일화: Multi-Model/Vision/Computer Use/Agent Teams(206-318)·Tool Priority(319-325)·Memory Layers(131-166) → 3줄 요약 + architecture.md 단일 source. 깨진 백틱 정리. ※gbrain/copilot-api 폐기 경고표는 근거 포함 PRESERVE
+9. CLAUDE.md:25-53 운영로그(P-201~P-255) → docs/active-infra-log.md, CLAUDE.md엔 폐기표+결재5건+1줄 인덱스. P-2xx(63-74) 중 OpenClaw전용(213/214/215/216/218) 분리, 보편(217/254)만 유지
+10. quality.md 블로그 Multi-Pass/이미지검증 → blog-fix Skill. secondbrain-tiers.md+BASB → 조건부 로드
+11. codex-vision(113)·codex-critic(122) 본문 축약(codex-rotate 호출부 유지, 평가는 /code-review 위임), pipeline-run(218) 루프골격 /goal 위임
+
+[PHASE 3 — 대표님 승인 필수 (AskUserQuestion)]
+12. gstack 처리: (a)gbrain 의존분 (b)1.4GB 번들 전체 외부격리(D:/tools/gstack-vendor/) — ※번들 전체 격리가 gbrain 개별삭제보다 안전. 이동 전 gpt-image-2의 gstack/bin 의존 확인 + 이동 후 동작 검증
+13. wiki-sync-scheduler.sh: ※통째 삭제 금지 — Phase2(BASB 06-raw→05-wiki) 살아있음. timeout 60→10초 + gbrain 주석정리만
+14. settings.json deny 보강(강화): Bash(*rm -rf D:*), Bash(*rm -rf /home*), fork폭탄, bash<(curl) 추가 + irreversible-alert.sh 정규식 차단화(현재 알림만). ※deny 보강을 hook 슬림보다 먼저
+15. .claude.json MCP korean-law/stitch/dropshipping/perplexity 상시로드 → 온디맨드
+16. PostToolUse 27 hook 슬림: Write|Edit 7-hook을 post-edit-dispatcher 단일통합(기능 1:1 무손실 + 통합후 5개 가드 단위테스트 통과 전제), regression-autotest 65초 하향, loop-detector 중복(L193+L349) 제거
+
+각 PHASE 후 Codex 회귀검증. 하네스 수정은 외부모델 사전검토(CLAUDE.md 규칙).</div>
+
+<div class="meta" style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:10px;">
+생성: JamesClaw harness-legacy-scan 워크플로 · 읽기 전용 감사 (대상 파일 무수정) · 설계 근거 wf_eb0bb4c9-7d8
+</div>
+
+</body>
+</html>
