@@ -25,6 +25,19 @@ cat ~/.harness-state/hook_audit_report.txt
 - 결과: `Total registered: N / PASS: M / ISSUES: K`
 - ISSUES > 0이면 침묵 hook 후보 식별 → P-111 패턴 재발 의심
 
+### 0-B. 라이브 라우트 회귀 가드 (2026-06-04 신설)
+
+gpt-korea.com 공개 서브라우트가 Vercel SSO 401 또는 deploy 404로 침묵 회귀했는지 점검:
+
+```bash
+bash D:/jamesclew/harness/scripts/vercel-sso-guard.sh
+```
+
+- exit 0 → 모든 공개 URL 2xx/3xx
+- exit 2 → SSO_GUARD_FAIL (401) 또는 DEPLOY_GUARD_FAIL (404) 발생 → 즉시 Vercel 프로젝트 settings 확인
+- 점검 대상: `/`, `/reviews`, `/uiwon-danawa`, `/bite-log`, `/benefit-alert`
+- 근거: 2026-06-04 audit에서 bite-log SSO 401 / uiwon-danawa·benefit-alert 404가 수동 triage로만 발견됨. 자동화 차단.
+
 ### 1. 세션 행동 감사 (기존 39 check)
 
 ```bash

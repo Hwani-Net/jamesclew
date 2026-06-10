@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>harness-diet 실행 리포트 — 2026-06-05</title>
+<style>
+  @page { size: A4; margin: 18mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Pretendard', -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+         line-height: 1.6; color: #1a1a1a; max-width: 1080px; margin: 0 auto; padding: 32px 24px; background: #fff; }
+  h1 { font-size: 1.7rem; border-bottom: 3px solid #16a34a; padding-bottom: 10px; margin-bottom: 4px; }
+  h2 { font-size: 1.25rem; margin-top: 34px; padding: 6px 12px; background: #f0fdf4; border-left: 5px solid #16a34a; }
+  .meta { color: #64748b; font-size: 0.85rem; margin-bottom: 8px; }
+  .lead { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.83rem; }
+  th, td { border: 1px solid #cbd5e1; padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: #14532d; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.82em; color: #be123c; word-break: break-all; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; color: #fff; white-space: nowrap; }
+  .MOVE { background: #2563eb; } .SHRINK { background: #d97706; } .HOLD { background: #6b7280; } .HIGH { background: #dc2626; }
+  .warn { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+  .warn h2 { background: none; border: none; color: #b91c1c; padding: 0; margin-top: 0; }
+  .ok { color: #16a34a; font-weight: 700; }
+  ul { margin: 8px 0; padding-left: 22px; } li { margin: 5px 0; }
+  .diff { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.8rem; white-space: pre-wrap; line-height: 1.5; }
+  .diff .del { color: #fca5a5; } .diff .add { color: #86efac; } .diff .hdr { color: #93c5fd; }
+  .st { display: inline-block; background: #14532d; color: #fff; padding: 8px 14px; border-radius: 8px; margin: 4px 6px 4px 0; font-size: 0.85rem; }
+  .st b { font-size: 1.15rem; color: #4ade80; }
+  .smoke { background: #1e293b; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-family: 'Consolas', monospace; font-size: 0.82rem; margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<h1>harness-diet 실행 리포트</h1>
+<div class="meta">harness-legacy-scan 후속 · low-risk 항목만 적용 · 2026-06-05 · 영구 삭제 0건 (archive 이동) · hooks/MCP/권한 무수정</div>
+
+<div>
+  <span class="st">최종 적용 <b>2</b>건</span>
+  <span class="st">철회 <b>1</b> (ralph-loop)</span>
+  <span class="st">영구삭제 <b>0</b></span>
+  <span class="st">commands 26→<b>25</b></span>
+  <span class="st">smoke-test #2 FAIL→수정</span>
+</div>
+
+<div class="warn">
+<h2>⚠️ 후속 검증(smoke-test) 결과 — 2026-06-05 실행</h2>
+<ul>
+<li><b>smoke-test #2 FAIL → 수정 완료</b>: <code>/ralph-loop</code>이 "Unknown command"로 실패. 원인 — 플러그인은 <code>ralph-loop:ralph-loop</code>(namespaced)로만 호출되어 <b>bare <code>/ralph-loop</code>(우리 command)을 대체하지 못함</b>. "정상 대체"는 실측 없는 오보였음(선행 scan의 Adversarial이 CONDITIONAL 경고한 지점). <b><code>ralph-loop.md</code> 복원(DELETE 판단 철회)</b> + PITFALL-257 기록.</li>
+<li><b>smoke-test #3 PASS</b>: "inbox 정리하고 위키 동기화" → 폐기된 <code>/wiki-sync</code> 시도 없이 <code>/inbox-process</code>가 처리(1건 → 02-projects/, inbox 0건).</li>
+<li><b>최종 적용 = 2건</b>: ① wiki-sync.md archive(user_invocable:false라 회귀 없음) ② codex-refresh.md description 축약. <b>ralph-loop은 원복</b>되어 §1~§4 표의 ralph-loop 행은 무효.</li>
+</ul>
+</div>
+
+<div class="lead">
+<b>이번 라운드 원칙</b>: scan 리포트의 dietAuto 항목 중 <b>① 배포 메커니즘이 확실하고 ② hooks/MCP/권한을 건드리지 않으며 ③ CLAUDE.md diverge 영향이 없는 것</b>만 적용했습니다. 실행 중 <b>중대 차단사항(CLAUDE.md 소스↔배포본 diverge)</b>을 발견해 CLAUDE.md 수술은 전면 보류했습니다(§6). 삭제 후보는 전부 <code>archive/harness-diet-2026-06-05/</code>로 이동(영구 삭제 0).
+</div>
+
+<h2>1. 변경한 파일 목록</h2>
+<table>
+<tr><th>파일</th><th>작업</th><th>소스(harness)</th><th>배포본(~/.claude)</th></tr>
+<tr><td><code>commands/wiki-sync.md</code></td><td><span class="tag MOVE">archive 이동</span></td><td>✅ → archive/</td><td>✅ → archive/</td></tr>
+<tr><td><code>commands/ralph-loop.md</code></td><td><span class="tag MOVE">archive 이동</span></td><td>✅ → archive/</td><td>✅ → archive/</td></tr>
+<tr><td><code>commands/codex-refresh.md</code></td><td><span class="tag SHRINK">description 축약</span></td><td>✅ 수정</td><td>✅ 수정</td></tr>
+</table>
+<p style="font-size:0.85rem;color:#64748b">※ 소스와 배포본을 모두 처리 — 한쪽만 바꾸면 <code>deploy.sh</code>(harness→~/.claude cp) 재배포 시 불일치/원복되기 때문. archive는 <code>~/.claude/archive/</code>·<code>harness/archive/</code> 양쪽 보존.</p>
+
+<h2>2. 파일별 변경 이유</h2>
+<table>
+<tr><th>파일</th><th>이유</th><th>안전 근거</th></tr>
+<tr><td><code>wiki-sync.md</code></td><td>gbrain(P-172, 2026-05-19 폐기) 의존이라 Phase 1/2 절차 전체 동작 불가. frontmatter <code>status:deprecated</code>·<code>user_invocable:false</code>·대체 <code>/inbox-process</code> 이미 명시</td><td>이미 <code>user_invocable:false</code>라 호출 0. 폐기 이력은 PITFALL-172 + STICKY DECISIONS에 보존</td></tr>
+<tr><td><code>ralph-loop.md</code></td><td>네이티브 <code>/ralph-loop</code> 플러그인(ralph-loop:ralph-loop) + <code>/loop·/goal</code>과 동명 충돌하는 17줄 래퍼. 둘 다 동일 <code>setup-ralph-loop.sh</code> 호출</td><td>watchdog-ralph.sh와 <b>연계 없음 실측 확인</b>(watchdog은 <code>.claude/ralph-loop.local.md</code> 상태파일만 사용, command 미참조). 플러그인이 기능 동등 대체</td></tr>
+<tr><td><code>codex-refresh.md</code></td><td>description 1줄에 절차 4개(PITFALL #069/자동감지/6계정)를 욱여넣어 트리거 신호 흐림 → 좁고 명확하게 축약</td><td>제거한 절차는 <b>본문 11~59줄에 전부 보존</b>(정보 손실 0). 실측 확인 후 축약</td></tr>
+</table>
+
+<h2>3. Before / After 요약</h2>
+<table>
+<tr><th>항목</th><th>Before</th><th>After</th></tr>
+<tr><td>commands 개수 (배포본)</td><td>26개</td><td><b>24개</b> (deprecated 2 제거)</td></tr>
+<tr><td>skill 피커 노출</td><td>wiki-sync(비활성)·ralph-loop(중복) 포함</td><td>두 항목 사라짐, 네이티브 <code>/ralph-loop</code>만 남음</td></tr>
+<tr><td><code>codex-refresh</code> description</td><td>108자 (절차 4개 나열)</td><td><b>43자</b> (목적만)</td></tr>
+<tr><td>삭제된 파일</td><td>—</td><td>0건 (전부 archive 보존, 복구 가능)</td></tr>
+</table>
+
+<h2>4. diff 요약</h2>
+<div class="diff"><span class="hdr"># git status --short (harness)</span>
+ M harness/commands/codex-refresh.md
+ D harness/commands/ralph-loop.md      <span class="del">→ archive/harness-diet-2026-06-05/</span>
+ D harness/commands/wiki-sync.md       <span class="del">→ archive/harness-diet-2026-06-05/</span>
+?? harness/archive/harness-diet-2026-06-05/
+
+<span class="hdr"># commands/codex-refresh.md (frontmatter description)</span>
+<span class="del">- description: Codex CLI 6계정 OAuth 토큰 갱신 가이드. 14일마다 호출 (refresh token 만료 회피). PITFALL #069 (codex logout 금지) 자동 적용. 인자 없으면 만료 자동 감지 + 6계정 순차 가이드.</span>
+<span class="add">+ description: Codex CLI 6계정 OAuth 토큰 갱신 (14일 주기, refresh token 만료 회피).</span></div>
+<p style="font-size:0.85rem;color:#64748b">※ 같은 변경을 <code>~/.claude/</code> 배포본에도 동일 적용(소스/배포 동기). git 추적은 <code>harness/</code>만.</p>
+
+<h2>5. Claude의 행동이 어떻게 달라지는가</h2>
+<ul>
+<li><b>skill 피커가 깨끗해짐</b> — <code>wiki-sync</code>(죽은 항목)·<code>ralph-loop</code>(중복)이 후보에서 제거되어, Ralph Loop 실행 시 <b>네이티브 <code>/ralph-loop</code> 하나만</b> 매칭(동명 혼선 해소).</li>
+<li><b><code>/codex-refresh</code> 트리거가 더 정확</b> — description이 목적 중심으로 좁아져 "코덱스 토큰 갱신" 류 요청에 명확히 매칭, 무관 맥락 오발동 감소. 실행 시 절차는 본문에서 그대로 안내.</li>
+<li><b>위키 동기화 요청 → <code>/inbox-process</code>로 자연 유도</b> — 죽은 <code>/wiki-sync</code>를 시도할 여지 제거.</li>
+<li><b>행동 규칙·안전장치 변화 없음</b> — CLAUDE.md/rules/hooks/settings 무수정이라 Ghost Mode·결재 5건·품질 게이트·회귀 가드는 그대로. 전역 컨텍스트 토큰은 이번 라운드에선 거의 불변(CLAUDE.md 보류).</li>
+</ul>
+
+<div class="warn">
+<h2>6. 아직 사람이 승인해야 하는 high-risk / 보류 항목</h2>
+<p><b>🚨 최우선 차단 — CLAUDE.md diverge (이번 발견)</b>: 소스 <code>harness/CLAUDE.md</code>(P-23X gpt-korea·v2.1.158)와 배포본 <code>~/.claude/CLAUDE.md</code>(P-255·v2.1.161)에 <b>서로 다른 변경</b>이 양쪽에 존재. 이 상태에서 한쪽만 슬림화하면 머지가 꼬입니다. <b>→ CLAUDE.md 슬림(중복 단일화/운영로그 MOVE/model 정책)은 양방향 머지 후에만</b>.</p>
+<table>
+<tr><th>보류 항목</th><th>사유</th><th>다음 조치</th></tr>
+<tr><td>CLAUDE.md 중복/운영로그/model정책 슬림</td><td><span class="tag HIGH">diverge</span> 소스↔배포본 충돌</td><td>먼저 CLAUDE.md 양방향 머지 → 이후 슬림</td></tr>
+<tr><td>design rules MOVE (stitch/claude-design)</td><td><span class="tag HOLD">연결작업</span> rules/에서 빼면 자동주입 끊기나, design-review.md cat 참조 추가 + 경로 설계 필요</td><td>별도 라운드: 이동 + 참조 연결 동시</td></tr>
+<tr><td><code>design_rubric.md</code></td><td><span class="tag HOLD">cat 3곳</span> design-review·pipeline-run·qa가 직접 cat</td><td>3곳 경로 동시 수정 필요</td></tr>
+<tr><td><code>agent-team.md</code> SPLIT (979줄)</td><td><span class="tag HOLD">설계</span> command는 reference 자동 안 읽음</td><td>본문/changelog 분리 + cat 연결 설계</td></tr>
+<tr><td>hooks (copilot-api-autostart, .bak-surrogate, wiki-sync-scheduler)</td><td><span class="tag HIGH">금지</span> 사용자 hooks 수정 금지 + Adversarial: wiki-sync-scheduler는 <b>BASB Phase2 살아있음</b>(삭제 금지, timeout 조정만)</td><td>대표님 승인 후 별도</td></tr>
+<tr><td>settings.json deny 보강 (D: 드라이브 미보호)</td><td><span class="tag HIGH">보안</span> 작업루트 D: 무방비 — <b>강화 대상</b></td><td>대표님 승인 후 우선 처리 권장</td></tr>
+<tr><td>.claude.json MCP 온디맨드 전환</td><td><span class="tag HIGH">금지</span> 사용자 MCP 수정 금지</td><td>대표님 승인 후 별도</td></tr>
+<tr><td>settings.json allow 유령 제거 (lazy-mcp)</td><td><span class="tag HOLD">권한</span> 사용자 allowed-tools 자동정리 제외 권장</td><td>대표님 승인 후</td></tr>
+<tr><td>gstack 1.4GB 격리 + gbrain 의존분</td><td><span class="tag HIGH">외부repo</span> .git 포함, gpt-image-2 의존 확인 필요</td><td>대표님 승인 + 이동 후 동작 검증</td></tr>
+</table>
+</div>
+
+<h2>7. 새 하네스 검증용 smoke-test 프롬프트 5개</h2>
+<p>아래를 신규 세션 또는 현 세션에서 실행해 회귀를 점검하십시오.</p>
+<div class="smoke">1. "코덱스 6계정 토큰 갱신해줘" — <b>/codex-refresh가 정상 매칭</b>되고, 본문에 PITFALL #069·만료감지·6계정 절차가 그대로 안내되는지 (description 축약 후 트리거+정보 보존 확인)</div>
+<div class="smoke">2. "/ralph-loop 테스트 작업 시작" — 동명 충돌 없이 <b>네이티브 ralph-loop:ralph-loop 플러그인</b>이 setup-ralph-loop.sh를 정상 실행하는지 (우리 래퍼 제거 후 대체 확인)</div>
+<div class="smoke">3. "옵시디언 inbox 정리하고 위키 동기화해줘" — 죽은 /wiki-sync 시도 없이 <b>/inbox-process로 유도</b>되는지 (deprecated 제거 확인)</div>
+<div class="smoke">4. 신규 세션 시작 후 "지금 활성 자율 인프라랑 결재 5건 규칙 말해봐" — <b>CLAUDE.md/rules 정상 로드</b>(STICKY DECISIONS·Ghost Mode·P-168 응답)되어 컨텍스트 깨짐이 없는지</div>
+<div class="smoke">5. "harness/archive/harness-diet-2026-06-05/ 안에 뭐가 있어?" — <b>wiki-sync.md·ralph-loop.md가 보존</b>되어 있어 영구 삭제가 아닌 복구 가능 이동임을 확인</div>
+
+<div class="meta" style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:10px;">
+생성: JamesClaw harness-diet · low-risk 3건 적용 (hooks/MCP/권한 무수정, 영구삭제 0) · git 미커밋(대표님 git diff 확인 후 커밋 권장) · 후속 scan 리포트: harness-legacy-scan-2026-06-05.html
+</div>
+
+</body>
+</html>

@@ -52,10 +52,10 @@ harness/docs/
 ├── pitfalls/
 │   └── index.md                      ← PITFALL 50개 (P-001~P-055, 결번 5개)
 │
-├── claude-code-manual.md             ← Claude Code v2.1.116 공식 매뉴얼 (로컬 신뢰 소스, 1240줄)
+├── claude-code-manual.md             ← Claude Code v2.1.172 공식 매뉴얼 (로컬 신뢰 소스)
 │
 └── 레거시/특수 매뉴얼 (아카이브)
-    ├── harness-manual.md             ← v1 단일 매뉴얼 (1024줄)
+    ├── harness-manual.md             ← [ARCHIVED 2026-06-11 → archive/harness-diet-2026-06-11/] v1 단일 매뉴얼 (CLAUDE.md+claude-code-manual.md로 대체)
     ├── gbrain-manual.md              ← [DEPRECATED 2026-05-19] 역사 참조용 (P-172)
     ├── managed-agent-manual.md       ← Managed Agents API 전용
     ├── ralph-loop-manual.md          ← Ralph Loop 상세

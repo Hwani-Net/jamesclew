@@ -20,10 +20,11 @@ MODEL=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 if [[ "$MODEL" == "Unknown" || -z "$MODEL" ]]; then
     CLAUDE_JSON_MODEL=$(jq -r '.teammateDefaultModel // empty' "$HOME/.claude.json" 2>/dev/null)
     case "$CLAUDE_JSON_MODEL" in
-        opusplan) MODEL="Opus Plan Mode" ;;
-        opus)     MODEL="Claude Opus" ;;
-        sonnet)   MODEL="Claude Sonnet" ;;
-        haiku)    MODEL="Claude Haiku" ;;
+        opusplan)              MODEL="Opus Plan Mode" ;;
+        opus)                  MODEL="Claude Opus" ;;
+        sonnet)                MODEL="Claude Sonnet" ;;
+        haiku)                 MODEL="Claude Haiku" ;;
+        claude-fable-5*|fable*) MODEL="Claude Fable 5" ;;
     esac
 fi
 CURRENT_DIR=$(echo "$input" | jq -r '.workspace.current_dir // "."')

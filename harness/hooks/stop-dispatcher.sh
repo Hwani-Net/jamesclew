@@ -5,6 +5,9 @@
 
 INPUT=$(cat)
 STATE_DIR="$HOME/.harness-state"
+# P-256 Reins: accumulate non-blocking deterministic feedback, emit ONCE at end
+# (v2.1.163 hookSpecificOutput.additionalContext) instead of multiple systemMessage printfs.
+FEEDBACK=""
 
 # check_declare_execute_ratio — detects declare-without-execute pattern (P-declare_no_execute)
 check_declare_execute_ratio() {
@@ -60,7 +63,8 @@ except Exception:
 
   # Inject warning if declarations found but no tool calls in this response
   if [ "$decl_count" -gt 0 ] && [ "$tool_calls" -eq 0 ]; then
-    printf '{"systemMessage":"[DECLARE-NO-EXEC] 선언만 감지, 실행 증거 없음. 즉시 실행 원칙 위반.","continue":true}\n'
+    # P-256: accumulate deterministic feedback (single additionalContext emit at end)
+    FEEDBACK="${FEEDBACK}[DECLARE-NO-EXEC] 선언만 있고 같은 응답에 도구 호출 0건. 다음 응답에서 선언한 작업을 즉시 도구로 실행하라 (Ghost Mode). "
     # Write flag for user-prompt-declare-warn.sh (2-file package)
     mkdir -p "$state_dir"
     echo "선언-미실행 감지 ($(date '+%H:%M:%S'))" > "$state_dir/declare_no_exec_flag"
@@ -145,7 +149,8 @@ print(len(remainder))
 
   # Inject warning if review declared but no evidence found
   if [ "$evidence_found" -eq 0 ]; then
-    printf '{"systemMessage":"[SKIP-REVIEW] 검수 선언만 있고 수치/근거 없음. Multi-Pass Review 규칙 위반. 점수(N/10), PASS/FAIL 항목 목록, 또는 200자 이상의 상세 근거를 포함하세요.","continue":true}\n'
+    # P-256: accumulate deterministic feedback
+    FEEDBACK="${FEEDBACK}[SKIP-REVIEW] 검수 선언만 있고 수치/근거 없음. 점수(N/10) 또는 PASS/FAIL 항목 목록 또는 200자+ 상세 근거를 포함하라. "
   fi
 }
 
@@ -164,7 +169,8 @@ check_skill_candidate() {
   count=$(grep -c "|${session_id}|" "$tool_log" 2>/dev/null || echo 0)
 
   if [ "$count" -ge 20 ]; then
-    printf '{"systemMessage":"이번 세션에서 복합 작업을 수행했습니다. 재사용 가능한 절차가 있다면 commands/에 스킬로 저장하고 mcp__agentmemory__memory_save로 동시 인덱싱하세요.","continue":true}\n'
+    # P-256: accumulate deterministic feedback
+    FEEDBACK="${FEEDBACK}복합 작업(도구 ${count}회) 완료 — 재사용 절차는 commands/에 스킬로 저장 + mcp__agentmemory__memory_save 인덱싱 고려. "
   fi
 }
 
@@ -209,8 +215,22 @@ check_declare_execute_ratio
 # 7. review evidence check (blocking capable, systemMessage on violation)
 check_review_evidence
 
-# 8. skill candidate reminder (non-blocking, systemMessage only)
+# 8. skill candidate reminder (non-blocking)
 check_skill_candidate
+
+# 9. P-256 Reins: emit accumulated deterministic feedback as a SINGLE Stop additionalContext.
+#    v2.1.163: hookSpecificOutput.additionalContext gives Claude feedback and keeps the turn going
+#    (no hook-error label). Replaces 3 separate systemMessage printfs that could emit multiple
+#    JSON objects to stdout (malformed). python3 json.dumps handles safe escaping.
+if [ -n "$FEEDBACK" ]; then
+  ESC=$(printf '%s' "$FEEDBACK" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null)
+  if [ -n "$ESC" ]; then
+    printf '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":%s},"continue":true}\n' "$ESC"
+  else
+    # Codex review #4: python3 unavailable → never drop feedback silently. Static systemMessage fallback (no escaping needed).
+    printf '{"systemMessage":"[HOOK-FEEDBACK] 검증 경고 발생(declare/review/skill). 상세 표시는 python3 필요.","continue":true}\n'
+  fi
+fi
 
 # Wait for background jobs.
 # P-153 fix: previously `wait -n` (no timeout) hung 22+ min when curation.ts stalled on

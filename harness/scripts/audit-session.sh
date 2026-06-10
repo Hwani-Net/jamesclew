@@ -364,11 +364,10 @@ check_error_retry() {
 # ─── Check 18: 외부 모델 실제 호출 (Claude 자기 검수 금지) ───
 check_external_model_calls() {
   [ "$IS_BUILD" -eq 0 ] && echo "N/A|비빌드 세션" && return
-  local gpt41=0 # copilot-api localhost:4141 DEPRECATED 2026-05 (GitHub 차단) — 체크 제거
   local codex=$(safe_count "grep -c 'codex exec\|codex ' \"$TRANSCRIPT\"")
   local gemini=$(safe_count "grep -c 'gemini ' \"$TRANSCRIPT\"")
-  local total=$((gpt41 + codex + gemini))
-  [ "$total" -ge 2 ] && echo "PASS|외부 모델 ${total}건 (GPT41:${gpt41} CX:${codex} GM:${gemini})" && return
+  local total=$((codex + gemini))
+  [ "$total" -ge 2 ] && echo "PASS|외부 모델 ${total}건 (CX:${codex} GM:${gemini})" && return
   [ "$total" -gt 0 ] && echo "WARN|외부 모델 ${total}건 (이중 검수 미달)" && return
   echo "FAIL|외부 모델 호출 0건 — Claude 자기 검수 금지"
 }
@@ -427,26 +426,29 @@ check_pipeline_loop() {
 # (check_design is already defined above, moving marker)
 # ─── Check 24: Antigravity 잔존 체크 ───
 check_no_antigravity() {
-  # Check if opencode/antigravity references remain in HARNESS SOURCE CODE (not old transcripts)
+  # Detect PROCEDURAL usage of opencode/antigravity in harness source.
+  # Line-level grep that excludes deprecation-guard mentions (폐기/금지/deprecated/차단/리스크 등)
+  # — previously file-level grep flagged CLAUDE.md's own STICKY deprecation table every
+  # session (678+ false FAILs). Guard text is the cure, not the disease.
   local harness_dir="$HOME/.claude"
-  # Exclude self (audit-session.sh, evaluator.sh) to avoid self-reference false positives
-  local source_refs=$(grep -rli "opencode\|antigravity" \
+  local guard_filter="폐기|금지|deprecated|차단|리스크|대체|P-053|P-105|STICKY"
+  # Codex review 2026-06-11: guard-filter alone can hide a procedural-usage line that
+  # happens to contain a guard keyword → also count positive invocation patterns UNFILTERED.
+  local usage_pattern="opencode (serve|run|exec)|npx +opencode|antigravity (login|exec|run)"
+  local raw=$(grep -rniE "opencode|antigravity" \
     "$harness_dir/CLAUDE.md" \
     "$harness_dir/hooks/"*.sh \
     "$harness_dir/scripts/"*.sh \
     "$harness_dir/rules/"*.md \
-    2>/dev/null | grep -v "audit-session.sh" | grep -v "evaluator.sh" | wc -l)
-  source_refs=$(echo "$source_refs" | tr -d '[:space:]')
-  if [ "$source_refs" -gt 0 ]; then
-    local files=$(grep -rli "opencode\|antigravity" \
-      "$harness_dir/CLAUDE.md" \
-      "$harness_dir/hooks/"*.sh \
-      "$harness_dir/scripts/"*.sh \
-      "$harness_dir/rules/"*.md \
-      2>/dev/null | grep -v "audit-session.sh" | grep -v "evaluator.sh" | xargs -I{} basename {} | tr '\n' ', ')
-    echo "FAIL|소스 코드에 opencode/antigravity 참조 ${source_refs}건: ${files}"
+    2>/dev/null | grep -v "audit-session.sh\|evaluator.sh")
+  local usage_hits=$(printf '%s' "$raw" | grep -ciE "$usage_pattern" | tr -d '[:space:]')
+  local hits=$(printf '%s\n' "$raw" | grep -viE "$guard_filter" | grep .)
+  local source_refs=$(printf '%s' "$hits" | grep -c . | tr -d '[:space:]')
+  if [ "${usage_hits:-0}" -gt 0 ] || [ "${source_refs:-0}" -gt 0 ]; then
+    local files=$(printf '%s\n' "$raw" | cut -d: -f1 | sort -u | xargs -I{} basename {} | tr '\n' ', ')
+    echo "FAIL|opencode/antigravity 절차적 참조 — 호출패턴 ${usage_hits:-0}건 + 비가드 언급 ${source_refs:-0}건: ${files}"
   else
-    echo "PASS|소스 코드에 opencode/antigravity 참조 0건 (폐기 준수)"
+    echo "PASS|opencode/antigravity 절차적 참조 0건 (가드 문구 제외 + 호출패턴 검사, 폐기 준수)"
   fi
 }
 
@@ -474,14 +476,16 @@ check_rule_impl_gap() {
   # Extract literal filenames (*.sh, *.ts, *.js) from rule files
   # Uses grep -oE to capture only the filename token; excludes lines that are comments (#)
   # Exclude: (a) build artifacts, (b) config files, (c) npm CLI tools used via npx,
-  #         (d) root-level harness scripts (install.sh, deploy.sh)
-  local EXCLUDE_PATTERN="^(deploy\.sh|install\.sh|index\.js|settings\.js|api_cost_log\.js|package\.json|tsconfig\.js|firebase\.js|server\.js|app\.js|main\.js|config\.js|setup\.js|build\.js|drift-guard\.(sh|ts|js))$"
+  #         (d) root-level harness scripts (install.sh, deploy.sh),
+  #         (e) WSL2-side OpenClaw scripts (/home/creator/... — never deployed to ~/.claude)
+  local EXCLUDE_PATTERN="^(deploy\.sh|install\.sh|index\.js|settings\.js|api_cost_log\.js|package\.json|tsconfig\.js|firebase\.js|server\.js|app\.js|main\.js|config\.js|setup\.js|build\.js|drift-guard\.(sh|ts|js)|openclaw[a-z0-9_-]*\.(sh|ts|js)|runtime[a-z0-9_-]*\.js)$"
   local referenced_files
+  # \b prevents .json filenames being captured as .js (access.json → "access.js" false positive)
   referenced_files=$(
     {
-      grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)' "$claude_md" 2>/dev/null
+      grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)\b' "$claude_md" 2>/dev/null
       for f in "$rules_dir"/*.md; do
-        [ -f "$f" ] && grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)' "$f" 2>/dev/null
+        [ -f "$f" ] && grep -oE '[a-z][a-z0-9_-]+\.(sh|ts|js)\b' "$f" 2>/dev/null
       done
     } | sort -u | grep -vE "$EXCLUDE_PATTERN"
   )
@@ -578,10 +582,10 @@ check_5h_emergency() {
 check_version_manual_sync() {
   local version_mention=$(safe_count "grep -c 'changelog\|버전.*업데이트\|version.*update\|v[0-9]\+\.[0-9]\+\.[0-9]\+' \"$TRANSCRIPT\"")
   [ "$version_mention" -eq 0 ] && echo "N/A|버전 업데이트 없음" && return
-  # Check if harness-manual.md was also modified
-  local manual_edit=$(safe_count "grep '\"name\":\"Write\"\|\"name\":\"Edit\"' \"$TRANSCRIPT\" | grep -c 'harness-manual\.md'")
+  # Check if claude-code-manual.md was also modified (harness-manual.md archived 2026-06-11)
+  local manual_edit=$(safe_count "grep '\"name\":\"Write\"\|\"name\":\"Edit\"' \"$TRANSCRIPT\" | grep -c 'claude-code-manual\.md'")
   [ "$manual_edit" -gt 0 ] && echo "PASS|버전 언급 ${version_mention}건, 매뉴얼 수정 ${manual_edit}건" && return
-  echo "WARN|버전 언급 ${version_mention}건, harness-manual.md 수정 0건"
+  echo "WARN|버전 언급 ${version_mention}건, claude-code-manual.md 수정 0건"
 }
 
 # ─── Check 32: design-review Vision 호출 검증 ───

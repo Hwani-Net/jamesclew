@@ -339,7 +339,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/task-queue-sort.sh",
+            "command": "bash $HOME/.claude/hooks/task-queue-sort.sh",
             "timeout": 10000
           }
         ]
@@ -384,7 +384,7 @@
           },
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/pitfall-auto-record.sh",
+            "command": "bash $HOME/.claude/hooks/pitfall-auto-record.sh",
             "timeout": 20000
           }
         ]
@@ -436,17 +436,17 @@
           },
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/emergency-mode-check.sh",
+            "command": "bash $HOME/.claude/hooks/emergency-mode-check.sh",
             "timeout": 15000
           },
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/inbox-classifier.sh",
+            "command": "bash $HOME/.claude/hooks/inbox-classifier.sh",
             "timeout": 15000
           },
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/self-evolve-trigger.sh",
+            "command": "bash $HOME/.claude/hooks/self-evolve-trigger.sh",
             "timeout": 45000
           }
         ]
@@ -552,7 +552,7 @@
           },
           {
             "type": "command",
-            "command": "bash D:/jamesclew/harness/hooks/emergency-banner.sh",
+            "command": "bash $HOME/.claude/hooks/emergency-banner.sh",
             "timeout": 5000
           },
           {
@@ -618,5 +618,8 @@
   "statusLine": {
     "type": "command",
     "command": "~/.claude/awesome-statusline.sh"
-  }
+  },
+  "fallbackModel": [
+    "claude-sonnet-4-6"
+  ]
 }
