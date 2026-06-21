@@ -8,6 +8,8 @@ severity: medium
 related: [pitfall-258-reins-engineering-machine-verdict-deterministic-feedback, pitfall-256-deploy-claude-md-oneway-overwrite-manual-undeployed, pitfall-070-statusline-settings-fixed-model-override]
 ---
 
+> ⛔ **[2026-06-21 SUPERSEDED — pitfall-270]** Fable 5는 대표님 지시로 **사용 금지**, 메인 세션 **Opus 4.8**(`claude-opus-4-8`) 복귀. 본 pitfall의 'Fable 5 채택' 전제는 무효이나, **역할기반 모델명 일반화(하드코딩 금지) 교훈은 유효**. (STICKY 폐기 표 참조)
+
 ## 증상
 
 1. 2026-06-11 대표님이 메인 세션을 `claude-fable-5[1m]`로 전환했으나, 하네스 문서가 모델명을 하드코딩("Opus는 판단만", "Opus 최종 판단", "Opus 세션 compact 45%", STICKY "메인 세션 Sonnet 유지"+"Fable 5 관망")해 **다음 세션이 구모델로 회귀하거나 잘못된 라우팅을 따를 위험**.
