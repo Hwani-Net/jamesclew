@@ -30,7 +30,7 @@ policy_changes:
 
 # Claude Code 공식 매뉴얼 (로컬 신뢰 소스)
 
-> 최종 갱신: 2026-06-15 | Claude Code v2.1.177 기준 (메인 세션 **Fable 5** — `[1m]` suffix v2.1.173부터 자동 strip, 1M 기본)
+> 최종 갱신: 2026-06-21 | Claude Code v2.1.177 기준 (메인 세션 **Opus 4.8** `claude-opus-4-8` — ⛔ Fable 5 금지, STICKY 폐기 표 참조)
 > 1차 소스: `~/.claude/cache/changelog.md` / docs.claude.com
 > 관리: `bash harness/deploy.sh` 시 옵시디언 자동 미러
 
@@ -754,7 +754,7 @@ JamesClaw 하네스의 PreCompact 파이프라인 (5단계 순차 실행):
 | `/update` | Claude Code 업데이트 | — | 구버전 |
 | `/usage` | 사용량 확인 (5H/7D) | — | 구버전 |
 
-**JamesClaw 하네스 추가 커맨드**: `/prd`, `/pipeline-install`, `/pipeline-run`, `/qa`, `/blog-generate`, `/blog-review`, `/blog-fix`, `/blog-publish`, `/blog-pipeline`, `/agent-team`, `/ralph-loop`, `/self-heal`, `/design-review`, `/annotate-plan`, `/wiki-sync`, `/cost`, `/audit`, `/feedback-loop`, `/저장` 등 21개. 상세: `harness/docs/skills/skills-reference.md`.
+**JamesClaw 하네스 추가 커맨드**: `/prd`, `/pipeline-install`, `/pipeline-run`, `/qa`, `/blog-generate`, `/blog-review`, `/blog-fix`, `/blog-publish`, `/blog-pipeline`, `/agent-team`, `/ralph-loop`, `/self-heal`, `/design-review`, `/annotate-plan`, `/wiki-sync`, `/cost`, `/audit`, `/저장` 등 21개. 상세: `harness/docs/skills/skills-reference.md`.
 
 ---
 
@@ -1188,7 +1188,6 @@ Claude Code 외부에서 세션을 트리거하는 기능입니다.
 | `/extra-usage` | Remote Control에서 동작 (v2.1.113+) |
 | `@`-file 자동완성 | Remote Control에서 쿼리 가능 (v2.1.113+) |
 
-**JamesClaw 하네스 Remote Trigger**: `/reset-ping-setup` 커맨드로 5H/7D 리셋 타이밍에 자동 ping 설정.
 
 ---
 

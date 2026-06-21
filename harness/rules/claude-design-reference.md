@@ -13,7 +13,7 @@
 
 ## Claude Design 핵심 정의
 
-Anthropic Labs의 AI design tool. 출시 시점(2026-04) 디폴트는 **Claude Opus 4.7 vision** — 외부 도구라 현재 디폴트는 사용 시 재확인 (우리 메인 세션은 2026-06-11부터 Fable 5).
+Anthropic Labs의 AI design tool. 출시 시점(2026-04) 디폴트는 **Claude Opus 4.7 vision** — 외부 도구라 현재 디폴트는 사용 시 재확인 (우리 메인 세션은 2026-06-11부터 Opus 4.8).
 
 ### 산출물 유형
 - Mockup, Prototype
@@ -59,7 +59,7 @@ Anthropic Labs의 AI design tool. 출시 시점(2026-04) 디폴트는 **Claude O
 ### 3. Vision 정확도 (Opus 4.7)
 - 스크린샷 입력 → 기존 디자인 분석 → 동일 스타일로 새 화면 생성.
 - 경쟁사 사이트 캡처 → 우리 스타일로 변환 가능.
-- 단, 우리 정책: **Sonnet Vision 금지, 메인 세션 최상위 모델 직접**(현 Fable 5) — Claude Design 자체 모델(출시 시 Opus 4.7)도 상위 티어라 정책 부합.
+- 단, 우리 정책: **Sonnet Vision 금지, 메인 세션 최상위 모델 직접**(현 Opus 4.8) — Claude Design 자체 모델(출시 시 Opus 4.7)도 상위 티어라 정책 부합.
 
 ### 4. 인라인 코멘트 + 부분 수정
 - 캔버스의 특정 영역에 코멘트 → 그 부분만 재생성.

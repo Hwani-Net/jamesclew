@@ -1,6 +1,6 @@
 # Design Rubric — Evaluator 참조 기준
 
-출처: Anthropic Harness 실험 (Opus 4.6 기준, 2026-04 — 평가축은 모델 무관 일반 원칙. 2026-06-11 Fable 5 메인 체제에서도 유효 재확인)
+출처: Anthropic Harness 실험 (Opus 4.6 기준, 2026-04 — 평가축은 모델 무관 일반 원칙. 2026-06-11 Opus 4.8 메인 체제에서도 유효 재확인)
 용도: `/qa` Evaluator가 프런트엔드 결과물을 등급 평가할 때 "정답" 기준으로 삼음
 
 ## 평가 원칙
