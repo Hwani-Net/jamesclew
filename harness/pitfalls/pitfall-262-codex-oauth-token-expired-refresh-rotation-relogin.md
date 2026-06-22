@@ -44,7 +44,28 @@ CODEX_HOME=/home/creator/.codex /home/creator/.npm-global/bin/codex exec 'reply 
 - TARS 무응답 시 "모델 문제"로 단정 말고 **토큰 만료 먼저 실측** (auth.json exp).
 - last_refresh가 14일 초과면 사전 재인증.
 
+## 재발 — 2026-06-22 (Windows 메인 + Cowork, 동시 갱신 burn + 콜백 오탐)
+
+같은 `401 ... refresh token was already used`가 **Windows 메인 머신**에서 재발(TARS/WSL 아님). 대표님이 "codex MCP 에러 잦음 → 삭제"했으나 **MCP는 증상이지 원인 아님** — CLI·MCP·plugin 모두 같은 `~/.codex/auth.json`을 공유하므로 토큰 만료 시 전부 401.
+
+### 추가 규명
+1. **동시 갱신이 refresh token을 태움**: Cowork 데스크톱 codex MCP(P-269) + CLI(`codex exec`) + codex-rotate가 **single-use refresh token을 동시 갱신** → 한쪽이 rotation하면 나머지가 "already used". → **codex 접속은 CLI 단일 경로만 유지, 데스크톱 MCP 재추가 금지**(갱신 경쟁자 제거 = 근본 재발 방지).
+2. **콜백 "사이트에 연결할 수 없음" = 오탐 가능**: `localhost:1455` 로그인 서버가 종료 직전 콜백을 받아 **토큰 교환은 성공**할 수 있음. 브라우저 에러로 실패 단정 금지 → **반드시 `codex exec`로 실검증** (이번: 브라우저 "연결 안 됨"에도 auth.json 생성 + `codex exec`→PONG 성공).
+3. **백그라운드 `codex login` 프로세스 미유지 주의**: Start-Process 백그라운드 login이 콜백 도착 전 죽으면 1455 listener 소멸 → 콜백 실패. 가장 안정적인 건 **사용자 터미널에서 직접 `codex login`**. 단 죽어도 교환이 끝났을 수 있으니 codex exec 검증 우선.
+
+### Windows 재인증 절차 (검증됨, 2026-06-22)
+```bash
+bash harness/scripts/codex-refresh-helper.sh prepare 1   # rm ~/.codex/auth.json (⛔ codex logout 금지 — P-069 서버측 revoke)
+codex login                                              # 브라우저 OAuth, hwanizero01(계정1). 콜백 에러 떠도 일단 진행
+codex exec --skip-git-repo-check "say PONG"              # 실검증 (PONG=성공, 401=재시도)
+bash harness/scripts/codex-refresh-helper.sh save 1      # 새 토큰 → account1.json 백업
+```
+- 현 체제: **Pro 단일 계정 hwanizero01**(account2~6 아카이브, CLAUDE.md STICKY) — 6계정 아님.
+- 비용 인지: `codex exec` 1회 = 풀 에이전트 턴(실측 ~38s·~27.5k tokens·GPT-5.5, Claude와 별도 quota).
+
 ## 관련
 - CLAUDE.md codex-refresh 스킬 (6계정 OAuth 갱신, 14일 주기)
+- [[pitfall-269-cowork-desktop-mcp-separate-from-cli-codex-mcp-server]] — Cowork MCP ≠ CLI codex MCP (이번 동시 갱신 원인)
+- [[pitfall-069-codex-logout-revokes-server-token]] — logout 금지 (rm auth.json만)
 - [[pitfall-255-...]] mirrored 네트워킹 (OAuth localhost 콜백 의존)
 - P-241 WSL codex 경로 (Windows stale binary 구분)

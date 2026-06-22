@@ -1,7 +1,7 @@
 # Claude Design Reference — Anthropic Labs (2026-04-17 launch)
 
-출처: claude.ai/design 공식 + engincanveske.substack.com 비교 리뷰 + Anthropic Labs Reddit announcement
-등록일: 2026-05-16
+출처: claude.ai/design 공식 + engincanveske.substack.com 비교 리뷰 + Anthropic Labs Reddit announcement + 홍아린 AI 영상 `vHmJg8VQW5c`(실전 4단계 워크플로, 2026)
+등록일: 2026-05-16 (2026-06-21 실전 워크플로 섹션 추가)
 
 ## 사용 규칙
 
@@ -106,6 +106,42 @@ Anthropic Labs의 AI design tool. 출시 시점(2026-04) 디폴트는 **Claude O
 ```
 
 ---
+
+## 실전 제작 워크플로 (영상 기법 — 홍아린 AI `vHmJg8VQW5c`, 2026)
+
+> Claude Design + Claude Code 페어로 "AI 티 안 나는 고퀄 사이트"를 만드는 4단계. **핵심 명제: 디자인은 Claude Design, 작동·애니메이션은 Claude Code — 한쪽 단점을 다른 쪽이 메운다.** (영상은 Stitch 없이 두 툴만으로 30분 완성 시연.)
+
+### 1단계 — 참고 디자인 ≥3장 먼저 수집 (결과물을 가르는 핵심)
+- 프롬프트만 넣으면 Claude Design·v0·Bolt 모두 **AI 티 나는 똑같은 디자인** → 차별화 0. 대부분 이 단계를 건너뛰고 여기서 결과가 갈린다.
+- Pinterest(+ designspace, worldofportfolios)에서 만들 디자인 키워드 검색 → 마음에 드는 화면 **최소 3장** 캡처해 첨부.
+- **1장=따라그림(복제), 3장+=방향 학습(차별화)** — 우리 P-081(reference=차별화이지 복제 아님)·P-220(벤치마크 구조 대조) 정합.
+
+### 2단계 — Claude Design로 디자인 뽑기
+- Prototype 탭. **와이어프레임 말고 Hi-Fidelity** 선택 — 토큰 더 쓰지만 왕복 수정 횟수가 급감(순비용 절감).
+- **Design System 토글 기본 OFF** — 켜면 매 요청마다 전체를 읽어 시작부터 토큰 과소비 + **Claude Design ↔ Claude Code는 사용량(quota) 별도**라 초반 낭비 시 그 주 내내 고생. (꼭 쓰려면 영상에서 소개한 "겟디자인위키"류 사이트 — 실제 브랜드(Apple 등) 디자인 시스템 정리본 — 에서 색·폰트·버튼 복사 → Create에 붙여넣기. ⚠️ 정확한 URL은 영상 자막상 불명확 → 고정댓글 확인 후 사용.)
+- 프롬프트 공식 = **브랜드 + 필요한 섹션 + 원하는 분위기**. Claude가 색감·타겟·무드를 역질문 → 답하거나 "알아서 해줘". 참고 3장 첨부 필수.
+
+### 3단계 — 수정 3종 (용도·토큰 차이 큼)
+| 방법 | 용도 | 토큰 |
+|------|------|------|
+| **Edit** | 요소 직접 클릭 → 크기·색·폰트·투명도 즉시 변경 | 적음 |
+| **Comment** | 요소 핀 + "이거 지워" → **그 부분만**, 나머지 절대 불변 | 적음 |
+| **Tweaks(트윅스)** | 슬라이더로 색·폰트·여백·회전·콘텐츠 실시간 조절 | **0 (프롬프트 불필요)** |
+
+- **Tweaks가 킬러 기능**: 한 번 켜면 원하는 조합 정할 때까지 **무한정 토큰 0**으로 다듬기. "한 번에 뽑는 게 아니라 무한 빠르게 다듬는다." → 우리 5H/7D 비용 정책과 정합, 적극 활용.
+- **스타일 탐색 ("목록 먼저")**: `이 디자인을 완전히 다른 스타일로 여러 개 제안. 먼저 가능한 스타일 목록부터 나열해줘.` ← **마지막 문장이 핵심**(Claude가 임의로 고르지 않고 목록 제시 → 사용자 선택). 우리 **P-213/P-217 "옵션 목록 먼저"** 와 동일 패턴. 고른 스타일로 재생성(메뉴·내용 유지, 디자인만 교체). `트윅스 개수 늘려줘`로 탐색 폭 확대.
+- ⛔ **Claude Design에서 애니메이션 넣지 말 것** — 작업 몇 번에 한 주치 토큰 증발. 디자인만 뽑고 끝. 움직임·반응은 Claude Code가 훨씬 잘함.
+
+### 4단계 — Claude Code 핸드오프 + 작동화 + 애니메이션
+- Share → **"Handoff to Claude Code"** → 생성된 명령어 복사 → VS Code/Cursor 터미널의 Claude Code에 붙여넣기. 색·폰트·레이아웃·섹션 + **Tweaks까지 그대로 보존**(배포 시 Tweaks만 제거).
+- **이미지 교체**: `input/` 폴더 생성 → 이미지 저장 → `input 폴더 이미지를 각 자리에 맞게 넣고 텍스트도 바꿔줘` (말 한마디로 끝).
+- **애니메이션**: 전용 무료 애니메이션 컴포넌트 라이브러리 사이트(전 세계 디자이너 애니메이션 모음 — 움직이는 버튼·카드 플립·슬라이딩 후기·호버 가격표; ⚠️ 정확한 사이트명 자막 불명 → 영상 고정댓글 확인)에서 복사 → Claude Code에 주며 **"할 것 + 안 할 것 동시 지시"**: `이 섹션 디자인은 절대 건드리지 마, 카드 올라오는 애니메이션만 가져와.` ← 우리 **Karpathy G3(surgical changes)·regression-guard** 와 정합. 딴 데 손 안 댐.
+- **시그니처 효과(스크롤 비디오 히어로)**: 라이브러리에서 `scroll video expansion hero` → `input/`에 이미지 1 + 루프 영상 1 → `히어로를 이걸로 교체, 영상이 루프 재생되며 나타나게.`
+
+### 영상 기법 → 하네스 적용 메모
+- 우리 블로그/랜딩(`smartreview`, `gpt-korea`) 신규 페이지 제작 표준 경로: ①Pinterest 3장+ 수집 → ②Claude Design Hi-Fi + **Tweaks 0토큰 폴리시** + "목록 먼저" 스타일 탐색 → ③Handoff → Claude Code(Firebase 통합) → ④애니메이션 "do+don't" 프롬프트.
+- 검증은 기존대로: `/design-review`(메인 모델 Vision) 라이브 대조 + drift-guard 토큰 일관성 + `verify-deploy.sh`.
+- **비용 우선순위**: Tweaks/Comment(0~소액) 우선, 재생성·Handoff·Claude Design 애니메이션은 토큰 큰 작업 → 결재 인지(P-168).
 
 ## 비용 가이드 (Pro 구독 기준)
 
