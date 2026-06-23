@@ -16,3 +16,7 @@
 ## 드롭 로그 (rel 0~1, 기록만 — 재상신 방지)
 - ✅ 보유(검증): bytedance/deer-flow(=우리 superagent), omnigent-ai/omnigent(=메타하네스), DietrichGebert/ponytail(=Karpathy G2)
 - ❌ 무관: tursodatabase/turso, ZhuLinsen/daily_stock_analysis, tamnd/kage, zhongerxin/Cowart
+
+## 평가 결과 (2026-06-22, watchlist 🎯 후보)
+- **DeusData/codebase-memory-mcp → 🎯 ADOPT 권장**: 코드베이스 영속 지식그래프 MCP, **120x 토큰절감**(구조 쿼리 ~3.4k vs 파일탐색 412k), 단일 static 바이너리(deps·API키 0), 설치 시 Claude Code/Codex/OpenClaw MCP·hook 자동구성. **Understand-Anything($12 pnpm·1회 스냅샷) 대체/보완** — 라이브·저토큰·경량. 위험 낮음(단일 binary·무인증·로컬) → 설치 시도+검증 권장. (단 최근 codex MCP 사태 고려: 단일 binary·무인증임을 확인하고 도입, 동시 갱신 경쟁 없음.)
+- **vercel/eve → study only**: TS 프레임워크라 직접 채택 X. 가치는 **durable execution 모델**(이벤트로그·스텝 체크포인트·last-good 재개·crash/deploy 생존) — 이를 `rules/durable-execution.md`(#1 격차 설계)에 반영 완료.
