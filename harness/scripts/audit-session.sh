@@ -14,10 +14,10 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 56개 (2026-05-19)
-# 마지막 업데이트: 2026-05-19 (check_v143/check_v144 4개 추가
-#                               — Claude Code v2.1.143~v2.1.144 신기능 감사
-#                               — Stop hook 8-cap, /model 단일세션 정책 변화 등)
+# 현재 체크 수: 69개 (2026-06-26)
+# 마지막 업데이트: 2026-06-26 (check_v153~check_v176 13개 추가
+#                               — Claude Code v2.1.153~v2.1.177 신기능 감사
+#                               — /model 영구화 원복, Fable 5 금지, nested subagent, hook if 수정 등)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -74,11 +74,24 @@
 #  52 check_v142_fast_mode_opus47   — v2.1.142 /fast 기본값 Opus 4.7 변경 인지
 #  53 check_v143_stop_hook_block_cap  — v2.1.143 Stop hook 8 consecutive blocks 자동 종료 (native 안전망)
 #  54 check_v143_powershell_policy    — v2.1.143 PowerShell -ExecutionPolicy Bypass 기본 적용 (Bedrock/Vertex/Foundry)
-#  55 check_v144_model_single_session — v2.1.144 /model 단일 세션 변경 정책 (default는 settings.json 또는 `d` 키)
+#  55 check_v144_model_single_session — v2.1.144 /model 단일 세션 변경 정책 (v2.1.153 원복 — `s` 키 현재세션)
 #  56 check_v144_mcp_paginated_tools  — v2.1.144 MCP paginated tools/list fix 인지 (agentmemory 등 도구 많은 MCP)
+#  57 check_v153_model_policy_revert  — v2.1.153 /model 영구화 원복 + `d` 키 제거 + `s` 키(현재세션) 인지
+#  58 check_v154_opus48_effort        — v2.1.154 Opus 4.8 default high effort + /effort xhigh 인지
+#  59 check_v154_dynamic_workflows    — v2.1.154 Dynamic Workflows (/workflows) opt-in 인지
+#  60 check_v159_ultracode_trigger    — v2.1.159 트리거어 workflow→ultracode 인지
+#  61 check_v163_hook_additional_context — v2.1.163 Stop/SubagentStop hook additionalContext 활용
+#  62 check_v166_fallback_model       — v2.1.166 fallbackModel + MAX_THINKING_TOKENS=0 설정 인지
+#  63 check_v169_safe_mode            — v2.1.169 --safe-mode + /cd + disableBundledSkills 인지
+#  64 check_v170_fable5_banned        — v2.1.170 Fable 5 출시·사용 금지(STICKY) 준수
+#  65 check_v172_nested_subagent      — v2.1.172 서브에이전트 중첩 스폰 최대 5단계 + 1M compact 복구 인지
+#  66 check_v173_fable5_suffix_strip  — v2.1.173 Fable 5 [1m] suffix 자동 strip 인지
+#  67 check_v174_workflow_attribution — v2.1.174 Workflow agent() attribution + background env var 상속 인지
+#  68 check_v175_enforce_models       — v2.1.175 enforceAvailableModels 설정 인지
+#  69 check_v176_hook_if_path_fix     — v2.1.176 hook if 경로 매칭 수정 인지 (verify-deploy/quality-gate/enforce-review)
 #
 # ─── 미구현 (TODO) ─────────────────────────────────────────────────────────
-# (없음 — 모든 TODO 구현 완료 2026-05-19)
+# (없음 — 모든 TODO 구현 완료 2026-06-26)
 # ═══════════════════════════════════════════════════════════════════════════
 
 MODE="${1:---full}"
@@ -1017,7 +1030,7 @@ check_v144_model_single_session() {
     model_val=$(grep -oE '"model"[[:space:]]*:[[:space:]]*"[a-z]+"' "$settings_file" | head -1)
     echo "PASS|settings.json에 ${model_val} default 명시 — v2.1.144 /model 단일세션 정책 호환"
   else
-    echo "WARN|settings.json model 필드 미명시 — v2.1.144+ /model 단일세션. opusplan 고정 시 settings.json 또는 picker 'd' 키 default 설정 권장"
+    echo "WARN|settings.json model 필드 미명시 — v2.1.153+ /model 영구화(원복). opusplan 고정 시 settings.json model 필드 또는 /model 1회 호출 후 자동 저장. 현재세션만 변경 시 picker 's' 키 사용. ('d' 키는 v2.1.153 제거됨)"
   fi
 }
 
@@ -1059,6 +1072,259 @@ check_v119_config_persistence() {
   else
     # File exists but no user-config fields = default state, not an error
     echo "WARN|settings.json에 /config 저장 필드 없음 — /config로 설정 변경 후 재시작해도 유지되는지 직접 확인 권장"
+  fi
+}
+
+# ─── Check 57: v2.1.153 /model 영구화 원복 + d키 제거 + s키 현재세션 ───
+check_v153_model_policy_revert() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.153 /model 영구화 원복 정책 확인 불가"
+    return
+  fi
+  local s_key
+  s_key=$(grep -cE "picker.*'s'|'s' 키|s.*현재세션|thisSessionOnly|modelPicker:thisSessionOnly" "$claude_md" 2>/dev/null || echo "0")
+  s_key=$(echo "$s_key" | tr -d '[:space:]')
+  local d_key_removed
+  d_key_removed=$(grep -cE "d.*키.*제거|d.*액션.*v2.1.153|v2.1.153.*제거|d.*키는.*v2.1.153" "$claude_md" 2>/dev/null || echo "0")
+  d_key_removed=$(echo "$d_key_removed" | tr -d '[:space:]')
+  if [ "$s_key" -gt 0 ] && [ "$d_key_removed" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 v2.1.153 /model 영구화 원복 + 's' 키 인지 + 'd' 키 제거 명시 확인"
+  elif [ "$s_key" -gt 0 ]; then
+    echo "WARN|CLAUDE.md에 's' 키 언급은 있으나 'd' 키 제거 명시 미확인 — v2.1.153 정책 불완전"
+  else
+    echo "FAIL|CLAUDE.md에 v2.1.153 /model 영구화 원복 정책('s' 키 현재세션) 미반영"
+  fi
+}
+
+# ─── Check 58: v2.1.154 Opus 4.8 + /effort xhigh 인지 ───
+check_v154_opus48_effort() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.154 Opus 4.8 / effort 정책 확인 불가"
+    return
+  fi
+  local opus48
+  opus48=$(grep -cE "opus-4-8|opus 4\.8|Opus 4\.8" "$claude_md" 2>/dev/null || echo "0")
+  opus48=$(echo "$opus48" | tr -d '[:space:]')
+  local effort_xhigh
+  effort_xhigh=$(grep -cE "effort xhigh|/effort xhigh|xhigh" "$claude_md" 2>/dev/null || echo "0")
+  effort_xhigh=$(echo "$effort_xhigh" | tr -d '[:space:]')
+  if [ "$opus48" -gt 0 ] && [ "$effort_xhigh" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 Opus 4.8 + /effort xhigh 인지 확인 (v2.1.154)"
+  elif [ "$opus48" -gt 0 ]; then
+    echo "WARN|Opus 4.8 언급 있으나 /effort xhigh 미확인 — v2.1.154 effort 정책 점검 권장"
+  else
+    echo "FAIL|CLAUDE.md에 Opus 4.8 또는 /effort xhigh 미반영 — v2.1.154 모델 정책 확인 필요"
+  fi
+}
+
+# ─── Check 59: v2.1.154 Dynamic Workflows /workflows opt-in 인지 ───
+check_v154_dynamic_workflows() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.154 Dynamic Workflows 정책 확인 불가"
+    return
+  fi
+  local wf
+  wf=$(grep -cE "Dynamic Workflows|/workflows" "$claude_md" 2>/dev/null || echo "0")
+  wf=$(echo "$wf" | tr -d '[:space:]')
+  if [ "$wf" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 Dynamic Workflows(/workflows) opt-in 인지 확인 (v2.1.154)"
+  else
+    echo "WARN|CLAUDE.md에 Dynamic Workflows(/workflows) 미언급 — v2.1.154 신기능 인지 권장"
+  fi
+}
+
+# ─── Check 60: v2.1.159 트리거어 ultracode 인지 ───
+check_v159_ultracode_trigger() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.159 ultracode 트리거 확인 불가"
+    return
+  fi
+  local ultracode
+  ultracode=$(grep -c "ultracode" "$claude_md" 2>/dev/null || echo "0")
+  ultracode=$(echo "$ultracode" | tr -d '[:space:]')
+  if [ "$ultracode" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 ultracode 트리거어 인지 확인 (v2.1.159, workflow→ultracode)"
+  else
+    echo "WARN|CLAUDE.md에 ultracode 트리거어 미언급 — v2.1.159 이후 workflow→ultracode 변경 확인 권장"
+  fi
+}
+
+# ─── Check 61: v2.1.163 Stop hook additionalContext 활용 ───
+check_v163_hook_additional_context() {
+  local stop_hook="$HOME/.claude/hooks/stop-dispatcher.sh"
+  if [ ! -f "$stop_hook" ]; then
+    echo "WARN|stop-dispatcher.sh 없음 — v2.1.163 additionalContext 확인 불가"
+    return
+  fi
+  local has_ctx
+  has_ctx=$(grep -c "additionalContext" "$stop_hook" 2>/dev/null || echo "0")
+  has_ctx=$(echo "$has_ctx" | tr -d '[:space:]')
+  if [ "$has_ctx" -gt 0 ]; then
+    echo "PASS|stop-dispatcher.sh에 additionalContext 활용 확인 (v2.1.163 결정론 피드백)"
+  else
+    echo "WARN|stop-dispatcher.sh에 additionalContext 미사용 — v2.1.163 결정론 피드백 미적용 가능"
+  fi
+}
+
+# ─── Check 62: v2.1.166 fallbackModel 설정 ───
+check_v166_fallback_model() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ ! -f "$settings_file" ]; then
+    echo "WARN|settings.json 없음 — v2.1.166 fallbackModel 확인 불가"
+    return
+  fi
+  local has_fallback
+  has_fallback=$(grep -c "fallbackModel" "$settings_file" 2>/dev/null || echo "0")
+  has_fallback=$(echo "$has_fallback" | tr -d '[:space:]')
+  if [ "$has_fallback" -gt 0 ]; then
+    local fallback_val
+    fallback_val=$(grep -oE '"fallbackModel"[[:space:]]*:[[:space:]]*"[^"]+"' "$settings_file" | head -1)
+    echo "PASS|settings.json에 ${fallback_val} 설정 — v2.1.166 overload 폴백 활성"
+  else
+    echo "WARN|settings.json에 fallbackModel 미설정 — v2.1.166 overload 시 자동 폴백 미구성 (참고용)"
+  fi
+}
+
+# ─── Check 63: v2.1.169 --safe-mode / disableBundledSkills 인지 ───
+check_v169_safe_mode() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.169 safe-mode 정책 확인 불가"
+    return
+  fi
+  local safe_mode
+  safe_mode=$(grep -cE "safe-mode|disableBundledSkills|/cd" "$claude_md" 2>/dev/null || echo "0")
+  safe_mode=$(echo "$safe_mode" | tr -d '[:space:]')
+  if [ "$safe_mode" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 v2.1.169 신기능(--safe-mode / /cd / disableBundledSkills) 인지 확인"
+  else
+    echo "WARN|CLAUDE.md에 v2.1.169 --safe-mode / disableBundledSkills 미언급 — hook 격리 진단 도구 미인지 가능"
+  fi
+}
+
+# ─── Check 64: v2.1.170 Fable 5 사용 금지 준수 ───
+check_v170_fable5_banned() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  local settings_file="$HOME/.claude/settings.json"
+  local claude_md_ban=0
+  if [ -f "$claude_md" ]; then
+    claude_md_ban=$(grep -cE "fable.*금지|Fable.*금지|fable-5.*banned|claude-fable-5.*금지|Fable 5.*사용 금지" "$claude_md" 2>/dev/null || echo "0")
+    claude_md_ban=$(echo "$claude_md_ban" | tr -d '[:space:]')
+  fi
+  local settings_fable=0
+  if [ -f "$settings_file" ]; then
+    settings_fable=$(grep -c "fable" "$settings_file" 2>/dev/null || echo "0")
+    settings_fable=$(echo "$settings_fable" | tr -d '[:space:]')
+  fi
+  if [ "$claude_md_ban" -gt 0 ] && [ "$settings_fable" -eq 0 ]; then
+    echo "PASS|Fable 5 사용 금지 준수 — CLAUDE.md 금지 명시 + settings.json 미사용 (v2.1.170 STICKY)"
+  elif [ "$settings_fable" -gt 0 ]; then
+    echo "FAIL|settings.json에 fable 관련 설정 감지 — Fable 5 사용 금지(2026-06-21 STICKY) 위반 의심"
+  else
+    echo "WARN|CLAUDE.md에 Fable 5 금지 명시 미확인 — STICKY 결정 미반영 가능"
+  fi
+}
+
+# ─── Check 65: v2.1.172 서브에이전트 중첩 스폰 5단계 인지 ───
+check_v172_nested_subagent() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.172 nested subagent 정책 확인 불가"
+    return
+  fi
+  local nested
+  nested=$(grep -cE "중첩.*스폰|nested.*subagent|5단계|최대 5" "$claude_md" 2>/dev/null || echo "0")
+  nested=$(echo "$nested" | tr -d '[:space:]')
+  if [ "$nested" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 v2.1.172 서브에이전트 중첩 스폰(최대 5단계) 인지 확인"
+  else
+    echo "WARN|CLAUDE.md에 v2.1.172 nested subagent 5단계 미언급 — 중첩 위임 제한 미인지 가능"
+  fi
+}
+
+# ─── Check 66: v2.1.173 Fable 5 [1m] suffix 자동 strip 인지 ───
+check_v173_fable5_suffix_strip() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.173 [1m] suffix strip 정책 확인 불가"
+    return
+  fi
+  local strip
+  strip=$(grep -cE "\[1m\].*strip|suffix.*strip|1m.*자동.*strip|fable.*\[1m\]|opusplan\[1m\]" "$claude_md" 2>/dev/null || echo "0")
+  strip=$(echo "$strip" | tr -d '[:space:]')
+  if [ "$strip" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 v2.1.173 Fable 5 [1m] suffix 자동 strip 인지 확인"
+  else
+    echo "WARN|CLAUDE.md에 v2.1.173 [1m] suffix strip 미언급 — opusplan[1m] 등 suffix 동작 미인지 가능 (참고용)"
+  fi
+}
+
+# ─── Check 67: v2.1.174 Workflow agent() attribution 인지 ───
+check_v174_workflow_attribution() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$claude_md" ]; then
+    echo "WARN|CLAUDE.md 없음 — v2.1.174 Workflow attribution 정책 확인 불가"
+    return
+  fi
+  local attr
+  attr=$(grep -cE "v2\.1\.174|Workflow.*attribution|background.*env.*var|background env var" "$claude_md" 2>/dev/null || echo "0")
+  attr=$(echo "$attr" | tr -d '[:space:]')
+  if [ "$attr" -gt 0 ]; then
+    echo "PASS|CLAUDE.md에 v2.1.174 Workflow agent() attribution / background env var 인지 확인"
+  else
+    echo "WARN|CLAUDE.md에 v2.1.174 미언급 — Workflow agent() attribution + background env var 상속 수정 미인지 가능 (참고용)"
+  fi
+}
+
+# ─── Check 68: v2.1.175 enforceAvailableModels 인지 ───
+check_v175_enforce_models() {
+  local settings_file="$HOME/.claude/settings.json"
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  local in_settings=0
+  local in_manual=0
+  if [ -f "$settings_file" ]; then
+    in_settings=$(grep -c "enforceAvailableModels" "$settings_file" 2>/dev/null || echo "0")
+    in_settings=$(echo "$in_settings" | tr -d '[:space:]')
+  fi
+  if [ -f "$claude_md" ]; then
+    in_manual=$(grep -cE "enforceAvailableModels|v2\.1\.175" "$claude_md" 2>/dev/null || echo "0")
+    in_manual=$(echo "$in_manual" | tr -d '[:space:]')
+  fi
+  if [ "$in_settings" -gt 0 ]; then
+    echo "PASS|settings.json에 enforceAvailableModels 설정 — v2.1.175 모델 제한 활성"
+  elif [ "$in_manual" -gt 0 ]; then
+    echo "WARN|CLAUDE.md에 v2.1.175 언급 있으나 settings.json 미설정 — enforceAvailableModels 미적용 (참고용)"
+  else
+    echo "WARN|v2.1.175 enforceAvailableModels 미설정 — 모델 제한 기능 미사용 (참고용)"
+  fi
+}
+
+# ─── Check 69: v2.1.176 hook if 경로 매칭 수정 인지 ───
+check_v176_hook_if_path_fix() {
+  local hooks_dir="$HOME/.claude/hooks"
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  local has_verify=0
+  local has_quality=0
+  local has_enforce=0
+  [ -f "${hooks_dir}/verify-deploy.sh" ] && has_verify=1
+  [ -f "${hooks_dir}/quality-gate.sh" ] && has_quality=1
+  [ -f "${hooks_dir}/enforce-review.sh" ] && has_enforce=1
+  local in_manual=0
+  if [ -f "$claude_md" ]; then
+    in_manual=$(grep -cE "v2\.1\.176|hook.*if.*경로|hook.*if.*path.*fix" "$claude_md" 2>/dev/null || echo "0")
+    in_manual=$(echo "$in_manual" | tr -d '[:space:]')
+  fi
+  local hooks_present=$((has_verify + has_quality + has_enforce))
+  if [ "$hooks_present" -ge 2 ] && [ "$in_manual" -gt 0 ]; then
+    echo "PASS|v2.1.176 hook if 경로 매칭 수정 인지 + 영향 hook(verify-deploy/quality-gate/enforce-review) ${hooks_present}/3 존재 확인"
+  elif [ "$hooks_present" -ge 2 ]; then
+    echo "WARN|영향 hook ${hooks_present}/3 존재하나 CLAUDE.md v2.1.176 미언급 — hook if 경로 매칭 수정 미인지 가능"
+  else
+    echo "WARN|v2.1.176 hook if 경로 매칭 수정 관련 hook(verify-deploy/quality-gate/enforce-review) ${hooks_present}/3 존재 (참고용)"
   fi
 }
 
@@ -1137,11 +1403,24 @@ R53=$(check_v143_stop_hook_block_cap)
 R54=$(check_v143_powershell_policy)
 R55=$(check_v144_model_single_session)
 R56=$(check_v144_mcp_paginated_tools)
+R57=$(check_v153_model_policy_revert)
+R58=$(check_v154_opus48_effort)
+R59=$(check_v154_dynamic_workflows)
+R60=$(check_v159_ultracode_trigger)
+R61=$(check_v163_hook_additional_context)
+R62=$(check_v166_fallback_model)
+R63=$(check_v169_safe_mode)
+R64=$(check_v170_fable5_banned)
+R65=$(check_v172_nested_subagent)
+R66=$(check_v173_fable5_suffix_strip)
+R67=$(check_v174_workflow_attribution)
+R68=$(check_v175_enforce_models)
+R69=$(check_v176_hook_if_path_fix)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "agentmemory Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "agentmemory Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated" "v153 Model Policy Revert" "v154 Opus48 Effort" "v154 Dynamic Workflows" "v159 Ultracode Trigger" "v163 Hook AdditionalCtx" "v166 FallbackModel" "v169 Safe Mode" "v170 Fable5 Banned" "v172 Nested Subagent" "v173 Fable5 Suffix Strip" "v174 Workflow Attribution" "v175 EnforceModels" "v176 Hook If PathFix")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56" "$R57" "$R58" "$R59" "$R60" "$R61" "$R62" "$R63" "$R64" "$R65" "$R66" "$R67" "$R68" "$R69")
 
-TOTAL_CHECKS=56
+TOTAL_CHECKS=69
 
 # ─── Score ───
 PASS=0; FAIL=0; WARN=0; NA=0
