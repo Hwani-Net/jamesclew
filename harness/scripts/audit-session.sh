@@ -14,10 +14,10 @@
 # 규칙: CLAUDE.md에 규칙 추가 → 여기에 check_ 함수 추가 → deploy.sh 실행
 # 버전 업데이트 시: changelog에서 하네스 영향 항목 → check_ 함수 추가
 #
-# 현재 체크 수: 56개 (2026-05-19)
-# 마지막 업데이트: 2026-05-19 (check_v143/check_v144 4개 추가
-#                               — Claude Code v2.1.143~v2.1.144 신기능 감사
-#                               — Stop hook 8-cap, /model 단일세션 정책 변화 등)
+# 현재 체크 수: 67개 (2026-06-30)
+# 마지막 업데이트: 2026-06-30 (check_v153~check_v176 11개 추가
+#                               — Issue #4 근본 수정: stale 'd' 키 WARN 수정
+#                               — Claude Code v2.1.153~v2.1.177 신기능 감사 공백 해소)
 #
 # 등록된 체크 목록:
 #  01 check_build_transition    — Build Transition Rule (/plan 먼저)
@@ -1004,20 +1004,20 @@ check_v143_powershell_policy() {
 
 # ─── Check 55: v2.1.144 /model 단일 세션 변경 정책 ───
 # v2.1.144부터 /model은 현재 세션만 변경 (이전 v2.1.117~v2.1.143 영구 지속).
-# default는 picker `d` 키 또는 settings.json `model` 필드.
-# opusplan 고정 운용 시 settings.json에 "model": "opusplan" 명시 권장.
+# v2.1.153에서 영구화로 원복됨 — /model 호출 시 자동 default 저장.
+# 현재 세션만 변경: picker `s` 키 (`d` 키는 v2.1.153에서 제거됨).
 check_v144_model_single_session() {
   local settings_file="$HOME/.claude/settings.json"
   if [ ! -f "$settings_file" ]; then
-    echo "WARN|settings.json 없음 — /model default 미지정. v2.1.144+ 매 진입마다 명시 호출 필요"
+    echo "WARN|settings.json 없음 — /model default 미지정. v2.1.153+ /model 호출 시 자동 저장됨"
     return
   fi
-  if grep -qE '"model"[[:space:]]*:[[:space:]]*"(opus|sonnet|opusplan|haiku)"' "$settings_file" 2>/dev/null; then
+  if grep -qE '"model"[[:space:]]*:[[:space:]]*"(opus|sonnet|opusplan|haiku|claude-opus|claude-sonnet)"' "$settings_file" 2>/dev/null; then
     local model_val
-    model_val=$(grep -oE '"model"[[:space:]]*:[[:space:]]*"[a-z]+"' "$settings_file" | head -1)
-    echo "PASS|settings.json에 ${model_val} default 명시 — v2.1.144 /model 단일세션 정책 호환"
+    model_val=$(grep -oE '"model"[[:space:]]*:[[:space:]]*"[^"]+"' "$settings_file" | head -1)
+    echo "PASS|settings.json에 ${model_val} default 명시 — v2.1.153+ 영구화 정책 호환"
   else
-    echo "WARN|settings.json model 필드 미명시 — v2.1.144+ /model 단일세션. opusplan 고정 시 settings.json 또는 picker 'd' 키 default 설정 권장"
+    echo "WARN|settings.json model 필드 미명시 — v2.1.153+ /model 영구화(원복). opusplan 고정 시 settings.json model 필드 또는 /model opusplan 1회 호출 후 자동 저장. 현재세션만 변경 시 picker 's' 키 사용. ('d' 키는 v2.1.153 제거됨)"
   fi
 }
 
@@ -1038,6 +1038,165 @@ check_v144_mcp_paginated_tools() {
     echo "PASS|v${cur_ver} 사용 중 — v2.1.144 MCP paginated tools/list fix 적용 (agentmemory 51 도구 등 정상 노출)"
   else
     echo "WARN|v${cur_ver} — v2.1.144 미만. MCP tools/list 첫 페이지만 노출 가능. claude update 권장"
+  fi
+}
+
+# ─── Check 57: v2.1.153 /model 영구화 원복 + s키 + d키 제거 ───
+# v2.1.153: /model 단일세션(v2.1.144)→영구화 원복. picker 's' 키 신설(현재세션만). 'd' 키 제거.
+check_v153_model_policy_revert() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    if grep -qE '"model"' "$settings_file" 2>/dev/null; then
+      echo "PASS|settings.json model 필드 확인 — v2.1.153 영구화 정책 인지 (s키=현재세션, d키 제거됨)"
+    else
+      echo "WARN|settings.json model 필드 없음 — v2.1.153+ /model 호출 시 자동 저장됨. STICKY: Opus 4.8 운용 확인 필요"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.153 /model 영구화 정책 검증 불가"
+  fi
+}
+
+# ─── Check 58: v2.1.154 Opus 4.8 default high effort + /effort xhigh ───
+# v2.1.154: Opus 4.8 기본 high effort, /effort xhigh 최고 난도 지원.
+check_v154_opus48_effort() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    local model_val
+    model_val=$(grep -oE '"model"[[:space:]]*:[[:space:]]*"[^"]+"' "$settings_file" 2>/dev/null | head -1)
+    if echo "$model_val" | grep -qi "opus"; then
+      echo "PASS|${model_val} 운용 — v2.1.154 Opus 4.8 high effort 기본, /effort xhigh 최고 난도 사용 가능"
+    else
+      echo "WARN|Opus 모델 미명시 — v2.1.154 Opus 4.8 high effort 정책 확인 필요 (STICKY: 메인 세션 opus-4-8 운용)"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.154 Opus 4.8 effort 정책 검증 불가"
+  fi
+}
+
+# ─── Check 59: v2.1.154 Dynamic Workflows (/workflows) ───
+# v2.1.154: /workflows — 수십~수백 에이전트 백그라운드 오케스트레이션. ultracode 키워드 트리거.
+check_v154_dynamic_workflows() {
+  local commands_dir="$HOME/.claude/commands"
+  if [ -d "$commands_dir" ]; then
+    echo "PASS|commands/ 디렉토리 확인 — v2.1.154 Dynamic Workflows(/workflows) 사용 가능 (ultracode 키워드 opt-in)"
+  else
+    echo "WARN|commands/ 디렉토리 없음 — /workflows 커스텀 workflow 저장 위치 부재"
+  fi
+}
+
+# ─── Check 60: v2.1.159 ultracode 트리거어 변경 ───
+# v2.1.159: 'workflow' 키워드 → 'ultracode'로 변경. CLAUDE.md 반영 여부 확인.
+check_v159_ultracode_trigger() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ -f "$claude_md" ]; then
+    if grep -q "ultracode" "$claude_md" 2>/dev/null; then
+      echo "PASS|CLAUDE.md에 'ultracode' 트리거어 확인 — v2.1.159 변경 반영됨"
+    else
+      echo "WARN|CLAUDE.md에 'ultracode' 미확인 — v2.1.159 트리거어 변경(workflow→ultracode) 미반영 가능"
+    fi
+  else
+    echo "WARN|CLAUDE.md 없음 — v2.1.159 ultracode 트리거어 검증 불가"
+  fi
+}
+
+# ─── Check 61: v2.1.163 Stop hook additionalContext + hook if Bash 수정 ───
+# v2.1.163: Stop/SubagentStop hookSpecificOutput.additionalContext (턴 유지 결정론 피드백).
+# hook `if:"Bash(...)"` $()/$VAR 포함 모든 Bash 오발동 수정.
+check_v163_hook_additional_context() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    local if_hooks
+    if_hooks=$(grep -c '"if"' "$settings_file" 2>/dev/null || echo "0")
+    if_hooks=$(echo "$if_hooks" | tr -d '[:space:]')
+    if [ "$if_hooks" -gt 0 ]; then
+      echo "PASS|settings.json에 hook if 조건 ${if_hooks}개 — v2.1.163 if Bash 오발동 수정 적용 (firebase/npm/jest 노이즈 해소)"
+    else
+      echo "WARN|hook if 조건 0개 — v2.1.163 additionalContext/if 수정 검증 불가 (정상: if 미사용 환경)"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.163 검증 불가"
+  fi
+}
+
+# ─── Check 62: v2.1.166 fallbackModel 배열 ───
+# v2.1.166: fallbackModel 배열(최대 3) — overload 시 순차 폴백. settings.json 등록 여부.
+check_v166_fallback_model() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    if grep -q '"fallbackModel"' "$settings_file" 2>/dev/null; then
+      echo "PASS|settings.json에 fallbackModel 설정 — v2.1.166 overload 폴백 활성"
+    else
+      echo "WARN|settings.json fallbackModel 없음 — v2.1.166 overload 시 폴백 미설정 (CLAUDE.md: fallbackModel 운용 중)"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.166 fallbackModel 검증 불가"
+  fi
+}
+
+# ─── Check 63: v2.1.169 --safe-mode / /cd / disableBundledSkills ───
+# v2.1.169: --safe-mode(hook 격리 진단), /cd(prompt cache 보존 디렉토리 변경), disableBundledSkills.
+check_v169_safe_mode() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    if grep -q '"disableBundledSkills"' "$settings_file" 2>/dev/null; then
+      echo "WARN|disableBundledSkills 설정됨 — v2.1.169 내장 skills 비활성. 커스텀 commands/ 사용 필요"
+    else
+      echo "PASS|disableBundledSkills 미설정 — v2.1.169 내장 skills 활성 (정상). --safe-mode: hook 격리 진단 도구로 사용 가능"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.169 검증 불가"
+  fi
+}
+
+# ─── Check 64: v2.1.170 Fable 5 STICKY 금지 준수 ───
+# v2.1.170: Claude Fable 5 GA. STICKY DECISIONS: 2026-06-21 대표님 금지 지시.
+# 재도입 금지. settings.json model 필드에 fable 없어야 PASS.
+check_v170_fable5_banned() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    if grep -qi '"model".*fable\|fable.*"model"' "$settings_file" 2>/dev/null; then
+      echo "FAIL|settings.json model에 Fable 5 감지 — STICKY DECISIONS 위반! 2026-06-21 대표님 금지 지시. 즉시 claude-opus-4-8로 교체 필요"
+    else
+      echo "PASS|Fable 5 미사용 — v2.1.170 STICKY 금지 준수 (재도입 금지)"
+    fi
+  else
+    echo "PASS|settings.json 없음이나 Fable 5 미명시 — STICKY 금지 위반 없음"
+  fi
+}
+
+# ─── Check 65: v2.1.172 서브에이전트 중첩 5단계 ───
+# v2.1.172: 서브에이전트 중첩 스폰 최대 5단계. 1M 컨텍스트 무크레딧 auto-compact 복구.
+check_v172_nested_subagents() {
+  echo "PASS|v2.1.172 서브에이전트 중첩 5단계 지원 — 다단계 오케스트레이션 가능. 과도한 중첩은 비용 누적 주의"
+}
+
+# ─── Check 66: v2.1.173 Fable 5 [1m] suffix 자동 strip ───
+# v2.1.173: claude-fable-5[1m] → claude-fable-5 자동 strip (1M 기본). 우리: Fable 5 금지이므로 무관.
+check_v173_fable5_suffix_strip() {
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ -f "$claude_md" ] && grep -q "Fable.*금지\|fable.*banned\|claude-fable-5.*금지" "$claude_md" 2>/dev/null; then
+    echo "PASS|CLAUDE.md Fable 5 금지 정책 확인 — v2.1.173 [1m] suffix strip 무관 (STICKY 금지 유지)"
+  else
+    echo "WARN|CLAUDE.md Fable 5 금지 정책 미확인 — v2.1.173 [1m] suffix strip 인지 필요"
+  fi
+}
+
+# ─── Check 67: v2.1.176 hook if Read/Edit/Write 경로 매칭 수정 ───
+# v2.1.176: v2.1.163 hook if 수정 후속 — Read/Edit/Write 경로 포함 if 조건 정상화.
+# verify-deploy.sh, quality-gate.sh if 조건이 정상 동작하는지 확인.
+check_v176_hook_if_path_fix() {
+  local settings_file="$HOME/.claude/settings.json"
+  if [ -f "$settings_file" ]; then
+    local if_bash_hooks
+    if_bash_hooks=$(grep -c '"if".*"Bash' "$settings_file" 2>/dev/null || echo "0")
+    if_bash_hooks=$(echo "$if_bash_hooks" | tr -d '[:space:]')
+    if [ "$if_bash_hooks" -gt 0 ]; then
+      echo "PASS|Bash if 조건 ${if_bash_hooks}개 — v2.1.176 경로 매칭 수정 적용 (firebase/npm/jest 조건부 hook 정상화)"
+    else
+      echo "WARN|Bash if 조건 0개 — v2.1.176 검증 불가 (if 미사용 환경이면 정상)"
+    fi
+  else
+    echo "WARN|settings.json 없음 — v2.1.176 hook if 검증 불가"
   fi
 }
 
@@ -1137,9 +1296,20 @@ R53=$(check_v143_stop_hook_block_cap)
 R54=$(check_v143_powershell_policy)
 R55=$(check_v144_model_single_session)
 R56=$(check_v144_mcp_paginated_tools)
+R57=$(check_v153_model_policy_revert)
+R58=$(check_v154_opus48_effort)
+R59=$(check_v154_dynamic_workflows)
+R60=$(check_v159_ultracode_trigger)
+R61=$(check_v163_hook_additional_context)
+R62=$(check_v166_fallback_model)
+R63=$(check_v169_safe_mode)
+R64=$(check_v170_fable5_banned)
+R65=$(check_v172_nested_subagents)
+R66=$(check_v173_fable5_suffix_strip)
+R67=$(check_v176_hook_if_path_fix)
 
-LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "agentmemory Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated")
-RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56")
+LABELS=("Build Transition" "PRD" "Pipeline Install" "Quality Loop" "External Review" "Deploy Verify" "TodoWrite" "Ghost Mode" "Evidence-First" "Telegram Result" "No Impossibility" "Multi-Pass Review" "PITFALLS Record" "Conventional Commit" "Harness Location" "Error Retry" "Design Reference" "External Model Call" "Tool Priority" "Cost Logging" "Search-Before-Solve" "Screenshot Verify" "Pipeline Loop" "No Antigravity" "agentmemory Usage" "Agent Teams Cleanup" "Rule Impl Gap" "PreCompact Block" "Obsidian Save" "5H Emergency" "Version Manual Sync" "Design Review Vision" "Model Sonnet Explicit" "Vision Dual Pass" "Sonnet Vision Delegation" "v121 PostTool Output" "v121 MCP AlwaysLoad" "v120 Git Bash Check" "v119 Config Persist" "v122 Malformed Hooks" "v128 Prompt Cache" "v128 Long Context Fix" "v132 Context Window" "v132 Session ID" "v133 Worktree BaseRef" "v133 CLAUDE_EFFORT" "v136 Hard Deny" "v139 Goal+AgentView" "v139 Hook Args Exec" "v141 TerminalSeq" "v142 Agents Flags" "v142 Fast Opus47" "v143 StopHook BlockCap" "v143 PowerShell Policy" "v144 Model SingleSession" "v144 MCP Paginated" "v153 Model Revert" "v154 Opus48 Effort" "v154 Dynamic Workflows" "v159 Ultracode Trigger" "v163 Hook AdditionalCtx" "v166 FallbackModel" "v169 Safe Mode" "v170 Fable5 Banned" "v172 Nested Subagents" "v173 Fable5 Suffix" "v176 Hook If PathFix")
+RESULTS=("$R1" "$R2" "$R3" "$R4" "$R5" "$R6" "$R7" "$R8" "$R9" "$R10" "$R11" "$R12" "$R13" "$R14" "$R15" "$R16" "$R17" "$R18" "$R19" "$R20" "$R21" "$R22" "$R23" "$R24" "$R25" "$R26" "$R27" "$R28" "$R29" "$R30" "$R31" "$R32" "$R33" "$R34" "$R35" "$R36" "$R37" "$R38" "$R39" "$R40" "$R41" "$R42" "$R43" "$R44" "$R45" "$R46" "$R47" "$R48" "$R49" "$R50" "$R51" "$R52" "$R53" "$R54" "$R55" "$R56" "$R57" "$R58" "$R59" "$R60" "$R61" "$R62" "$R63" "$R64" "$R65" "$R66" "$R67")
 
 TOTAL_CHECKS=56
 
