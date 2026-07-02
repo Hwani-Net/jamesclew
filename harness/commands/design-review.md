@@ -17,16 +17,16 @@ description: "Vision 기반 디자인 리뷰. Stitch 디자인 생성 후 실행
 
 ### Step 1: Stitch 스크린샷 캡처
 
-Stitch MCP 또는 expect MCP로 스크린샷 확보:
+Stitch MCP 또는 gstack /browse로 스크린샷 확보:
 
 ```
 방법 A (Stitch MCP):
   mcp__stitch__fetch_screen_image → PNG 다운로드
 
-방법 B (expect MCP):
-  mcp__expect__open → Stitch 프로젝트 URL
-  mcp__expect__screenshot → 각 스크린 캡처
-  mcp__expect__close
+방법 B (gstack /browse):
+  B="$HOME/.claude/skills/gstack/browse/dist/browse.exe"
+  $B goto <Stitch 프로젝트 URL>
+  $B screenshot <각 스크린 캡처 경로>
 
 방법 C (Chrome):
   mcp__claude-in-chrome__navigate → Stitch URL
@@ -110,6 +110,6 @@ mcp__stitch__edit_screens → 승인된 수정 사항 반영
 
 ## Fallback
 
-- Stitch MCP 미연결 → expect MCP 또는 Chrome으로 스크린샷
+- Stitch MCP 미연결 → gstack /browse 또는 Chrome으로 스크린샷
 - 스크린샷 캡처 실패 → Stitch `fetch_screen_code`로 텍스트 기반 리뷰
 - **절대 design-review를 스킵하고 react-components로 넘어가지 않는다**

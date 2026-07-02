@@ -5,7 +5,7 @@ description: "품질 게이트 7단계 + AI냄새 검사 + SEO 점수"
 # /blog-review — 품질 게이트 7단계 + AI냄새 검사 + SEO 점수
 
 `/blog-generate`로 생성된 초안을 발행 전 자동 검증하는 품질 게이트.
-expect MCP 7단계 + 외부 모델 AI냄새 교차검수 + SEO 분석.
+gstack 렌더 검증 + 외부 모델 AI냄새 교차검수 + SEO 분석.
 
 ## 사용법
 - `/blog-review` — `status.json`이 `draft`인 최신 초안 자동 선택
@@ -19,7 +19,7 @@ expect MCP 7단계 + 외부 모델 AI냄새 교차검수 + SEO 분석.
 
 ## 실행 절차
 
-### Phase 1: 프리뷰 렌더링 (expect MCP 7단계)
+### Phase 1: 프리뷰 렌더링 (gstack /browse 렌더 검증)
 
 로컬 프리뷰 서버가 필요. Next.js dev 서버 또는 간단 HTTP 서버 사용.
 
@@ -33,29 +33,24 @@ npx marked draft.md -o preview.html && npx serve .
 ```
 프리뷰 URL 확보: `http://localhost:3000/preview/{slug}` 또는 `http://localhost:3000/preview.html`
 
-**1-2. expect MCP 7단계 실행**
+**1-2. gstack 렌더 검증 5단계 실행** (`B="$HOME/.claude/skills/gstack/browse/dist/browse.exe"`)
 ```
-Step 1: mcp__expect__open → 프리뷰 URL 로드
-Step 2: mcp__expect__screenshot → 렌더링 확인
-  - 빈 페이지 감지: 스크린샷 Read 후 Opus Vision으로 "이 페이지가 정상 렌더링되었는가?" 판단
-  - 에러 페이지 감지: "404", "Error", "Not Found" 텍스트 존재 여부
-Step 3: mcp__expect__network_requests → 실패 리소스 0건
-  - 404, 혼합 콘텐츠(http→https), CORS 에러 필터링
-Step 4: mcp__expect__console_logs → error 레벨 0건
-  - warning은 로그만, error는 FAIL
-Step 5: mcp__expect__performance_metrics → LCP < 2.5s, CLS < 0.1
-Step 6: mcp__expect__accessibility_audit → critical 위반 0건
-Step 7: mcp__expect__close → 세션 정리
+Step 1: $B goto <프리뷰 URL>
+Step 2: $B screenshot <path> → Read(메인 모델 Vision): "정상 렌더링인가? 빈 페이지 아닌가?"
+Step 3: $B text → "404"/"Error"/"Not Found" 문자열 0건 (에러 페이지 감지)
+Step 4: $B js "JSON.stringify(performance.getEntriesByType('resource').filter(r=>r.responseStatus>=400||(r.transferSize===0&&r.decodedBodySize===0)).map(r=>r.name))" → 실패 리소스 0건
+Step 5: $B js "JSON.stringify([...document.images].filter(i=>!i.complete||i.naturalWidth===0).map(i=>i.src))" → 깨진 이미지 0건 (naturalWidth>0 게이트, P-255/P-001)
 ```
+> ⚠️ **2026-07-01 expect MCP 제거로 검증 축소** (대표님 승인 B): a11y 감사·LCP/CLS 성능 지표·console error 레벨 게이트는 gstack에 대체제 없어 **제거**. 렌더/에러페이지/실패리소스/깨진이미지 4대 기계 게이트는 gstack js로 유지.
 
-각 Step 결과를 `quality-report.json`의 `expectGates[]`에 기록:
+각 Step 결과를 `quality-report.json`의 `renderGates[]`에 기록:
 ```json
-{ "step": 1, "name": "open", "pass": true, "detail": "200 OK, 1.2s" }
+{ "step": 1, "name": "goto", "pass": true, "detail": "200 OK" }
 ```
 
 **프리뷰 서버 없는 경우 (Phase 0.5 최소 모드)**:
-expect MCP 7단계를 스킵하고 Phase 2~4만 실행. `quality-report.json`에 `"expectSkipped": true` 기록.
-발행 후 post-deploy 검증(T18)에서 라이브 URL로 7단계 실행.
+gstack 렌더 검증을 스킵하고 Phase 2~4만 실행. `quality-report.json`에 `"renderSkipped": true` 기록.
+발행 후 post-deploy 검증(T18)에서 라이브 URL로 렌더 검증 실행.
 
 ### Phase 2: AI 냄새 검사 (외부 모델 교차검수)
 
@@ -201,7 +196,7 @@ grep -ri "pitfall 콘텐츠" D:/jamesclew/harness/pitfalls/
 {
   "slug": "...",
   "timestamp": "...",
-  "expectGates": [...],
+  "renderGates": [...],
   "aiSmell": { "gpt41": 25, "codex": 20, "final": 22, "verdict": "PASS" },
   "seo": { "keywordCount": 5, "metaDesc": 142, "h2Count": 4, ... , "verdict": "PASS" },
   "images": { "count": 4, "allValid": true, "topicMatch": true, "verdict": "PASS" },
@@ -279,6 +274,6 @@ echo "blog-review: {slug} | overall={verdict} | aiSmell={score} | seo={pass}/{to
 ```
 
 ## 에러 처리
-- expect MCP 서버 미응답 → Phase 1 스킵, Phase 2~4만 실행
+- gstack /browse daemon 미응답 → Phase 1 스킵, Phase 2~4만 실행
 - 외부 CLI 전체 실패 → Sonnet 서브에이전트 교차검수로 임시 대체
 - SCORE 파싱 실패 → 정규식 `SCORE:\s*(\d+)` 재시도 3회, 실패 시 50점 (보수적)

@@ -243,7 +243,7 @@ JetBrains 터미널 깜빡임, Kitty 키보드 프로토콜 Shift+non-ASCII, 처
 | **`rm -rf $HOME` trailing slash 보안 fix** | `HOME`에 끝 슬래시 있을 때 dangerous-path 차단 누락 버그 수정 |
 | 1M-context 모델 bg 완료 알림 → "out of context" 오작동 fix | 백그라운드 세션 안정성 |
 
-> **하네스 영향 (중대)**: ①~~현재 메인 모델이 Opus 4.8~~ (2026-06-11 갱신: 메인 세션은 Fable 5[1m]로 전환 완료, CLAUDE.md Model Selection·Vision 라우팅도 "메인 모델(현 Fable 5)"로 일반화 완료). ②**Dynamic Workflows**는 우리 Multi-Model Orchestration에 신규 옵션 — 대규모 fan-out(감사/마이그레이션/대량 리뷰)에 Agent Teams보다 적합. 단 "ultracode"/명시 opt-in 시에만 사용(수십 에이전트 토큰 소비). ③**AskUserQuestion 절제**는 P-217(선택지 제시 시 AskUserQuestion 강제)과 정합 — "취향·전략 등 진짜 사용자 결정"에만 사용하라는 우리 P-213 분기와 동일 방향. ④`/effort xhigh`로 최난도 작업 가능.
+> **하네스 영향 (중대)**: ①메인 모델 = **Opus 4.8** (~~06-11 Fable 5[1m] 전환~~ → **2026-06-21 대표님 Fable 5 금지·Opus 4.8 복귀**, STICKY 폐기 표). CLAUDE.md Model Selection·Vision 라우팅은 "메인 모델(현 Opus 4.8)"로 일반화 완료. ②**Dynamic Workflows**는 우리 Multi-Model Orchestration에 신규 옵션 — 대규모 fan-out(감사/마이그레이션/대량 리뷰)에 Agent Teams보다 적합. 단 "ultracode"/명시 opt-in 시에만 사용(수십 에이전트 토큰 소비). ③**AskUserQuestion 절제**는 P-217(선택지 제시 시 AskUserQuestion 강제)과 정합 — "취향·전략 등 진짜 사용자 결정"에만 사용하라는 우리 P-213 분기와 동일 방향. ④`/effort xhigh`로 최난도 작업 가능.
 
 #### v2.1.156 ~ v2.1.158 (2026-05-27 ~ 05-30)
 

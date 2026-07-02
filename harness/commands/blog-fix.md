@@ -57,7 +57,7 @@ Agent(model: sonnet, prompt: "
 수정된 전체 마크다운을 출력하라. frontmatter 유지.")
 ```
 - 수정 결과를 `draft.md`에 덮어쓰기
-- `/blog-review` 재실행 (Phase 2~4만, expect MCP는 스킵 가능)
+- `/blog-review` 재실행 (Phase 2~4만, gstack /browse는 스킵 가능)
 - PASS → 완료. FAIL → 라운드 2로.
 - **regression 감지**: 이전 PASS 항목이 FAIL 전환 → 수정 롤백 (`draft.md.bak` 복원) → 라운드 2로.
 

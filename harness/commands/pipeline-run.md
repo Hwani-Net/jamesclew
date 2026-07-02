@@ -93,25 +93,23 @@ description: "7단계 품질 파이프라인 실행 (루프)"
   - Vision Rubric(아래)은 시각적 인상 검출 → 두 레이어 병행
   - snapshot 부재 시 스킵(경고만), 존재하면 **실패 = Step 1 강제 복귀**
 
-  ```
+  ```bash
+  B="$HOME/.claude/skills/gstack/browse/dist/browse.exe"
+
   # 1. 데스크톱 스크린샷
-  mcp__expect__open(url: "<로컬 또는 스테이징 URL>")
-  mcp__expect__screenshot()
+  $B goto "<로컬 또는 스테이징 URL>"
+  $B screenshot ~/.harness-state/pipeline_screenshot_desktop.png
 
   # 2. 모바일 스크린샷
-  mcp__expect__playwright(script: "page.setViewportSize({width:390,height:844})")
-  mcp__expect__screenshot()
+  $B js "window.resizeTo(390,844)"
+  $B screenshot ~/.harness-state/pipeline_screenshot_mobile.png
 
-  # 3. 콘솔 에러 확인
-  mcp__expect__console_logs(type: "error")
+  # 3. 콘솔 에러 확인 — console error 게이트 제거(expect 폐지 2026-07-01)
 
-  # 4. 네트워크 에러 확인
-  mcp__expect__network_requests()
+  # 4. 네트워크 에러 확인 (실패 리소스)
+  $B js "JSON.stringify(performance.getEntriesByType('resource').filter(r=>r.responseStatus>=400||(r.transferSize===0&&r.decodedBodySize===0)).map(r=>r.name))"
 
-  # 5. 접근성 감사
-  mcp__expect__accessibility_audit()
-
-  mcp__expect__close()
+  # 5. 접근성 감사 — a11y 게이트 폐지(expect 폐지 2026-07-01)
   ```
 
 - Design Rubric 평가: Codex 1순위 + gemma4 보조 (무료)
@@ -153,7 +151,7 @@ description: "7단계 품질 파이프라인 실행 (루프)"
 - `verify-deploy.sh` hook이 자동으로:
   - HTTP 200 확인
   - `pipeline_review_done` 증거 파일 존재 확인 (없으면 배포 차단)
-  - `mcp__expect__*`로 심층 검증 지시 주입
+  - gstack /browse로 심층 검증 지시 주입
 - 핵심 기능 1개 이상 실제 동작 확인 (버튼 클릭, API 응답 등)
 
 ---
@@ -183,12 +181,12 @@ description: "7단계 품질 파이프라인 실행 (루프)"
   ```
   실패 시 스킵 (선택적 산출물).
 - UI 프로젝트: Step 3 스크린샷 재촬영 (라이브 URL 기준)
-  ```
-  mcp__expect__open(url: "<라이브 URL>")
-  mcp__expect__screenshot()
-  mcp__expect__playwright(script: "page.setViewportSize({width:390,height:844})")
-  mcp__expect__screenshot()
-  mcp__expect__close()
+  ```bash
+  B="$HOME/.claude/skills/gstack/browse/dist/browse.exe"
+  $B goto "<라이브 URL>"
+  $B screenshot ~/.harness-state/pipeline_screenshot_live_desktop.png
+  $B js "window.resizeTo(390,844)"
+  $B screenshot ~/.harness-state/pipeline_screenshot_live_mobile.png
   ```
 - **ALL PASS → 완료 보고 + `<promise>PIPELINE_COMPLETE</promise>`**
 - **FAIL → Step 1로 복귀 (FAIL 항목만 수정)**

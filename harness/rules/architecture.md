@@ -3,7 +3,7 @@
 ## Tool Selection
 상세: CLAUDE.md Tool Priority 참조. 요약: Built-in > Bash commands > MCP servers (비용순)
 - GitHub: gh CLI (MCP 아님)
-- 브라우저: npx playwright CLI (MCP의 4x 저렴, 비용 비교 참조용 — 하네스 내부 브라우저 작업은 **expect MCP 우선**: `mcp__expect__open/screenshot/playwright` 등. allowlist 승인 불필요. claude-in-chrome은 실제 크롬 탭 조작 필요 시에만, 매 호출 승인 요구)
+- 브라우저 (CLAUDE.md "브라우저 자동화 도구 우선순위" 참조): **표면별** — Desktop/Cowork=내장 Claude in Chrome 고정(브라우저 MCP 미등록) / CLI=**gstack `/browse` 1순위**(네비게이션+렌더검증 겸용: screenshot·`performance.getEntriesByType('resource')`·`naturalWidth>0` js 게이트) > claude-in-chrome(2순위, 승인). Playwright 직접 호출 금지. ⚠️ **expect MCP 2026-07-01 완전 제거**(승인 B) — a11y·perf(LCP/CLS)·console error 게이트는 대체제 없어 폐지, 재등록 금지.
 - 웹 콘텐츠: curl r.jina.ai/URL
 - OCR: tesseract CLI
 - Tavily: 5개 도구. 크롤링/추출에 강점. **토큰 주의: 결과 평균 11KB/회 — 도구 결과 중 최대.**
