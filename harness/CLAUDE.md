@@ -10,11 +10,12 @@
 
 | 도구 | 폐기일 | 결정 근거 | 대체 |
 |------|--------|----------|------|
+| **⛔ OpenClaw 전체** (이 컴 gw1 + 봇 10개 + workboard + 전 systemd unit 25개) | 2026-07-04 | 대표님 명시 폐기 결정 — "더이상 이 openclaw를 운영하지 않을거야. 폐기해줘." 전 unit stop+disable, **봇 10개 전원 Discord 길드(1506254036310167635) 퇴장 완료**(main·claude·codex·ollama·kitt·c3po·joi + javis·javis_claw 포함), WSL-KeepAlive task Disabled. `~/.openclaw` 데이터는 보존(삭제는 별도 결재). **다음 세션 gateway 재가동·봇 재초대·unit re-enable 절대 금지.** Discord 앱 완전 삭제는 대표님이 dev portal에서 수동. 아래 P-19x~P-26x OpenClaw STICKY 항목들은 전부 이력 보존용. | (운영 종료 — 대체 없음) |
 | **gbrain** (CLI + MCP + PGLite) | 2026-05-19 | OpenAI 임베딩 의존, 외부 데이터 전송, 옵시디언과 중복 저장, PGLite Windows 반복 손상 (P-019/P-040/P-071/P-147), 5주간 임베딩 0으로도 운영 가능 입증 → 가치 대비 부담 과대. [[pitfall-172-handoff-failure-gbrain-revival]] | **옵시디언 직접 grep + agentmemory MCP + Claude Code 검색** |
 | copilot-api (`localhost:4141`) | 2026-05 | GitHub 외부 접근 차단 | HydraTeams(`:3456`) 또는 Ollama |
 | `/deep-plan` | 2026-04-21 | 실체 없음 (하네스·내장 모두 미구현) | `/pipeline-install` + `/annotate-plan` + `/qa` 조합 |
 | Antigravity (opencode) | 2026-04 | OAuth + 비용 리스크 (P-053) | Codex CLI (2026-06-07부터 Pro 단일 계정 hwanizero01) |
-| **Claude Fable 5** (`claude-fable-5`) | 2026-06-21 | 대표님 사용 금지 지시 — 메인 세션 사용 불가, 재도입 금지. (이력: 06-11 채택 → 06-21 금지) | **Opus 4.8** (`claude-opus-4-8`) |
+| ~~Claude Fable 5~~ (`claude-fable-5`) | ~~2026-06-21~~ → **2026-07-03 금지 해제** | 대표님 의도적 재도입(모델 부활 확인). 이 행은 이력 보존용 — 폐기 아님. (이력: 06-11 채택 → 06-21 금지 → 07-03 재도입) | (해제 — 메인 세션 모델로 복귀) |
 
 ### 모델 티어 결정 (변경 전 대표님 확인 필수)
 
@@ -24,7 +25,7 @@
 | **EVE(claude 봇) `google/gemini-3.1-pro-preview` (fallback gpt-5.4/gpt-5.4-mini) 의도 운영** — sonnet 아님. 다음 세션 sonnet으로 되돌리기 금지. | 2026-06-10 | 대표님 명시 결정. 봇 id는 "claude"지만 Gemini family 운영. 검수자 cross-family 강화 효과. |
 | **JARVIS(main) `anthropic/claude-opus-4-8`** — gpt-5.5(codex)에서 변경. thinkingDefault=medium. | 2026-06-10 | Claude 사용량 초기화 후 대표님 명시 결정. 메인 오케스트레이터. (이력: 06-08 sonnet→gpt-5.5, 06-10 gpt-5.5→opus, thinking xhigh→medium) |
 | **ultra(Bumblebee) `claude-opus-4-8` HOLD 유지** — EVE 사인오프 + JARVIS go 전 활성화 금지. | 2026-06-08 | 활성화 기준 미충족. |
-| **메인 세션(Claude Code) `claude-opus-4-8` (Opus 4.8) 운영** — ⛔ **Fable 5는 [2026-06-21 대표님 금지] 사용 불가** (폐기 표 참조, 재도입 금지). 워커 서브에이전트(Sonnet)·OpenClaw 봇 티어는 불변. Codex 외부 모델 = GPT-5.5. | 2026-06-21 | 대표님 명시 — Fable 5 금지, Opus 4.8 메인 확정. (이력: 06-08 Sonnet → 06-10 Fable 관망 → 06-11 Fable 채택 → 06-21 Fable 금지·Opus 4.8 복귀) |
+| **메인 세션(Claude Code) `claude-fable-5` (Fable 5) 운영** — 2026-07-03 대표님 의도적 재도입(모델 부활, 06-21 금지 해제). 폴백 `claude-opus-4-8`. 워커 서브에이전트(Sonnet)·OpenClaw 봇 티어는 불변. Codex 외부 모델 = GPT-5.5. | 2026-07-03 | 대표님 명시 — "의도적 재도입이야. fable 5 모델이 되살아났기 때문이야." (이력: 06-08 Sonnet → 06-11 Fable 채택 → 06-21 Fable 금지·Opus 4.8 → 07-03 Fable 5 재도입) |
 
 ### 인수인계 메커니즘 (이 문서 자체)
 
@@ -226,6 +227,15 @@
 ## Multi-Model Orchestration (토큰 절감 + 품질 핵심)
 메인 모델(현 Opus 4.8, STICKY 참조) = **오케스트레이터 + 어드바이저 + 모델 라우터**. 작업 유형에 따라 최적 외부 모델 배정 (Codex 1순위, 로컬은 보조).
 ⚠️ **자기 인식**: 너의 실제 모델명은 API 응답의 `model` 필드로 확인. CLAUDE.md에 "Opus"라 적혀있어도 네가 다른 모델이면 그 모델이다. 자신을 잘못 칭하지 마라.
+
+### 🎯 Advisor Strategy (조언자 전략) — 비용·품질 동시 최적 [2026-07-04 채택, 개발동생 영상 mRY3XES6VKE 실측 반영]
+**명제**: "비싼·똑똑한 모델에게 **일을 시키지 말고, 일을 시키는 역할**을 시켜라." 상위 모델=**조언자**(설계·brief 작성·검증·커밋·"언제 멈출지" 판단), 하위·저렴 모델=**워커**(구현 노동). 우리 기존 Multi-Model Orchestration·P-256과 독립 수렴 — **핵심은 특정 모델 아닌 역할 분리**(모델 바뀌어도 유효).
+**실측 근거**(테트리스+봇 5조합 벤치): ①**싼 모델 단독 = 최고 비용**(Sonnet 단독 $20·309요청·59분 — 시행착오 폭증+미요청 리팩터 폭주). ②**같은 워커도 조언자 밑에선 3배 저렴**($21→$6). ③품질은 워커 등급보다 **brief 정밀도 + 조언자 검증**이 좌우. ④**검증 없이 위임만 = 죽은 코드+비용 폭증**.
+**3대 정밀화 규칙**:
+1. **저렴 모델 단독 방치 금지 (복잡·멀티스텝 작업)** — 조언자 없이 워커만 두면 "언제 멈출지 몰라" 비용 폭증. 복잡 작업은 반드시 메인(조언자) 검증 루프 안에 둔다. ⚡**우리 이점**: 워커 1순위 Codex는 5H·7D 0(무료)이라 영상의 $6 Sonnet-워커보다 더 쌈.
+2. **brief(작업지시서) = 워커 재사용 영속 문서** — 조언자가 **1회 작성**한 brief를 워커가 전 단계 재사용 → 작업 쌓일수록 가치 극대화. `/prd`·`/annotate-plan` 산출물이 곧 brief. 세션 길어져도 지시 안 흐려짐(프롬프트 반복붙임 대신 규칙파일/brief).
+3. **복잡도 기반 워커 티어** — 단순 작업 → 최저 워커(Codex/Sonnet). **복잡 작업 → Codex 실패 시 상위 워커**(Sonnet은 어려운 문제서 시행착오 폭증해 오히려 상위 워커가 더 싸고 빠름, 실측). "무조건 저렴 워커 = 비용 효율" 오해 금지.
+**검증 필수(P-256 정합)**: 조언자는 워커 "완료" 자기선언을 믿지 않는다 — diff·test·기계 게이트로 직접 확인 후 승인. "검증하는 조언자"가 전략 성능의 핵심. (영상이 우리 Reins 원칙에 독립 도달.)
 
 ### 실행 모델 풀
 | 모델 | 호출 | 강점 | 용도 |
