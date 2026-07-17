@@ -1148,19 +1148,17 @@ check_v169_safe_mode() {
   fi
 }
 
-# ─── Check 64: v2.1.170 Fable 5 STICKY 금지 준수 ───
-# v2.1.170: Claude Fable 5 GA. STICKY DECISIONS: 2026-06-21 대표님 금지 지시.
-# 재도입 금지. settings.json model 필드에 fable 없어야 PASS.
+# ─── Check 64: v2.1.170 Fable 5 STICKY 재도입 준수 ───
+# v2.1.170: Claude Fable 5 GA. 06-21 금지 → 07-03 대표님 재도입(금지 해제).
+# CLAUDE.md에 "2026-07-03 금지 해제" 기록 확인이 PASS 조건.
 check_v170_fable5_banned() {
-  local settings_file="$HOME/.claude/settings.json"
-  if [ -f "$settings_file" ]; then
-    if grep -qi '"model".*fable\|fable.*"model"' "$settings_file" 2>/dev/null; then
-      echo "FAIL|settings.json model에 Fable 5 감지 — STICKY DECISIONS 위반! 2026-06-21 대표님 금지 지시. 즉시 claude-opus-4-8로 교체 필요"
-    else
-      echo "PASS|Fable 5 미사용 — v2.1.170 STICKY 금지 준수 (재도입 금지)"
-    fi
+  # 2026-07-03 Fable 5 금지 해제 반영 (대표님 명시 재도입 — "의도적 재도입이야. fable 5 모델이 되살아났기 때문이야.")
+  # 구 로직(Fable 5 감지 → FAIL)은 재도입 STICKY와 역전 → 수정
+  local claude_md="$HOME/.claude/CLAUDE.md"
+  if [ -f "$claude_md" ] && grep -q "2026-07-03 금지 해제" "$claude_md" 2>/dev/null; then
+    echo "PASS|CLAUDE.md Fable 5 금지 해제 확인 (2026-07-03) — v2.1.170 이후 메인 세션 모델로 재도입 STICKY 준수"
   else
-    echo "PASS|settings.json 없음이나 Fable 5 미명시 — STICKY 금지 위반 없음"
+    echo "WARN|CLAUDE.md에서 Fable 5 재도입 STICKY(2026-07-03 금지 해제) 미확인 — STICKY DECISIONS 섹션 확인 권고"
   fi
 }
 
@@ -1171,13 +1169,16 @@ check_v172_nested_subagents() {
 }
 
 # ─── Check 66: v2.1.173 Fable 5 [1m] suffix 자동 strip ───
-# v2.1.173: claude-fable-5[1m] → claude-fable-5 자동 strip (1M 기본). 우리: Fable 5 금지이므로 무관.
+# v2.1.173: claude-fable-5[1m] → claude-fable-5 자동 strip (1M 기본).
+# 2026-07-03 재도입 후 Fable 5가 메인 모델 — suffix strip은 정상 동작 확인 대상.
 check_v173_fable5_suffix_strip() {
+  # 2026-07-03 Fable 5 재도입 반영: 금지 해제 후 suffix strip이 실제로 동작하는 환경
+  # 구 로직: "Fable.*금지" grep → PASS("STICKY 금지 유지") — v2.1.170 changelog 이력 텍스트에 매칭되어 거짓 PASS 발생
   local claude_md="$HOME/.claude/CLAUDE.md"
-  if [ -f "$claude_md" ] && grep -q "Fable.*금지\|fable.*banned\|claude-fable-5.*금지" "$claude_md" 2>/dev/null; then
-    echo "PASS|CLAUDE.md Fable 5 금지 정책 확인 — v2.1.173 [1m] suffix strip 무관 (STICKY 금지 유지)"
+  if [ -f "$claude_md" ] && grep -q "2026-07-03 금지 해제" "$claude_md" 2>/dev/null; then
+    echo "PASS|Fable 5 재도입 STICKY 확인 — v2.1.173 [1m] suffix 자동 strip 정상 동작 (claude-fable-5=1M 컨텍스트 기본)"
   else
-    echo "WARN|CLAUDE.md Fable 5 금지 정책 미확인 — v2.1.173 [1m] suffix strip 인지 필요"
+    echo "WARN|CLAUDE.md Fable 5 재도입 STICKY(2026-07-03 금지 해제) 미확인 — v2.1.173 suffix strip 정책 확인 권고"
   fi
 }
 
