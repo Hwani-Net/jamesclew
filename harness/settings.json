@@ -448,6 +448,11 @@
             "type": "command",
             "command": "bash $HOME/.claude/hooks/self-evolve-trigger.sh",
             "timeout": 45000
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/token-usage-tracker.sh",
+            "timeout": 15000
           }
         ]
       },

@@ -45,6 +45,7 @@
 - `agentmemory-mirror-obsidian.sh` (PostToolUse mcp__agentmemory__memory_save) — saved ID + content를 `$OBSIDIAN_VAULT/06-raw/agentmemory/{YYYY-MM-DD}-{mem_id}.md` 자동 미러. Layer 1 ↔ Layer 2 BASB 통합
 - `pre-compact-snapshot.sh` (PreCompact) — compact 직전 git state + context milestone 옵시디언 스냅샷 (P-007)
 - `session-start-active-infra.sh` (SessionStart) — 활성 인프라 + 핵심 정책 additionalContext 주입 + `~/.harness-state/session-start-active-infra.log` 사후 검증 로그 기록
+- `token-usage-tracker.sh` (Stop) — 세션 토큰 사용량을 **(세션, 1시간)** 단위 롤업으로 `~/.harness-state/token_usage.jsonl`에 적재. 원격 세션 컨테이너는 휘발성이라 `~/.claude/projects/**/*.jsonl` 트랜스크립트가 세션 종료와 함께 사라지므로, Stop 시점에 스냅샷을 남겨야 여러 세션을 가로질러 집계 가능. 한 줄 = 누적 스냅샷이라 같은 키가 반복 기록됨 → 리포트 쪽에서 `rev` 최대 행만 채택(중복 합산 방지). 관측 전용, 항상 exit 0. 리포트: `python3 harness/scripts/token-usage-report.py` (시간대별 표 + 작업별 합계 + 이상치). 이상치 기준 = 가중 토큰 중앙값+3·MAD 또는 중앙값 3배 초과, 표본 3개 미만이면 판정 보류. 가중 토큰 = 가격 배수 반영(캐시읽기 0.1× / 5분 캐시쓰기 1.25× / 1시간 캐시쓰기 2× / output 5×) — 원시 토큰 합계로 비교하면 캐시읽기가 지배해 실제 비용 이상치를 놓침.
 
 #### 운영 라이브
 - **smartreview** (Firebase): `https://multi-blog-personal.web.app/` — 13페이지 가전·생활용품 비교. 소스: `D:/AI 비즈니스/smartreview/`. 배포: `cd "..." && firebase deploy --only hosting`
