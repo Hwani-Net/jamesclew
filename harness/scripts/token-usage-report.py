@@ -114,7 +114,9 @@ def add_usage(bucket, model, usage):
     bucket["cache_read"] += cr
     bucket["output"] += out
     bucket["calls"] += 1
-    if model:
+    # <synthetic>(중단 안내 등 CLI가 만든 가짜 응답)은 usage가 전부 0이라
+    # 합계엔 영향이 없지만 모델 목록만 오염시킨다. 토큰을 쓴 모델만 기록한다.
+    if model and (inp or cw5 or cw1h or cr or out):
         bucket["models"].add(model)
     bucket["cost_usd"] += cost_usd(model, inp, cw5, cw1h, cr, out)
     return inp + cw5 + cw1h + cr + out
@@ -131,6 +133,10 @@ def merge_rollup(bucket, row):
 
 def scan_transcripts(buckets, labels):
     seen_files = []
+    # Claude Code는 API 응답 하나를 content block마다 별도 레코드로 기록하는데,
+    # 각 레코드가 같은 usage 객체를 통째로 들고 있다. 레코드를 그대로 세면
+    # 블록 수만큼 사용량이 부풀려지므로(실측 161레코드 = 76호출) 응답 단위로 중복 제거한다.
+    counted = set()
     for path in sorted(glob.glob(TRANSCRIPT_GLOB)):
         seen_files.append(path)
         for line in open(path, errors="replace"):
@@ -178,6 +184,11 @@ def scan_transcripts(buckets, labels):
             ts = rec.get("timestamp")
             if not usage or not ts:
                 continue
+            # 한 API 응답당 1회만 계상 (위 counted 주석 참조)
+            resp_id = msg.get("id") or rec.get("requestId") or rec.get("uuid")
+            if resp_id in counted:
+                continue
+            counted.add(resp_id)
             hour = ts[:13]  # "YYYY-MM-DDTHH"
             key = (sid, hour)
             if key not in buckets:
