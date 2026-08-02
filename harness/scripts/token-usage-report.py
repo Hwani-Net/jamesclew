@@ -30,6 +30,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import statistics
 import sys
 from collections import defaultdict
@@ -65,6 +66,9 @@ REPO_LEDGER_GLOB = os.path.join(
     "docs", "token-usage", "*.jsonl",
 )
 TRANSCRIPT_GLOB = os.path.expanduser("~/.claude/projects/*/*.jsonl")
+
+# 프롬프트 머리표 "[작업: 이름]" → 작업명. 정기 작업 구분용.
+TASK_MARKER_RE = re.compile(r"^\[\s*작업\s*[::]\s*([^\]]{1,60})\]")
 
 
 def price_for(model):
@@ -156,8 +160,12 @@ def scan_transcripts(buckets, labels):
                     )
                 text = " ".join(text.split())
                 if text and not text.startswith("<"):
+                    # 프롬프트가 "[작업: 이름]"으로 시작하면 그 이름을 작업명으로 쓴다.
+                    # 정기 작업(routine)은 프롬프트가 고정이라, 머리표만 붙여두면
+                    # 환경변수 없이도 목록에서 항상 같은 이름으로 묶인다.
+                    m = TASK_MARKER_RE.match(text)
                     labels[sid] = {
-                        "label": text[:70],
+                        "label": m.group(1).strip() if m else text[:70],
                         "branch": rec.get("gitBranch"),
                         "cwd": rec.get("cwd"),
                         "entrypoint": rec.get("entrypoint"),
@@ -214,7 +222,11 @@ def scan_ledgers(buckets, labels):
                 latest[key] = row
 
     for (sid, hour), row in latest.items():
-        if row.get("label"):
+        # 명시된 작업명(task)은 첫 프롬프트에서 추출한 라벨을 덮는다 —
+        # 정기 작업은 목록에서 고정된 이름으로 보여야 구분이 된다.
+        if row.get("task"):
+            labels.setdefault(sid, {})["label"] = row["task"]
+        elif row.get("label"):
             labels.setdefault(sid, {}).setdefault("label", row["label"])
         if row.get("branch"):
             labels.setdefault(sid, {}).setdefault("branch", row["branch"])
@@ -401,8 +413,13 @@ def render_markdown(rep):
     return "\n".join(out)
 
 
-def emit_ledger():
-    """현재 라이브 트랜스크립트를 롤업 JSONL로 표준출력에 내보낸다 (Stop hook용)."""
+def emit_ledger(task=None):
+    """현재 라이브 트랜스크립트를 롤업 JSONL로 표준출력에 내보낸다 (Stop hook용).
+
+    task: 작업명. 명시하면 첫 프롬프트에서 추출한 라벨 대신 이 이름을 쓴다.
+    정기 작업(routine)은 이름이 고정이라 이걸로 목록에서 구분된다.
+    """
+    task = task or os.environ.get("HARNESS_TASK") or None
     buckets, labels = {}, {}
     scan_transcripts(buckets, labels)
     rev = int(datetime.now(timezone.utc).timestamp())
@@ -412,7 +429,8 @@ def emit_ledger():
             "session_id": sid,
             "hour": hour,
             "rev": rev,
-            "label": meta.get("label"),
+            "task": task,
+            "label": task or meta.get("label"),
             "branch": meta.get("branch"),
             "models": sorted(b["models"]),
             "calls": b["calls"],
@@ -432,10 +450,12 @@ def main():
     ap.add_argument("--since", type=int, metavar="HOURS", help="최근 N시간만 집계")
     ap.add_argument("--emit-ledger", action="store_true",
                     help="라이브 트랜스크립트를 롤업 JSONL로 출력 (Stop hook용)")
+    ap.add_argument("--task", metavar="NAME",
+                    help="작업명. 목록에서 이 이름으로 구분된다 (env HARNESS_TASK로도 지정 가능)")
     args = ap.parse_args()
 
     if args.emit_ledger:
-        emit_ledger()
+        emit_ledger(task=args.task)
         return
 
     rep = build(since_hours=args.since)

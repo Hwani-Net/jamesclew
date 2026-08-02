@@ -1,6 +1,11 @@
 harness/keys/
 *.credentials*
-.claude/
+# .claude/ 내용물은 무시하되 settings.json은 버전 관리한다.
+# 원격 클라우드 컨테이너에는 ~/.claude/ 하네스가 배포되지 않으므로(install.sh는 로컬 PC 전용),
+# 리포 레벨 .claude/settings.json이 원격 세션에 hook을 거는 유일한 경로다.
+# 디렉토리 자체를 무시하면 git이 안으로 내려가지 않아 negation이 먹지 않으므로 `/*` 형태여야 한다.
+.claude/*
+!.claude/settings.json
 pipelines/*/dist/
 pipelines/*/.firebase/
 *.png

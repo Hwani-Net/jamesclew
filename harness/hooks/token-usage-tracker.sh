@@ -23,8 +23,10 @@ mkdir -p "$STATE_DIR"
 
 PY=$(command -v python3 || command -v python) || exit 0
 
+# HARNESS_TASK가 설정돼 있으면 그 이름으로 목록에 표시된다 (정기 작업 구분용).
+# 미설정이면 리포트가 첫 사용자 프롬프트에서 라벨을 뽑는다.
 TMP=$(mktemp) || exit 0
-if "$PY" "$SCRIPT" --emit-ledger >"$TMP" 2>/dev/null && [ -s "$TMP" ]; then
+if "$PY" "$SCRIPT" --emit-ledger ${HARNESS_TASK:+--task "$HARNESS_TASK"} >"$TMP" 2>/dev/null && [ -s "$TMP" ]; then
   cat "$TMP" >>"$LOG"
 fi
 rm -f "$TMP"
